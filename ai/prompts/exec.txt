@@ -1,0 +1,39 @@
+Translate the following technical assessment into a CIO/CTO-level executive briefing.
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "summary": "2-3 paragraph executive narrative. Lead with maturity posture, key risks, and investment thesis.",
+  "top_business_risks": [
+    {
+      "title": "...",
+      "business_impact": "What the business loses if unresolved",
+      "technical_cause": "Root technical gap",
+      "severity": "Critical | High | Medium",
+      "affected_controls": ["control_id"]
+    }
+  ],
+  "investment_priorities": [
+    {
+      "priority": 1,
+      "initiative": "...",
+      "estimated_effort": "...",
+      "business_value": "..."
+    }
+  ],
+  "expected_outcomes_90_days": [
+    "Measurable outcome statement"
+  ]
+}
+
+Rules:
+- Audience is CIO / CTO — translate technical gaps into business risk language
+- Never use task-based language. Lead with outcomes.
+- Tie every risk to a business consequence: revenue, compliance, operational continuity, reputation
+- Investment priorities should be ordered by risk reduction per effort
+- 90-day outcomes must be concrete and measurable (e.g., "Policy compliance above 80%")
+- Use execution_context.tenant_id and subscription info to contextualize
+- If delta is provided, describe trend direction (improving, stagnating, regressing)
+
+Assessment Data:
+{{ASSESSMENT}}

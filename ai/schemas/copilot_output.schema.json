@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CSA Copilot Output",
+  "description": "Unified AI layer response for the Azure Landing Zone Assessor.",
+  "type": "object",
+  "required": ["meta", "executive", "initiatives", "transformation_roadmap"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["generated_at", "assessment_run_id", "tenant_id"],
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "assessment_run_id": { "type": "string" },
+        "tenant_id": { "type": "string" }
+      }
+    },
+    "executive": {
+      "type": "object",
+      "required": ["summary", "top_business_risks", "investment_priorities", "expected_outcomes_90_days"],
+      "properties": {
+        "summary": { "type": "string" },
+        "top_business_risks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "business_impact", "technical_cause"],
+            "properties": {
+              "title": { "type": "string" },
+              "business_impact": { "type": "string" },
+              "technical_cause": { "type": "string" },
+              "severity": { "type": "string", "enum": ["Critical", "High", "Medium"] },
+              "affected_controls": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "investment_priorities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "priority": { "type": "integer" },
+              "initiative": { "type": "string" },
+              "estimated_effort": { "type": "string" },
+              "business_value": { "type": "string" }
+            }
+          }
+        },
+        "expected_outcomes_90_days": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "enterprise_scale_readiness": {
+      "type": "object",
+      "required": ["ready_for_enterprise_scale", "max_supported_subscriptions_current_state", "blockers"],
+      "properties": {
+        "ready_for_enterprise_scale": { "type": "boolean" },
+        "max_supported_subscriptions_current_state": { "type": "integer" },
+        "readiness_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "blockers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "category": { "type": "string" },
+              "description": { "type": "string" },
+              "severity": { "type": "string" },
+              "resolving_initiative": { "type": "string" }
+            }
+          }
+        },
+        "minimum_initiatives_required": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "scaling_recommendations": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "transformation_roadmap": {
+      "type": "object",
+      "properties": {
+        "roadmap_30_60_90": {
+          "type": "object",
+          "properties": {
+            "30_days": { "type": "array" },
+            "60_days": { "type": "array" },
+            "90_days": { "type": "array" }
+          }
+        },
+        "dependency_graph": { "type": "array" },
+        "critical_path": { "type": "array", "items": { "type": "string" } },
+        "parallel_execution_groups": { "type": "array" },
+        "maturity_trajectory": {
+          "type": "object",
+          "properties": {
+            "current_maturity_percent": { "type": "number" },
+            "projected_30_day_percent": { "type": "number" },
+            "projected_60_day_percent": { "type": "number" },
+            "projected_90_day_percent": { "type": "number" },
+            "assumptions": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "initiatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["initiative_id", "title", "priority", "blast_radius", "caf_discipline"],
+        "properties": {
+          "initiative_id": { "type": "string" },
+          "title": { "type": "string" },
+          "priority": { "type": "integer" },
+          "blast_radius": { "type": "string", "enum": ["High", "Medium", "Low"] },
+          "caf_discipline": { "type": "string" },
+          "why_it_matters": { "type": "string" },
+          "success_criteria": { "type": "string" },
+          "dependencies": { "type": "array", "items": { "type": "string" } },
+          "controls": { "type": "array", "items": { "type": "string" } },
+          "owner_role": { "type": "string" },
+          "delivery_model": {
+            "type": "object",
+            "properties": {
+              "estimated_duration": { "type": "string" },
+              "team": { "type": "array", "items": { "type": "string" } },
+              "change_scope": { "type": "string", "enum": ["Tenant", "ManagementGroup", "Subscription"] }
+            }
+          },
+          "learn_references": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": { "type": "string" },
+                "url": { "type": "string", "format": "uri" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "implementation_backlog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["initiative_id", "implementation"],
+        "properties": {
+          "initiative_id": { "type": "string" },
+          "implementation": {
+            "type": "object",
+            "properties": {
+              "bicep_modules": { "type": "array" },
+              "policy_assignments": { "type": "array" },
+              "rbac_roles": { "type": "array" },
+              "pipelines": { "type": "array" },
+              "validation_queries": { "type": "array" }
+            }
+          }
+        }
+      }
+    },
+    "smart_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "type", "resolves_controls"],
+        "properties": {
+          "question": { "type": "string" },
+          "type": { "type": "string", "enum": ["yes_no", "selection", "maturity_scale"] },
+          "resolves_controls": { "type": "array", "items": { "type": "string" } },
+          "impact_if_yes": { "type": "string" },
+          "impact_if_no": { "type": "string" },
+          "follow_up_recommendation": { "type": "string" }
+        }
+      }
+    },
+    "progress_analysis": {
+      "type": "object",
+      "properties": {
+        "velocity": { "type": "string", "enum": ["stalled", "progressing", "regressing"] },
+        "maturity_trend": { "type": "string" },
+        "recommended_next_initiative": { "type": "string" }
+      }
+    }
+  }
+}

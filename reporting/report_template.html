@@ -1,0 +1,97 @@
+<html>
+<head>
+  <title>Azure Landing Zone Assessment</title>
+  <style>
+    body { font-family: Arial; margin: 24px; }
+    .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .metric { font-size: 28px; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; vertical-align: top; }
+    .tag { padding: 2px 8px; border-radius: 10px; background: #eee; display: inline-block; }
+  </style>
+</head>
+<body>
+
+<h1>Azure Landing Zone Assessment Report</h1>
+
+<div class="card">
+  <h2>Scorecard</h2>
+  <div class="grid">
+    <div>
+      <div class="metric">
+        {% if scoring.overall_maturity_percent is not none %}
+          {{ scoring.overall_maturity_percent }}%
+        {% else %}
+          N/A
+        {% endif %}
+      </div>
+      <div>Overall maturity (automated controls)</div>
+    </div>
+    <div>
+      <div class="metric">{{ scoring.automation_coverage.data_driven }}</div>
+      <div>Data-driven (signal evidence)</div>
+    </div>
+    <div>
+      <div class="metric">{{ scoring.automation_coverage.requires_customer_input }}</div>
+      <div>Requires customer input</div>
+    </div>
+  </div>
+  <p style="margin-top:8px;color:#666;">Assessment coverage: {{ scoring.automation_coverage.total_controls }} controls total</p>
+</div>
+
+<div class="card">
+  <h2>Top failing sections</h2>
+  <table>
+    <tr>
+      <th>Section</th>
+      <th>Maturity</th>
+      <th>Status counts</th>
+    </tr>
+    {% for s in scoring.top_failing_sections %}
+    <tr>
+      <td>{{ s.section }}</td>
+      <td>
+        {% if s.maturity_percent is not none %}
+          {{ s.maturity_percent }}%
+        {% else %}
+          <span class="tag">No automation yet</span>
+        {% endif %}
+      </td>
+      <td>
+        Pass: {{ s.counts.get("Pass", 0) }},
+        Partial: {{ s.counts.get("Partial", 0) }},
+        Fail: {{ s.counts.get("Fail", 0) }},
+        Manual: {{ s.counts.get("Manual", 0) }}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="card">
+  <h2>Most impactful gaps</h2>
+  <table>
+    <tr>
+      <th>Control</th>
+      <th>Status</th>
+      <th>Severity</th>
+      <th>Evidence</th>
+      <th>Risk Score</th>
+      <th>Question</th>
+    </tr>
+    {% for g in scoring.most_impactful_gaps %}
+    <tr>
+      <td>{{ g.control_id }}</td>
+      <td>{{ g.status }}</td>
+      <td>{{ g.severity or "N/A" }}</td>
+      <td>{{ g.evidence_count }}</td>
+      <td>{{ g.risk_score }}</td>
+      <td>{{ g.question }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+</body>
+</html>

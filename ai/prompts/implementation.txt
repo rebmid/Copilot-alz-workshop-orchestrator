@@ -1,0 +1,58 @@
+For the following initiative, generate deployable Azure implementation components.
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "initiative_id": "INIT-001",
+  "implementation": {
+    "bicep_modules": [
+      {
+        "module_name": "...",
+        "description": "...",
+        "parameters": ["..."],
+        "target_scope": "managementGroup | subscription | resourceGroup"
+      }
+    ],
+    "policy_assignments": [
+      {
+        "policy_definition": "...",
+        "display_name": "...",
+        "scope": "...",
+        "parameters": {}
+      }
+    ],
+    "rbac_roles": [
+      {
+        "role": "...",
+        "scope": "...",
+        "justification": "..."
+      }
+    ],
+    "pipelines": [
+      {
+        "name": "...",
+        "trigger": "...",
+        "steps": ["..."]
+      }
+    ],
+    "validation_queries": [
+      {
+        "name": "...",
+        "language": "KQL | ARG",
+        "query": "..."
+      }
+    ]
+  }
+}
+
+Rules:
+- Use real Azure resource types and built-in policy definition IDs where possible
+- Bicep modules should target the correct ARM scope (MG, sub, or RG)
+- Policy assignments must reference real built-in or well-known custom definitions
+- RBAC roles must use official Azure role names
+- Validation queries should be Azure Resource Graph (ARG) or KQL that can verify success
+- Pipelines should be GitHub Actions or Azure DevOps YAML compatible
+- Match implementation scope to the initiative's delivery_model.change_scope
+
+Initiative:
+{{INITIATIVE}}

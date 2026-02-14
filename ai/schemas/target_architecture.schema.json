@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Target Architecture",
+  "description": "Target-state Azure Landing Zone architecture contract — consumed by the workshop and report layers.",
+  "type": "object",
+  "required": ["meta", "assumptions", "target_state", "implementation_plan", "links"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["schema_version", "generated_at", "control_pack", "tenant_context", "data_confidence"],
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "control_pack": { "type": "string" },
+        "tenant_context": {
+          "type": "object",
+          "properties": {
+            "tenant_id": { "type": "string" },
+            "subscriptions_visible": { "type": "integer", "minimum": 0 },
+            "regions_observed": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "data_confidence": {
+          "type": "object",
+          "properties": {
+            "governance": { "$ref": "#/$defs/confidence_level" },
+            "network": { "$ref": "#/$defs/confidence_level" },
+            "security": { "$ref": "#/$defs/confidence_level" },
+            "management": { "$ref": "#/$defs/confidence_level" }
+          }
+        }
+      }
+    },
+
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "needs_customer_confirmation"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ASSUMP-\\d{3}$" },
+          "statement": { "type": "string" },
+          "needs_customer_confirmation": { "type": "boolean" },
+          "linked_questions": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+
+    "target_state": {
+      "type": "object",
+      "required": [
+        "management_group_hierarchy",
+        "subscription_model",
+        "network_topology",
+        "logging_and_monitoring",
+        "security_baseline",
+        "operating_model"
+      ],
+      "properties": {
+        "management_group_hierarchy": {
+          "type": "object",
+          "required": ["root"],
+          "properties": {
+            "root": { "$ref": "#/$defs/mg_node" }
+          }
+        },
+
+        "subscription_model": {
+          "type": "object",
+          "required": ["platform_subscriptions", "landing_zone_subscriptions"],
+          "properties": {
+            "platform_subscriptions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["purpose", "recommended_name", "mg_placement"],
+                "properties": {
+                  "purpose": { "type": "string" },
+                  "recommended_name": { "type": "string" },
+                  "mg_placement": { "type": "string" }
+                }
+              }
+            },
+            "landing_zone_subscriptions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["purpose", "mg_placement"],
+                "properties": {
+                  "purpose": { "type": "string" },
+                  "mg_placement": { "type": "string" },
+                  "pattern": { "type": "string" }
+                }
+              }
+            },
+            "placement_rules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["rule"],
+                "properties": {
+                  "rule": { "type": "string" },
+                  "enforcement": { "type": "string", "enum": ["policy", "process"] },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+
+        "network_topology": {
+          "type": "object",
+          "required": ["pattern", "hub", "spokes"],
+          "properties": {
+            "pattern": { "type": "string", "enum": ["hub_spoke", "vwan"] },
+            "hub": {
+              "type": "object",
+              "required": ["subscription", "vnet_name", "address_space", "services"],
+              "properties": {
+                "subscription": { "type": "string" },
+                "vnet_name": { "type": "string" },
+                "address_space": { "type": "string" },
+                "services": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            },
+            "spokes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["subscription_pattern", "connectivity", "egress"],
+                "properties": {
+                  "subscription_pattern": { "type": "string" },
+                  "vnet_name_pattern": { "type": "string" },
+                  "connectivity": { "type": "string", "enum": ["peering", "vwan"] },
+                  "egress": { "type": "string", "enum": ["centralized", "distributed"] },
+                  "ingress": { "type": "string" }
+                }
+              }
+            },
+            "routing": {
+              "type": "object",
+              "properties": {
+                "udr_strategy": { "type": "string" },
+                "east_west_inspection": { "type": "string", "enum": ["required", "optional"] },
+                "notes": { "type": "string" }
+              }
+            }
+          }
+        },
+
+        "logging_and_monitoring": {
+          "type": "object",
+          "required": ["strategy", "workspace", "diagnostics_baseline"],
+          "properties": {
+            "strategy": { "type": "string", "enum": ["single_workspace", "regional_workspaces"] },
+            "workspace": {
+              "type": "object",
+              "required": ["subscription", "name", "retention_days"],
+              "properties": {
+                "subscription": { "type": "string" },
+                "name": { "type": "string" },
+                "retention_days": { "type": "integer", "minimum": 30 }
+              }
+            },
+            "diagnostics_baseline": {
+              "type": "object",
+              "properties": {
+                "coverage_target_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "collection_method": { "type": "string" },
+                "notes": { "type": "string" }
+              }
+            },
+            "siem_integration": {
+              "type": "object",
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "target": { "type": "string", "enum": ["Microsoft Sentinel", "Other", "Unknown"] },
+                "notes": { "type": "string" }
+              }
+            },
+            "entra_id_logs": {
+              "type": "object",
+              "properties": {
+                "ingest_to_workspace": { "type": "boolean" },
+                "notes": { "type": "string" }
+              }
+            }
+          }
+        },
+
+        "security_baseline": {
+          "type": "object",
+          "required": ["ddos", "defender_for_cloud", "policy_baseline"],
+          "properties": {
+            "ddos": {
+              "type": "object",
+              "required": ["recommended", "scope"],
+              "properties": {
+                "recommended": { "type": "string", "enum": ["ddos_network_protection", "ip_protection"] },
+                "scope": { "type": "string" },
+                "notes": { "type": "string" }
+              }
+            },
+            "defender_for_cloud": {
+              "type": "object",
+              "required": ["target_enabled_percent", "plans_required"],
+              "properties": {
+                "target_enabled_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "plans_required": { "type": "array", "items": { "type": "string" } },
+                "notes": { "type": "string" }
+              }
+            },
+            "policy_baseline": {
+              "type": "object",
+              "required": ["target_compliance_percent", "assignment_scopes"],
+              "properties": {
+                "target_compliance_percent": { "type": "integer", "minimum": 0, "maximum": 100 },
+                "assignment_scopes": { "type": "array", "items": { "type": "string" } },
+                "notes": { "type": "string" }
+              }
+            }
+          }
+        },
+
+        "operating_model": {
+          "type": "object",
+          "required": ["roles", "org_decisions_required"],
+          "properties": {
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["team", "responsibilities"],
+                "properties": {
+                  "team": { "type": "string" },
+                  "responsibilities": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            },
+            "org_decisions_required": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+
+    "implementation_plan": {
+      "type": "object",
+      "required": ["phases"],
+      "properties": {
+        "phases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["phase", "order", "objectives"],
+            "properties": {
+              "phase": { "type": "string" },
+              "order": { "type": "integer", "minimum": 1 },
+              "objectives": { "type": "array", "items": { "type": "string" } },
+              "execution_units": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["capability", "objective", "scope", "owner", "success_criteria"],
+                  "properties": {
+                    "capability": { "type": "string" },
+                    "objective": { "type": "string" },
+                    "scope": { "type": "string" },
+                    "owner": { "type": "string" },
+                    "depends_on": { "type": "array", "items": { "type": "string" } },
+                    "success_criteria": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              },
+              "validation": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "links": {
+      "type": "object",
+      "properties": {
+        "learn_references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["title", "url"],
+            "properties": {
+              "title": { "type": "string" },
+              "url": { "type": "string", "format": "uri" }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "$defs": {
+    "confidence_level": {
+      "type": "string",
+      "enum": ["High", "Medium", "Low"]
+    },
+    "mg_node": {
+      "type": "object",
+      "required": ["display_name"],
+      "properties": {
+        "id": { "type": "string" },
+        "display_name": { "type": "string" },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mg_node" }
+        }
+      }
+    }
+  }
+}

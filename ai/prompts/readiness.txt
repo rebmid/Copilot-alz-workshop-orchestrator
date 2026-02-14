@@ -1,0 +1,41 @@
+Determine whether this Azure tenant can support enterprise-scale operations (50+ subscriptions).
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "ready_for_enterprise_scale": false,
+  "max_supported_subscriptions_current_state": 1,
+  "readiness_score": 0,
+  "blockers": [
+    {
+      "category": "Governance | Security | Networking | Identity | Management",
+      "description": "...",
+      "severity": "Critical | High | Medium",
+      "resolving_initiative": "INIT-xxx"
+    }
+  ],
+  "minimum_initiatives_required": ["INIT-001", "INIT-002"],
+  "scaling_recommendations": [
+    "Recommendation for moving from current state to enterprise-scale"
+  ]
+}
+
+Evaluation criteria for enterprise-scale readiness:
+- Management group hierarchy: must have dedicated Platform, Connectivity, Identity, Landing Zones MGs
+- Policy governance: must have policy initiatives assigned at MG scope with >70% compliance
+- Network topology: must have hub-spoke or Virtual WAN with centralized egress
+- Security: Defender for Cloud enabled across all plans, Secure Score >60
+- Diagnostics: centralized logging to Log Analytics covering >80% of resources
+- Identity: PIM enabled, break-glass accounts documented, identity logs centralized
+- Subscription vending: automated process or at minimum documented standards
+
+Rules:
+- ready_for_enterprise_scale is true ONLY if all critical blockers are resolved
+- max_supported_subscriptions_current_state: estimate based on current governance depth
+  (no MG structure = 1-3, basic MG = 5-10, full MG + policy = 50+)
+- readiness_score: 0-100 reflecting how close to enterprise-scale
+- minimum_initiatives_required references initiative IDs from the roadmap
+- Be brutally honest — if the tenant is immature, say so
+
+Assessment Data:
+{{ASSESSMENT}}

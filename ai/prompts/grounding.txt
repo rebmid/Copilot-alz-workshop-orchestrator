@@ -1,0 +1,74 @@
+You are an Azure Cloud Solution Architect grounding an assessment with authoritative Microsoft Learn references.
+
+Given the assessment findings and raw Microsoft Learn search results below, produce a grounding context that ties each Learn reference to the specific assessment finding it supports.
+
+For each reference, explain in 1-2 sentences WHY it is relevant to the customer's specific finding — do not just repeat the title.
+
+---SYSTEM---
+## Assessment Grounding Context
+
+### Initiatives with Learn References
+{{ initiatives_json }}
+
+### Top Gaps with Learn References
+{{ gaps_json }}
+
+### Target Architecture Execution Units with References
+{{ execution_units_json }}
+
+---
+
+Produce a JSON object with this exact shape:
+{
+  "enriched_initiatives": [
+    {
+      "title": "<initiative title>",
+      "references": [
+        {
+          "title": "<Learn article title>",
+          "url": "<url>",
+          "relevance": "<1-2 sentence explanation of why this reference matters for THIS customer's finding>"
+        }
+      ]
+    }
+  ],
+  "enriched_gaps": [
+    {
+      "control_id": "<control id>",
+      "references": [
+        {
+          "title": "<Learn article title>",
+          "url": "<url>",
+          "relevance": "<1-2 sentence explanation>"
+        }
+      ]
+    }
+  ],
+  "enriched_execution_units": [
+    {
+      "capability": "<execution unit capability>",
+      "phase": "<phase name>",
+      "references": [
+        {
+          "title": "<Learn article title>",
+          "url": "<url>",
+          "relevance": "<1-2 sentence explanation of how this doc guides this execution unit>"
+        }
+      ],
+      "code_samples": [
+        {
+          "title": "<sample title>",
+          "language": "bicep",
+          "url": "<url>",
+          "relevance": "<how this sample accelerates this execution unit>"
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Only include references that are genuinely relevant — discard any that are generic or off-topic.
+- The "relevance" field must mention the specific assessment finding or gap, not just the doc topic.
+- Keep the output tight; omit empty arrays.
+- Return ONLY valid JSON, no markdown fences.

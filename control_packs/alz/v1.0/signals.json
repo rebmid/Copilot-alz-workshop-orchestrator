@@ -1,0 +1,107 @@
+{
+  "pack_id": "alz-v1.0",
+  "name": "Azure Landing Zone — V1 Starter",
+  "version": "1.0.0",
+  "description": "Signal and control definitions for the ALZ enterprise-scale assessment. Maps logical signal names to signal providers registered in the signals/ layer.",
+
+  "signals": {
+    "mg_hierarchy": {
+      "provider": "arm",
+      "query": "management_groups",
+      "signal_bus_name": "arm:mg_hierarchy",
+      "description": "Management group hierarchy — depth, platform/landing-zone structure",
+      "preflight_probe": "management_groups_read"
+    },
+    "subscriptions": {
+      "provider": "arm",
+      "query": "subscriptions",
+      "signal_bus_name": null,
+      "description": "Enabled subscription list for scope targeting",
+      "preflight_probe": null
+    },
+    "policy_assignments": {
+      "provider": "policy_insights",
+      "query": "assignments",
+      "signal_bus_name": "policy:assignments",
+      "description": "Policy assignment counts — total, initiative, built-in",
+      "preflight_probe": "policy_insights"
+    },
+    "policy_compliance_summary": {
+      "provider": "policy_insights",
+      "query": "compliance_summary",
+      "signal_bus_name": "policy:compliance_summary",
+      "description": "Policy compliance percentage + noncompliant resource count",
+      "preflight_probe": "policy_insights"
+    },
+    "defender_pricings": {
+      "provider": "defender",
+      "query": "pricings",
+      "signal_bus_name": "defender:pricings",
+      "description": "Defender for Cloud plan pricing tiers",
+      "preflight_probe": "defender_for_cloud"
+    },
+    "defender_secure_score": {
+      "provider": "defender",
+      "query": "secure_score",
+      "signal_bus_name": "defender:secure_score",
+      "description": "Microsoft Defender secure score percentage",
+      "preflight_probe": "defender_for_cloud"
+    },
+    "diagnostic_settings_sample": {
+      "provider": "monitor",
+      "query": "diagnostic_coverage",
+      "signal_bus_name": "monitor:diag_coverage_sample",
+      "description": "Sample-based diagnostics coverage percentage",
+      "preflight_probe": null
+    },
+    "azure_firewalls": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/azurefirewalls'",
+      "signal_bus_name": "resource_graph:azure_firewall",
+      "description": "Azure Firewall resources across subscriptions",
+      "preflight_probe": "resource_graph"
+    },
+    "vnets": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/virtualnetworks'",
+      "signal_bus_name": "resource_graph:vnets",
+      "description": "Virtual networks with peerings, subnets, DDoS plan",
+      "preflight_probe": "resource_graph"
+    },
+    "public_ips": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/publicipaddresses'",
+      "signal_bus_name": "resource_graph:public_ips",
+      "description": "Public IP addresses with SKU and association status",
+      "preflight_probe": "resource_graph"
+    },
+    "route_tables": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/routetables'",
+      "signal_bus_name": "resource_graph:route_tables",
+      "description": "Route tables for centralized egress verification",
+      "preflight_probe": "resource_graph"
+    },
+    "nsgs": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/networksecuritygroups'",
+      "signal_bus_name": "resource_graph:nsgs",
+      "description": "Network Security Groups across subscriptions",
+      "preflight_probe": "resource_graph"
+    },
+    "ddos_plans": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/ddosprotectionplans'",
+      "signal_bus_name": null,
+      "description": "DDoS Protection Plan resources (VNet-level DDoS coverage is on vnets signal)",
+      "preflight_probe": "resource_graph"
+    },
+    "log_analytics_workspaces": {
+      "provider": "arm",
+      "query": "workspaces",
+      "signal_bus_name": null,
+      "description": "Log Analytics workspaces for centralized logging validation",
+      "preflight_probe": "log_analytics_reader"
+    }
+  }
+}

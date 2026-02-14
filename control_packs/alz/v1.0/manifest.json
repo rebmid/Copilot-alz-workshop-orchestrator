@@ -1,0 +1,9 @@
+{
+  "pack_id": "alz-v1.0",
+  "name": "Azure Landing Zone — V1 Starter",
+  "version": "1.0.0",
+  "description": "Maps control packs to the knowledge graph + signal bus. Provides pack-level metadata for discovery and loading.",
+  "graph_ref": "../../graph/controls.json",
+  "signals_ref": "signals.json",
+  "controls_ref": "controls.json"
+}

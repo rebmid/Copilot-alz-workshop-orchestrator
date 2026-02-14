@@ -1,0 +1,13 @@
+azure-identity
+azure-mgmt-resourcegraph
+azure-mgmt-managementgroups
+azure-mgmt-resource
+requests
+jinja2
+fastapi
+uvicorn
+openpyxl
+openai
+mcp
+
+ 

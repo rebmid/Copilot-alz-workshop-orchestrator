@@ -1,0 +1,390 @@
+{
+  "version": "1.0.0",
+  "description": "Control Knowledge Graph — maps control dependencies, signal requirements, CAF alignment, and question resolvers.",
+
+  "caf_disciplines": {
+    "identity":      "Identity & Access Management",
+    "security":      "Security, Governance & Compliance",
+    "network":       "Network Topology & Connectivity",
+    "management":    "Management & Monitoring",
+    "automation":    "Platform Automation & DevOps",
+    "organization":  "Resource Organization"
+  },
+
+  "intent_bundles": {
+    "enterprise_readiness": {
+      "label": "Enterprise-Scale Readiness",
+      "description": "Full ALZ assessment — all 21 automated controls",
+      "controls": [
+        "2df27ee4", "61623a76", "92481607", "8bbac757",
+        "5c986cb2", "3829e7e3", "d8a2adb1", "49b82111",
+        "e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5",
+        "09945bda", "77425f48", "36a72a48", "15833ee7",
+        "a56888b2", "67e7a8ed", "1cf0b8da"
+      ]
+    },
+    "network_review": {
+      "label": "Network Topology Review",
+      "description": "Validate hub-spoke, firewall, IP governance, DDoS",
+      "controls": ["e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5"]
+    },
+    "governance_review": {
+      "label": "Governance & Policy Review",
+      "description": "MG hierarchy, policy assignments, compliance posture",
+      "controls": ["2df27ee4", "61623a76", "92481607", "8bbac757",
+                    "5c986cb2", "3829e7e3", "d8a2adb1", "49b82111"]
+    },
+    "security_review": {
+      "label": "Security Posture Review",
+      "description": "Defender plans, secure score, diagnostics coverage",
+      "controls": ["09945bda", "77425f48", "36a72a48", "15833ee7",
+                    "a56888b2", "67e7a8ed", "1cf0b8da"]
+    },
+    "mg_structure": {
+      "label": "Management Group Structure",
+      "description": "Validate ALZ management group hierarchy",
+      "controls": ["2df27ee4", "61623a76", "92481607", "8bbac757"]
+    },
+    "policy_health": {
+      "label": "Policy Health Check",
+      "description": "Policy adoption, compliance, noncompliant resources",
+      "controls": ["5c986cb2", "3829e7e3", "d8a2adb1", "49b82111"]
+    },
+    "defender_posture": {
+      "label": "Defender Posture Check",
+      "description": "Defender plans coverage and secure score",
+      "controls": ["09945bda", "77425f48", "36a72a48", "15833ee7"]
+    }
+  },
+
+  "controls": {
+    "e6c4cfd3": {
+      "name": "Azure Firewall Presence",
+      "evaluator_module": "evaluators.networking",
+      "full_id": "e6c4cfd3-e504-4547-a244-7ec66138a720",
+      "requires_signals": ["resource_graph:azure_firewall"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "network", "weight": 0.25}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "question_resolvers": ["Q-NVA-VENDOR", "Q-VWAN-MODEL"]
+    },
+    "e8bbac75": {
+      "name": "Hub-Spoke Topology",
+      "evaluator_module": "evaluators.networking",
+      "full_id": "e8bbac75-7155-49ab-a153-e8908ae28c84",
+      "requires_signals": ["resource_graph:vnets", "resource_graph:azure_firewall"],
+      "depends_on": ["e6c4cfd3"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "network", "weight": 0.30}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "question_resolvers": ["Q-VWAN-MODEL", "Q-HYBRID-CONNECTIVITY"]
+    },
+    "3c5a808d": {
+      "name": "Public IP Governance",
+      "evaluator_module": "evaluators.networking",
+      "full_id": "3c5a808d-c695-4c14-a63c-c7ab7a510e41",
+      "requires_signals": ["resource_graph:public_ips"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "network", "weight": 0.15},
+        {"discipline": "security", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity",
+      "question_resolvers": ["Q-PUBLIC-IP-JUSTIFICATION"]
+    },
+    "0c47f486": {
+      "name": "Public IP SKU Standard",
+      "evaluator_module": "evaluators.networking",
+      "full_id": "0c47f486-656d-4699-8c30-edef5b8a93c4",
+      "requires_signals": ["resource_graph:public_ips"],
+      "depends_on": ["3c5a808d"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "network", "weight": 0.10}
+      ],
+      "caf_reference": null,
+      "question_resolvers": []
+    },
+    "088137f5": {
+      "name": "DDoS Protection",
+      "evaluator_module": "evaluators.networking",
+      "full_id": "088137f5-e6c4-4cfd-9e50-4547c2447ec6",
+      "requires_signals": ["resource_graph:vnets"],
+      "depends_on": ["3c5a808d"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "network", "weight": 0.20},
+        {"discipline": "security", "weight": 0.05}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "question_resolvers": ["Q-DDOS-TIER"]
+    },
+
+    "2df27ee4": {
+      "name": "MG Hierarchy Depth",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "2df27ee4-12e7-4f98-9f63-04722dd69c5b",
+      "requires_signals": ["arm:mg_hierarchy"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "organization", "weight": 0.20}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "question_resolvers": ["Q-MG-RESTRUCTURE"]
+    },
+    "61623a76": {
+      "name": "Platform Management Group",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "61623a76-5a91-47e1-b348-ef254c27d42e",
+      "requires_signals": ["arm:mg_hierarchy"],
+      "depends_on": ["2df27ee4"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "organization", "weight": 0.25}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "question_resolvers": ["Q-MG-RESTRUCTURE"]
+    },
+    "92481607": {
+      "name": "Landing Zones Management Group",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "92481607-d5d1-4e4e-9146-58d3558fd772",
+      "requires_signals": ["arm:mg_hierarchy"],
+      "depends_on": ["61623a76"],
+      "defer_if_parent_fails": true,
+      "affects": [
+        {"discipline": "organization", "weight": 0.20}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "question_resolvers": []
+    },
+    "8bbac757": {
+      "name": "Connectivity Management Group",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "8bbac757-1559-4ab9-853e-8908ae28c84c",
+      "requires_signals": ["arm:mg_hierarchy"],
+      "depends_on": ["61623a76"],
+      "defer_if_parent_fails": true,
+      "affects": [
+        {"discipline": "organization", "weight": 0.15},
+        {"discipline": "network", "weight": 0.05}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "question_resolvers": []
+    },
+    "5c986cb2": {
+      "name": "Policy Initiatives Assigned",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "5c986cb2-9131-456a-8247-6e49f541acdc",
+      "requires_signals": ["policy:assignments"],
+      "depends_on": ["3829e7e3"],
+      "defer_if_parent_fails": true,
+      "affects": [
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+      "question_resolvers": ["Q-COMPLIANCE-FRAMEWORK"]
+    },
+    "3829e7e3": {
+      "name": "Policy Assignment Count",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "3829e7e3-1618-4368-9a04-77a209945bda",
+      "requires_signals": ["policy:assignments"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+      "question_resolvers": ["Q-COMPLIANCE-FRAMEWORK"]
+    },
+    "d8a2adb1": {
+      "name": "Policy Compliance Percentage",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "d8a2adb1-17d6-4326-af62-5ca44e5695f2",
+      "requires_signals": ["policy:compliance_summary"],
+      "depends_on": ["3829e7e3"],
+      "defer_if_parent_fails": true,
+      "affects": [
+        {"discipline": "security", "weight": 0.20}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+      "question_resolvers": ["Q-COMPLIANCE-FRAMEWORK", "Q-EXEMPTION-POLICY"]
+    },
+    "49b82111": {
+      "name": "Noncompliant Resource Count",
+      "evaluator_module": "evaluators.governance",
+      "full_id": "49b82111-2df2-47ee-912e-7f983f630472",
+      "requires_signals": ["policy:compliance_summary"],
+      "depends_on": ["d8a2adb1"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "security", "weight": 0.10}
+      ],
+      "caf_reference": null,
+      "question_resolvers": ["Q-EXEMPTION-POLICY"]
+    },
+
+    "09945bda": {
+      "name": "Defender CSPM Enabled",
+      "evaluator_module": "evaluators.security",
+      "full_id": "09945bda-4333-44f2-9911-634182ba5275",
+      "requires_signals": ["defender:pricings"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "security", "weight": 0.20}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security",
+      "question_resolvers": ["Q-DEFENDER-ROLLOUT"]
+    },
+    "77425f48": {
+      "name": "Defender CWP Coverage",
+      "evaluator_module": "evaluators.security",
+      "full_id": "77425f48-ecba-43a0-aeac-a3ac733ccc6a",
+      "requires_signals": ["defender:pricings"],
+      "depends_on": ["09945bda"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security",
+      "question_resolvers": ["Q-DEFENDER-ROLLOUT"]
+    },
+    "36a72a48": {
+      "name": "Defender for Servers",
+      "evaluator_module": "evaluators.security",
+      "full_id": "36a72a48-fffe-4c40-9747-0ab5064355ba",
+      "requires_signals": ["defender:pricings"],
+      "depends_on": ["09945bda"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "security", "weight": 0.10}
+      ],
+      "caf_reference": null,
+      "question_resolvers": ["Q-DEFENDER-ROLLOUT", "Q-SERVER-WORKLOADS"]
+    },
+    "15833ee7": {
+      "name": "Secure Score Threshold",
+      "evaluator_module": "evaluators.security",
+      "full_id": "15833ee7-ad6c-46d3-9331-65c7acbe44ab",
+      "requires_signals": ["defender:secure_score"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": null,
+      "question_resolvers": []
+    },
+    "a56888b2": {
+      "name": "Centralized Security Visibility",
+      "evaluator_module": "evaluators.security",
+      "full_id": "a56888b2-7e83-4404-bd31-b886528502d1",
+      "requires_signals": ["defender:secure_score", "monitor:diag_coverage_sample"],
+      "depends_on": ["15833ee7", "67e7a8ed"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "security", "weight": 0.10},
+        {"discipline": "management", "weight": 0.15}
+      ],
+      "caf_reference": null,
+      "question_resolvers": ["Q-SIEM-TOOL"]
+    },
+    "67e7a8ed": {
+      "name": "Diagnostics Coverage",
+      "evaluator_module": "evaluators.security",
+      "full_id": "67e7a8ed-4b30-4e38-a3f2-9812b2363cef",
+      "requires_signals": ["monitor:diag_coverage_sample"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "management", "weight": 0.25}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-LOG-ANALYTICS-WORKSPACE"]
+    },
+    "1cf0b8da": {
+      "name": "Diagnostics for Identity (Entra ID)",
+      "evaluator_module": "evaluators.security",
+      "full_id": "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1",
+      "requires_signals": ["monitor:diag_coverage_sample"],
+      "depends_on": ["67e7a8ed"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "management", "weight": 0.15},
+        {"discipline": "identity", "weight": 0.15}
+      ],
+      "caf_reference": null,
+      "question_resolvers": ["Q-LOG-ANALYTICS-WORKSPACE", "Q-ENTRA-LICENSING"]
+    }
+  },
+
+  "question_resolvers": {
+    "Q-NVA-VENDOR": {
+      "question": "Which network virtual appliance (NVA) vendor is in use, if not Azure Firewall?",
+      "resolves_controls": ["e6c4cfd3", "e8bbac75"],
+      "resolution_effect": "If NVA is confirmed, Azure Firewall absence can be reclassified from Fail to Pass with override."
+    },
+    "Q-VWAN-MODEL": {
+      "question": "Is Virtual WAN (vWAN) used instead of traditional hub-spoke?",
+      "resolves_controls": ["e6c4cfd3", "e8bbac75"],
+      "resolution_effect": "vWAN topology uses secured hubs; hub-spoke check logic changes."
+    },
+    "Q-HYBRID-CONNECTIVITY": {
+      "question": "What hybrid connectivity model is used (ExpressRoute, S2S VPN, both)?",
+      "resolves_controls": ["e8bbac75"],
+      "resolution_effect": "Clarifies whether hub-spoke is bridging on-premises or cloud-only."
+    },
+    "Q-PUBLIC-IP-JUSTIFICATION": {
+      "question": "Are all public IP addresses documented with a business justification?",
+      "resolves_controls": ["3c5a808d"],
+      "resolution_effect": "If documented, severity can be lowered from Fail to Partial."
+    },
+    "Q-DDOS-TIER": {
+      "question": "Is Azure DDoS Network Protection or IP Protection intended?",
+      "resolves_controls": ["088137f5"],
+      "resolution_effect": "IP Protection per-PIP is a valid alternative to network-level DDoS plan."
+    },
+    "Q-MG-RESTRUCTURE": {
+      "question": "Is there a planned management group restructuring initiative?",
+      "resolves_controls": ["2df27ee4", "61623a76"],
+      "resolution_effect": "If restructure is in flight, MG hierarchy gaps are expected and severity is informational."
+    },
+    "Q-COMPLIANCE-FRAMEWORK": {
+      "question": "Which compliance frameworks or regulatory standards apply (e.g., ISO 27001, PCI-DSS, SOC 2)?",
+      "resolves_controls": ["5c986cb2", "3829e7e3", "d8a2adb1"],
+      "resolution_effect": "Identifies which policy initiatives are mandatory vs. aspirational."
+    },
+    "Q-EXEMPTION-POLICY": {
+      "question": "Is there a formal policy exemption process for noncompliant resources?",
+      "resolves_controls": ["d8a2adb1", "49b82111"],
+      "resolution_effect": "Exemptions with documented risk acceptance reduce urgency of noncompliant counts."
+    },
+    "Q-DEFENDER-ROLLOUT": {
+      "question": "Is there a phased Defender for Cloud rollout plan?",
+      "resolves_controls": ["09945bda", "77425f48", "36a72a48"],
+      "resolution_effect": "Partial coverage may be expected if rollout is in progress."
+    },
+    "Q-SERVER-WORKLOADS": {
+      "question": "Are there IaaS VM workloads that require Defender for Servers protection?",
+      "resolves_controls": ["36a72a48"],
+      "resolution_effect": "If no VMs, Defender for Servers is N/A rather than Fail."
+    },
+    "Q-SIEM-TOOL": {
+      "question": "Which SIEM/SOAR tool is the target for security log consolidation?",
+      "resolves_controls": ["a56888b2"],
+      "resolution_effect": "If Sentinel is not used, centralized security may route to a third-party SIEM."
+    },
+    "Q-LOG-ANALYTICS-WORKSPACE": {
+      "question": "Is there a centralized Log Analytics workspace for platform diagnostics?",
+      "resolves_controls": ["67e7a8ed", "1cf0b8da"],
+      "resolution_effect": "Centralized workspace confirms logging architecture even if per-resource coverage is partial."
+    },
+    "Q-ENTRA-LICENSING": {
+      "question": "What Entra ID licensing tier is in use (Free, P1, P2)?",
+      "resolves_controls": ["1cf0b8da"],
+      "resolution_effect": "P1/P2 enables richer identity diagnostics; Free tier limits available logs."
+    }
+  }
+}

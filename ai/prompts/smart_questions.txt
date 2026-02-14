@@ -1,0 +1,36 @@
+Cluster the manual (unresolvable by automation) controls into the minimum number of high-impact questions.
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "smart_questions": [
+    {
+      "question": "Clear, actionable question for the customer",
+      "type": "yes_no | selection | maturity_scale",
+      "resolves_controls": ["control_id"],
+      "impact_if_yes": "What changes in the assessment if the answer is positive",
+      "impact_if_no": "What remains a gap if the answer is negative",
+      "follow_up_recommendation": "What to do next based on either answer"
+    }
+  ],
+  "question_count": 0,
+  "controls_resolved": 0,
+  "resolution_coverage_percent": 0
+}
+
+Rules:
+- Minimum questions, maximum control resolution. Aim for <15 questions resolving >80% of manual controls.
+- Group related manual controls into a single question where possible
+  (e.g., all identity-related manual checks → one question about PIM/RBAC maturity)
+- Each question must be answerable by a platform engineering lead or security architect
+- type guides the UI:
+  - yes_no: binary toggle
+  - selection: pick from predefined options (include the options in the question)
+  - maturity_scale: rate 1-5
+- impact_if_yes / impact_if_no: describe exactly how the assessment posture changes
+- Order questions by impact: highest control-resolution-count first
+- Do not ask questions that the automated assessment already answered
+- Do not ask about things that can be verified via Azure APIs
+
+Assessment Data:
+{{ASSESSMENT}}

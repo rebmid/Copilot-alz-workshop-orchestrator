@@ -1,0 +1,1 @@
+# schemas — shared domain contracts

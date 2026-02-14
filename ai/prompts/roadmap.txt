@@ -1,0 +1,150 @@
+Generate initiatives, a dependency graph, and a 30-60-90 transformation roadmap aligned to the Cloud Adoption Framework.
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "executive_summary": "...",
+  "transformation_progress": {
+    "maturity_change": "...",
+    "key_improvements": ["..."],
+    "regressions": ["..."],
+    "reprioritized_initiatives": ["..."]
+  },
+  "roadmap_30_60_90": {
+    "30_days": [
+      {
+        "action": "...",
+        "initiative_id": "INIT-001",
+        "caf_discipline": "Govern | Secure | Manage | Ready | Adopt",
+        "dependency_on": [],
+        "success_criteria": "...",
+        "owner_role": "..."
+      }
+    ],
+    "60_days": [ { "action": "...", "initiative_id": "INIT-002", "caf_discipline": "...", "dependency_on": ["..."], "success_criteria": "...", "owner_role": "..." } ],
+    "90_days": [ { "action": "...", "initiative_id": "INIT-003", "caf_discipline": "...", "dependency_on": ["..."], "success_criteria": "...", "owner_role": "..." } ]
+  },
+  "parallel_execution_groups": [
+    ["INIT-001", "INIT-002"],
+    ["INIT-003"]
+  ],
+  "top_risks": [
+    {
+      "title": "...",
+      "business_impact": "...",
+      "technical_cause": "...",
+      "initiative_id": "INIT-001"
+    }
+  ],
+  "initiative_execution_plan": [
+    {
+      "initiative_id": "INIT-001",
+      "title": "...",
+      "priority": 1,
+      "blast_radius": "High|Medium|Low",
+      "caf_discipline": "Govern",
+      "why_it_matters": "...",
+      "success_criteria": "...",
+      "controls": ["control_id"],
+      "dependencies": ["..."],
+      "permission_requirements": ["..."],
+      "owner_role": "...",
+      "delivery_model": {
+        "estimated_duration": "...",
+        "team": ["Platform Engineering", "Security"],
+        "change_scope": "Tenant | ManagementGroup | Subscription"
+      }
+    }
+  ],
+  "backlog": {
+    "epics": [
+      {
+        "epic_id": "EPIC-001",
+        "title": "...",
+        "initiative_id": "INIT-001",
+        "capabilities": [
+          {
+            "capability": "...",
+            "features": ["..."]
+          }
+        ]
+      }
+    ]
+  },
+  "maturity_trajectory": {
+    "current_maturity_percent": 0,
+    "projected_30_day_percent": 0,
+    "projected_60_day_percent": 0,
+    "projected_90_day_percent": 0,
+    "assumptions": ["..."]
+  },
+  "dependency_graph": [
+    {
+      "action": "...",
+      "depends_on": ["..."],
+      "phase": "30_days | 60_days | 90_days"
+    }
+  ],
+  "critical_path": ["action that blocks everything else"]
+}
+
+Cluster failed and manual controls into 5–10 initiatives.
+
+Write outcomes, not tasks.
+Actions must begin with a measurable platform outcome.
+Never start with Enable, Deploy, Create, Configure.
+Do NOT say: "Deploy Azure Firewall"
+Instead say: "Establish centralized egress control and east-west traffic inspection for all landing zones"
+
+If management_group_hierarchy is provided:
+- Use it to determine whether the platform MG structure already exists
+- Check whether subscriptions are correctly placed under their parent MGs
+- If platform/connectivity/identity MGs exist:
+  Focus on policy inheritance, RBAC model, subscription placement, landing zone onboarding
+  Do NOT recommend creating MGs that already exist
+- If platform MGs are missing:
+  Focus on MG creation as a prerequisite before onboarding
+- If a MG exists but has no children / subscriptions:
+  Prioritize subscription placement and workload migration over structural changes
+- Always reference the actual hierarchy in your reasoning
+
+Sequencing rules from signals:
+- Missing platform MG → 30_days: establish MG structure (Govern)
+- Policy compliance below 50% → 30_days: policy baseline (Govern)
+- Diagnostics coverage below 30% → 30_days: central logging (Manage)
+- No hub-spoke detected → 60_days: network topology (Ready)
+- Defender coverage partial → 60_days: security baseline (Secure)
+- Identity logs not centralized → 90_days: identity integration (Secure)
+
+Blast radius rules:
+- Governance / MG / Policy / Logging = High
+- Cross-domain impact = High
+- Subscription-only issues = Medium
+- Advisory-only = Low
+
+Use execution_context to validate feasibility:
+- management_group_access false → MG changes require tenant-root elevation (dependency)
+- subscription_count_visible is 1 → sequence platform first, expand later
+- identity_type is user → note assessment reflects user-scoped visibility
+
+For each initiative, populate dependencies and permission_requirements.
+Group independent initiatives into parallel_execution_groups.
+Initiatives with unmet dependencies must not share a group with their prerequisite.
+
+If delta is provided:
+- Compare previous and current maturity and section scores
+- Describe progress, stagnation, and regression
+- Adjust initiative priorities accordingly
+- Call out partially or fully completed initiatives
+
+For maturity_trajectory:
+- Use overall_maturity as base
+- Estimate projected % at 30/60/90 days assuming the roadmap is executed
+- List key assumptions
+
+For backlog:
+- Map each initiative to an epic
+- Break each epic into capabilities and features suitable for Azure DevOps / GitHub Projects
+
+Assessment Data:
+{{PAYLOAD}}

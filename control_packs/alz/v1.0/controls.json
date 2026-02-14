@@ -1,0 +1,224 @@
+{
+  "pack_id": "alz-v1.0",
+  "name": "Azure Landing Zone — V1 Starter",
+  "version": "1.0.0",
+  "description": "21 automated control evaluators covering Networking, Governance, and Security design areas.",
+
+  "design_areas": {
+    "network": {
+      "label": "Network Topology & Connectivity",
+      "controls": ["e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5"]
+    },
+    "governance": {
+      "label": "Governance & Policy",
+      "controls": ["2df27ee4", "61623a76", "92481607", "8bbac757", "5c986cb2", "3829e7e3", "d8a2adb1", "49b82111"]
+    },
+    "security": {
+      "label": "Security & Compliance",
+      "controls": ["09945bda", "77425f48", "36a72a48", "15833ee7", "a56888b2", "67e7a8ed", "1cf0b8da"]
+    }
+  },
+
+  "controls": {
+    "e6c4cfd3": {
+      "name": "Azure Firewall Presence",
+      "full_id": "e6c4cfd3-e504-4547-a244-7ec66138a720",
+      "design_area": "network",
+      "evaluator_module": "evaluators.networking",
+      "required_signals": ["azure_firewalls"],
+      "severity": "High",
+      "caf_guidance": "Plan for traffic inspection",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+    },
+    "e8bbac75": {
+      "name": "Hub-Spoke Topology",
+      "full_id": "e8bbac75-7155-49ab-a153-e8908ae28c84",
+      "design_area": "network",
+      "evaluator_module": "evaluators.networking",
+      "required_signals": ["vnets", "azure_firewalls"],
+      "severity": "High",
+      "caf_guidance": "Define an Azure network topology",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+    },
+    "3c5a808d": {
+      "name": "Public IP Governance",
+      "full_id": "3c5a808d-c695-4c14-a63c-c7ab7a510e41",
+      "design_area": "network",
+      "evaluator_module": "evaluators.networking",
+      "required_signals": ["public_ips"],
+      "severity": "Medium",
+      "caf_guidance": "Plan for inbound and outbound internet connectivity",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity"
+    },
+    "0c47f486": {
+      "name": "Public IP SKU Standard",
+      "full_id": "0c47f486-656d-4699-8c30-edef5b8a93c4",
+      "design_area": "network",
+      "evaluator_module": "evaluators.networking",
+      "required_signals": ["public_ips"],
+      "severity": "Medium",
+      "caf_guidance": null,
+      "caf_url": null
+    },
+    "088137f5": {
+      "name": "DDoS Protection",
+      "full_id": "088137f5-e6c4-4cfd-9e50-4547c2447ec6",
+      "design_area": "network",
+      "evaluator_module": "evaluators.networking",
+      "required_signals": ["vnets"],
+      "severity": "High",
+      "caf_guidance": "Plan for traffic inspection",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+    },
+    "2df27ee4": {
+      "name": "MG Hierarchy Depth",
+      "full_id": "2df27ee4-12e7-4f98-9f63-04722dd69c5b",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["mg_hierarchy"],
+      "severity": "Medium",
+      "caf_guidance": "Resource organization — Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+    },
+    "61623a76": {
+      "name": "Platform Management Group",
+      "full_id": "61623a76-5a91-47e1-b348-ef254c27d42e",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["mg_hierarchy"],
+      "severity": "Medium",
+      "caf_guidance": "Resource organization — Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+    },
+    "92481607": {
+      "name": "Landing Zones Management Group",
+      "full_id": "92481607-d5d1-4e4e-9146-58d3558fd772",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["mg_hierarchy"],
+      "severity": "Medium",
+      "caf_guidance": "Resource organization — Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+    },
+    "8bbac757": {
+      "name": "Connectivity Management Group",
+      "full_id": "8bbac757-1559-4ab9-853e-8908ae28c84c",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["mg_hierarchy"],
+      "severity": "Medium",
+      "caf_guidance": "Resource organization — Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+    },
+    "5c986cb2": {
+      "name": "Policy Initiatives Assigned",
+      "full_id": "5c986cb2-9131-456a-8247-6e49f541acdc",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["policy_assignments"],
+      "severity": "High",
+      "caf_guidance": "Governance design area",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance"
+    },
+    "3829e7e3": {
+      "name": "Policy Assignment Count",
+      "full_id": "3829e7e3-1618-4368-9a04-77a209945bda",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["policy_assignments"],
+      "severity": "High",
+      "caf_guidance": "Governance design area",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance"
+    },
+    "d8a2adb1": {
+      "name": "Policy Compliance Percentage",
+      "full_id": "d8a2adb1-17d6-4326-af62-5ca44e5695f2",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["policy_compliance_summary"],
+      "severity": "Medium",
+      "caf_guidance": "Governance design area",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance"
+    },
+    "49b82111": {
+      "name": "Noncompliant Resource Count",
+      "full_id": "49b82111-2df2-47ee-912e-7f983f630472",
+      "design_area": "governance",
+      "evaluator_module": "evaluators.governance",
+      "required_signals": ["policy_compliance_summary"],
+      "severity": "High",
+      "caf_guidance": null,
+      "caf_url": null
+    },
+    "09945bda": {
+      "name": "Defender CSPM Enabled",
+      "full_id": "09945bda-4333-44f2-9911-634182ba5275",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["defender_pricings"],
+      "severity": "High",
+      "caf_guidance": "Security design area",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security"
+    },
+    "77425f48": {
+      "name": "Defender CWP Coverage",
+      "full_id": "77425f48-ecba-43a0-aeac-a3ac733ccc6a",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["defender_pricings"],
+      "severity": "High",
+      "caf_guidance": "Security design area",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security"
+    },
+    "36a72a48": {
+      "name": "Defender for Servers",
+      "full_id": "36a72a48-fffe-4c40-9747-0ab5064355ba",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["defender_pricings"],
+      "severity": "High",
+      "caf_guidance": null,
+      "caf_url": null
+    },
+    "15833ee7": {
+      "name": "Secure Score Threshold",
+      "full_id": "15833ee7-ad6c-46d3-9331-65c7acbe44ab",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["defender_secure_score"],
+      "severity": "Medium",
+      "caf_guidance": null,
+      "caf_url": null
+    },
+    "a56888b2": {
+      "name": "Centralized Security Visibility",
+      "full_id": "a56888b2-7e83-4404-bd31-b886528502d1",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["defender_secure_score", "diagnostic_settings_sample"],
+      "severity": "High",
+      "caf_guidance": null,
+      "caf_url": null
+    },
+    "67e7a8ed": {
+      "name": "Diagnostics Coverage",
+      "full_id": "67e7a8ed-4b30-4e38-a3f2-9812b2363cef",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["diagnostic_settings_sample"],
+      "severity": "Medium",
+      "caf_guidance": "Management design area",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+    },
+    "1cf0b8da": {
+      "name": "Diagnostics for Identity (Entra ID)",
+      "full_id": "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1",
+      "design_area": "security",
+      "evaluator_module": "evaluators.security",
+      "required_signals": ["diagnostic_settings_sample"],
+      "severity": "Medium",
+      "caf_guidance": null,
+      "caf_url": null
+    }
+  }
+}

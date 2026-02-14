@@ -1,0 +1,113 @@
+"""Control pack loader — discovers and loads versioned control packs.
+
+Usage:
+    from control_packs.loader import load_pack, list_packs
+    pack = load_pack("alz", "v1.0")
+    pack.signals   # signal definitions
+    pack.controls  # control definitions
+"""
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+
+@dataclass
+class ControlPack:
+    """A loaded control pack with its signal and control definitions."""
+    pack_id: str
+    name: str
+    version: str
+    description: str
+    signals: dict[str, dict[str, Any]]
+    controls: dict[str, dict[str, Any]]
+    design_areas: dict[str, dict[str, Any]]
+    manifest: dict[str, Any]
+
+    def signal_bus_names(self) -> list[str]:
+        """Return all signal_bus_name values (non-null) for preflight cross-ref."""
+        return [
+            s["signal_bus_name"]
+            for s in self.signals.values()
+            if s.get("signal_bus_name")
+        ]
+
+    def signals_for_preflight_probe(self, probe_name: str) -> list[str]:
+        """Return signal names that depend on a specific preflight probe."""
+        return [
+            name for name, s in self.signals.items()
+            if s.get("preflight_probe") == probe_name
+        ]
+
+    def controls_in_area(self, area: str) -> list[str]:
+        """Return control short IDs in a design area."""
+        da = self.design_areas.get(area, {})
+        return da.get("controls", [])
+
+    def control_count(self) -> int:
+        return len(self.controls)
+
+
+PACKS_DIR = Path(__file__).parent
+
+
+def list_packs() -> list[dict[str, str]]:
+    """Discover all available control packs under control_packs/."""
+    packs = []
+    for manifest_path in PACKS_DIR.rglob("manifest.json"):
+        try:
+            with open(manifest_path, encoding="utf-8") as f:
+                m = json.load(f)
+            packs.append({
+                "pack_id": m.get("pack_id", "unknown"),
+                "name": m.get("name", ""),
+                "version": m.get("version", ""),
+                "path": str(manifest_path.parent),
+            })
+        except Exception:
+            continue
+    return packs
+
+
+def load_pack(family: str = "alz", version: str = "v1.0") -> ControlPack:
+    """
+    Load a control pack by family and version.
+
+    Args:
+        family: Pack family directory name (e.g. "alz")
+        version: Version directory name (e.g. "v1.0")
+
+    Returns:
+        ControlPack with all definitions loaded.
+    """
+    pack_dir = PACKS_DIR / family / version
+
+    # Load manifest
+    manifest_path = pack_dir / "manifest.json"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Control pack not found: {pack_dir}")
+    with open(manifest_path, encoding="utf-8") as f:
+        manifest = json.load(f)
+
+    # Load signals
+    signals_path = pack_dir / manifest.get("signals_ref", "signals.json")
+    with open(signals_path, encoding="utf-8") as f:
+        signals_data = json.load(f)
+
+    # Load controls
+    controls_path = pack_dir / manifest.get("controls_ref", "controls.json")
+    with open(controls_path, encoding="utf-8") as f:
+        controls_data = json.load(f)
+
+    return ControlPack(
+        pack_id=manifest.get("pack_id", ""),
+        name=manifest.get("name", ""),
+        version=manifest.get("version", ""),
+        description=manifest.get("description", ""),
+        signals=signals_data.get("signals", {}),
+        controls=controls_data.get("controls", {}),
+        design_areas=controls_data.get("design_areas", {}),
+        manifest=manifest,
+    )
