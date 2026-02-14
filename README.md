@@ -544,40 +544,6 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 
 ---
 
-## Extending the Tool
-
-### Adding a New Evaluator
-
-1. Create a file in `evaluators/` (e.g., `evaluators/identity.py`)
-2. Import and use the `register_evaluator` decorator from `evaluators/registry.py`
-3. Map your evaluator to ALZ checklist GUIDs
-4. Import the module in `scan.py` (noqa import to trigger registration)
-
-### Adding a New Signal Provider
-
-1. Create a provider in `signals/providers/`
-2. Register it with the SignalBus
-3. Your evaluators can then request signals by type
-
-### Adding a New AI Pass
-
-1. Create a prompt template in `ai/prompts/` (`.txt` file)
-2. Add the pass to `ReasoningEngine.generate()` in `ai/engine/reasoning_engine.py`
-3. The pass will receive the advisor payload and return structured JSON
-
-### Swapping the AI Provider
-
-Implement the `ReasoningProvider` protocol from `ai/engine/reasoning_provider.py`:
-
-```python
-class ReasoningProvider(Protocol):
-    def complete(self, template: str, payload: dict, *, max_tokens: int = 4000) -> dict: ...
-```
-
-Then pass your provider to `ReasoningEngine(your_provider, PromptPack())`.
-
----
-
 ## Troubleshooting
 
 | Problem | Solution |
@@ -595,4 +561,4 @@ Then pass your provider to `ReasoningEngine(your_provider, PromptPack())`.
 
 ## License
 
-MIT
+Copyright (c) 2026 Rebekah Midkiff
