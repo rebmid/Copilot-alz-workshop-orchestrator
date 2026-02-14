@@ -26,6 +26,7 @@ from signals.registry import SignalBus
 from control_packs.loader import load_pack
 from engine.assessment_runtime import AssessmentRuntime
 from agent.intent_orchestrator import IntentOrchestrator
+from agent.why_reasoning import explain_why
 
 # Import evaluator modules so register_evaluator() calls fire
 import evaluators.networking   # noqa: F401
@@ -80,12 +81,34 @@ def parse_args():
                    help="Run preflight access probes and exit")
     p.add_argument("--on-demand", metavar="INTENT",
                    help="Run on-demand evaluation via WorkshopAgent (e.g. enterprise_readiness)")
+    p.add_argument("--why", metavar="DOMAIN",
+                   help="Explain why a domain is a top risk (e.g. Networking, Security)")
+    p.add_argument("--demo", action="store_true",
+                   help="Run in demo mode using sample data (no Azure connection required)")
     return p.parse_args()
 
 
 # ------------------------------------------------------------------
 # Main
 # ------------------------------------------------------------------
+
+def _load_run(demo: bool = False) -> dict:
+    """Load a run JSON — either the latest real run or the demo fixture."""
+    import glob
+    if demo:
+        demo_path = os.path.join(os.path.dirname(__file__), "demo", "demo_run.json")
+        if not os.path.exists(demo_path):
+            raise SystemExit("demo/demo_run.json not found. Run a full scan first, then copy a run file there.")
+        with open(demo_path, encoding="utf-8") as f:
+            return json.load(f)
+    # Find latest run in out/
+    run_files = sorted(glob.glob(os.path.join(OUT_DIR, "run-*.json")), reverse=True)
+    if not run_files:
+        raise SystemExit("No run files found in out/. Run a full scan first (python scan.py).")
+    with open(run_files[0], encoding="utf-8") as f:
+        print(f"  Using: {run_files[0]}")
+        return json.load(f)
+
 
 def main():
     args = parse_args()
@@ -94,6 +117,26 @@ def main():
     print("╔══════════════════════════════════════╗")
     print("║   Azure Landing Zone Assessor        ║")
     print("╚══════════════════════════════════════╝")
+
+    # ── Why-Risk reasoning (runs on existing data — no Azure needed) ──
+    if args.why:
+        run = _load_run(demo=args.demo)
+        provider = None
+        if enable_ai:
+            try:
+                provider = AOAIReasoningProvider()
+            except EnvironmentError as e:
+                print(f"  ⚠ AI disabled: {e}")
+        result = explain_why(run, args.why, provider=provider, verbose=True)
+        # Save result
+        os.makedirs(OUT_DIR, exist_ok=True)
+        why_path = os.path.join(OUT_DIR, f"why-{args.why.lower()}.json")
+        with open(why_path, "w", encoding="utf-8") as f:
+            json.dump(result, f, indent=2, default=str)
+        print(f"\n✓ Saved: {why_path}")
+        if args.pretty:
+            print(json.dumps(result, indent=2, default=str))
+        return
 
     # ── Timing + paths ────────────────────────────────────────────
     now = datetime.now(timezone.utc)

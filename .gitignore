@@ -19,6 +19,9 @@ out/
 *.xlsx
 *.html
 !reporting/report_template.html
+
+# One-shot scripts
+_make_demo.py
 run_*.json
 preflight.json
 target_architecture.json

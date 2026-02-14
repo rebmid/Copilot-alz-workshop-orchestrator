@@ -17,8 +17,25 @@ import json
 import requests
 from typing import Any
 
-from mcp import ClientSession
-from mcp.client.streamable_http import streamable_http_client
+# Lazy MCP imports — avoids hard failure when mcp SDK is not installed
+# (e.g. --why / --demo mode only needs mcp_retriever's REST fallback)
+ClientSession = None
+streamable_http_client = None
+
+def _ensure_mcp():
+    """Import MCP SDK on first real use; raise clear error if missing."""
+    global ClientSession, streamable_http_client
+    if ClientSession is not None:
+        return
+    try:
+        from mcp import ClientSession as _CS
+        from mcp.client.streamable_http import streamable_http_client as _SHC
+        ClientSession = _CS
+        streamable_http_client = _SHC
+    except ImportError as exc:
+        raise ImportError(
+            "MCP SDK not installed. Install with: pip install mcp"
+        ) from exc
 
 
 # ── MCP endpoint ──────────────────────────────────────────────────
@@ -33,6 +50,7 @@ _TIMEOUT = 30
 
 async def _mcp_call_async(tool_name: str, arguments: dict) -> dict | None:
     """Invoke an MCP tool using the official SDK's Streamable HTTP client."""
+    _ensure_mcp()
     try:
         async with streamable_http_client(MCP_URL) as (read, write, _):
             async with ClientSession(read, write) as session:

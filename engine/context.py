@@ -2,8 +2,9 @@ from dataclasses import dataclass, asdict
 import json
 import os
 import subprocess
+import requests
 from azure.identity import AzureCliCredential
-from azure.mgmt.resource.subscriptions import SubscriptionClient
+
 
 @dataclass
 class ExecutionContext:
@@ -28,8 +29,19 @@ def _get_tenant_from_az_cli() -> str | None:
 
 
 def discover_execution_context(credential: AzureCliCredential) -> dict:
-    sub_client = SubscriptionClient(credential)
-    subs = [s.subscription_id for s in sub_client.subscriptions.list() if s.subscription_id]
+    # List subscriptions via ARM REST API (works with all azure-mgmt-resource versions)
+    token = credential.get_token("https://management.azure.com/.default").token
+    resp = requests.get(
+        "https://management.azure.com/subscriptions?api-version=2022-01-01",
+        headers={"Authorization": f"Bearer {token}"},
+        timeout=30,
+    )
+    resp.raise_for_status()
+    subs = [
+        s["subscriptionId"]
+        for s in resp.json().get("value", [])
+        if s.get("state") == "Enabled"
+    ]
 
     # Tenant: resolve from active Azure CLI session
     tenant_id = _get_tenant_from_az_cli()

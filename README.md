@@ -83,6 +83,9 @@ lz-assessor/
 ├── .env                         # Environment variables (Azure OpenAI keys)
 ├── .gitignore                   # Excludes secrets, outputs, caches
 │
+├── demo/                        # Demo fixtures (no Azure required)
+│   └── demo_run.json            #   Sanitized assessment run for --demo mode
+│
 ├── docs/                        # Documentation assets
 │   └── demo/                    #   Demo screenshots for README
 │
@@ -155,6 +158,7 @@ lz-assessor/
 │
 ├── agent/                       # Agent / workshop mode
 │   ├── intent_orchestrator.py   #   Routes user intents to evaluators
+│   ├── why_reasoning.py         #   "Why is X the top risk?" causal reasoning agent
 │   ├── workshop.py              #   Workshop agent loop
 │   └── session.py               #   Session state management
 │
@@ -168,6 +172,7 @@ lz-assessor/
 │
 └── out/                         # Output directory (git-ignored)
     ├── run-YYYYMMDD-HHMM.json   #   Raw assessment data
+    ├── why-{domain}.json         #   Causal reasoning output (--why mode)
     ├── report.html               #   Executive HTML report
     ├── CSA_Workbook_v1.xlsx      #   CSA deliverable workbook
     └── target_architecture.json  #   AI-generated target architecture
@@ -286,6 +291,9 @@ python scan.py [OPTIONS]
 | `--tenant-wide` | Scan all visible subscriptions across the tenant (default: Resource Graph subscriptions only) |
 | `--pretty` | Pretty-print the final JSON to stdout after the run |
 | `--preflight` | Run preflight access probes and exit — validates permissions without a full assessment |
+| `--why DOMAIN` | Explain **why** a domain is the top risk — runs causal reasoning over an existing assessment |
+| `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
+| `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
 
 ### Examples
 
@@ -301,6 +309,15 @@ python scan.py --preflight
 
 # Full run, print JSON to console
 python scan.py --pretty
+
+# Explain why Networking is the top risk (uses latest run)
+python scan.py --why Networking
+
+# Same, but using the bundled demo data (no Azure needed)
+python scan.py --why Networking --demo
+
+# Demo mode without AI — returns raw evidence payload
+python scan.py --why Networking --demo --no-ai
 ```
 
 ---
@@ -460,6 +477,35 @@ This runs the **IntentOrchestrator** which:
 3. Runs the assessment runtime against the targeted scope
 4. Optionally generates an AI explanation of the results
 5. Saves output to `out/run-*-on-demand.json`
+
+---
+
+## Why-Risk Reasoning (`--why`)
+
+After a full assessment, drill into **why** a specific domain was flagged as the top risk:
+
+```bash
+python scan.py --why Networking --demo
+```
+
+This runs a **6-step causal reasoning pipeline** over the existing assessment data:
+
+| Step | What it does |
+|---|---|
+| 1. **Find risk** | Matches the domain to a top business risk from the executive summary |
+| 2. **Failing controls** | Extracts every Fail/Partial control tied to the risk |
+| 3. **Dependency impact** | Queries the knowledge graph for downstream controls blocked by failures |
+| 4. **Roadmap initiatives** | Finds transformation plan actions that address the affected controls |
+| 5. **Learn grounding** | Attaches Microsoft Learn references to each initiative via MCP |
+| 6. **AI causal explanation** | Sends the assembled evidence to the reasoning model for root-cause analysis |
+
+The AI output includes:
+- **Root cause** — why the domain is the top risk (current-state framing)
+- **Business impact** — specific consequences tied to the evidence
+- **Fix sequence** — ordered remediation steps with dependency rationale and Learn URLs
+- **Cascade effect** — which downstream controls will automatically improve
+
+Output is saved to `out/why-{domain}.json`. Use `--no-ai` to get the raw evidence payload without the AI narration.
 
 ---
 
