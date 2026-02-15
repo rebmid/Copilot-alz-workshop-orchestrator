@@ -423,9 +423,17 @@ def build_csa_workbook(
     ]:
         ws.column_dimensions[col_letter].width = width
 
-    # ── Save ──────────────────────────────────────────────────────
+    # ── Save (with fallback if file is locked) ─────────────────────
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    wb.save(output_path)
+    try:
+        wb.save(output_path)
+    except PermissionError:
+        stem = Path(output_path).stem
+        ts = datetime.now().strftime("%H%M%S")
+        fallback = Path(output_path).with_name(f"{stem}_{ts}.xlsx")
+        wb.save(str(fallback))
+        print(f"  ⚠ {Path(output_path).name} is locked (open in Excel?). Saved as {fallback.name}")
+        output_path = str(fallback)
     print(f"  ✓ CSA workbook → {output_path}  ({len(results)} controls, "
           f"{len(target.get('assumptions', []))} assumptions)")
     return output_path
