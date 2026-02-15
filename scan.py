@@ -26,7 +26,9 @@ from signals.registry import SignalBus
 from control_packs.loader import load_pack
 from engine.assessment_runtime import AssessmentRuntime
 from agent.intent_orchestrator import IntentOrchestrator
-from agent.why_reasoning import explain_why, print_why_report
+from agent.run_loader import load_run
+from agent.why_reasoning import build_why_payload, print_why_report
+from agent.why_ai import generate_why_explanation
 
 # Import evaluator modules so register_evaluator() calls fire
 import evaluators.networking   # noqa: F401
@@ -92,24 +94,6 @@ def parse_args():
 # Main
 # ------------------------------------------------------------------
 
-def _load_run(demo: bool = False) -> dict:
-    """Load a run JSON — either the latest real run or the demo fixture."""
-    import glob
-    if demo:
-        demo_path = os.path.join(os.path.dirname(__file__), "demo", "demo_run.json")
-        if not os.path.exists(demo_path):
-            raise SystemExit("demo/demo_run.json not found. Run a full scan first, then copy a run file there.")
-        with open(demo_path, encoding="utf-8") as f:
-            return json.load(f)
-    # Find latest run in out/
-    run_files = sorted(glob.glob(os.path.join(OUT_DIR, "run-*.json")), reverse=True)
-    if not run_files:
-        raise SystemExit("No run files found in out/. Run a full scan first (python scan.py).")
-    with open(run_files[0], encoding="utf-8") as f:
-        print(f"  Using: {run_files[0]}")
-        return json.load(f)
-
-
 def main():
     args = parse_args()
     enable_ai = not args.no_ai
@@ -120,26 +104,30 @@ def main():
 
     # ── Why-Risk reasoning (runs on existing data — no Azure needed) ──
     if args.why:
-        run = _load_run(demo=args.demo)
-        provider = None
-        if enable_ai:
+        run = load_run(demo=args.demo)
+
+        # Step 1: deterministic payload
+        payload = build_why_payload(run, args.why, verbose=True)
+
+        # Step 2: optional AI explanation
+        if enable_ai and "error" not in payload:
             try:
                 provider = AOAIReasoningProvider()
+                payload["ai_explanation"] = generate_why_explanation(provider, payload)
             except EnvironmentError as e:
                 print(f"  ⚠ AI disabled: {e}")
-        result = explain_why(run, args.why, provider=provider, verbose=True)
 
-        # Pretty terminal report
-        print_why_report(result)
+        # Step 3: terminal display
+        print_why_report(payload)
 
-        # Save JSON
+        # Step 4: save JSON
         os.makedirs(OUT_DIR, exist_ok=True)
         why_path = os.path.join(OUT_DIR, f"why-{args.why.lower()}.json")
         with open(why_path, "w", encoding="utf-8") as f:
-            json.dump(result, f, indent=2, default=str)
+            json.dump(payload, f, indent=2, default=str)
         print(f"  Saved: {why_path}")
         if args.pretty:
-            print(json.dumps(result, indent=2, default=str))
+            print(json.dumps(payload, indent=2, default=str))
         return
 
     # ── Timing + paths ────────────────────────────────────────────
