@@ -1,97 +1,582 @@
 <html>
 <head>
-  <title>Azure Landing Zone Assessment</title>
+  <title>Azure Landing Zone — Platform Readiness Report</title>
   <style>
-    body { font-family: Arial; margin: 24px; }
-    .card { border: 1px solid #ddd; padding: 16px; border-radius: 8px; margin-bottom: 16px; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .metric { font-size: 28px; font-weight: bold; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; vertical-align: top; }
-    .tag { padding: 2px 8px; border-radius: 10px; background: #eee; display: inline-block; }
+    :root {
+      --bg: #f7f8fa;
+      --card-bg: #fff;
+      --border: #e0e3e8;
+      --accent: #0078d4;
+      --accent-dark: #005a9e;
+      --danger: #d13438;
+      --warn: #f7630c;
+      --success: #107c10;
+      --muted: #6b7280;
+      --text: #1b1b1f;
+      --heading: #1b1b1f;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 28px 64px; }
+
+    /* ── Nav ─────────────────────────────────────────────── */
+    nav.toc { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid var(--border); padding: 10px 28px; margin: 0 -28px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+    nav.toc a { font-size: 13px; color: var(--accent); text-decoration: none; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+    nav.toc a:hover { background: #e8f0fe; }
+
+    /* ── Typography ──────────────────────────────────────── */
+    h1 { font-size: 26px; color: var(--heading); margin-bottom: 4px; }
+    h1 small { font-size: 14px; color: var(--muted); font-weight: 400; }
+    h2 { font-size: 18px; color: var(--heading); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); display: inline-block; }
+    h3 { font-size: 15px; color: var(--heading); margin-bottom: 8px; }
+
+    /* ── Cards ────────────────────────────────────────────── */
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
+    .card + .card { margin-top: 0; }
+
+    /* ── Grid helpers ─────────────────────────────────────── */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 800px) { .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+    /* ── KPI Tiles ────────────────────────────────────────── */
+    .kpi { text-align: center; padding: 18px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card-bg); }
+    .kpi .value { font-size: 36px; font-weight: 700; }
+    .kpi .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .kpi.danger .value { color: var(--danger); }
+    .kpi.warn .value { color: var(--warn); }
+    .kpi.ok .value { color: var(--success); }
+
+    /* ── Tables ───────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-weight: 600; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--heading); font-size: 13px; text-transform: uppercase; letter-spacing: .3px; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Tags / badges ────────────────────────────────────── */
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .tag-critical { background: #fde7e9; color: var(--danger); }
+    .tag-high { background: #fff4ce; color: #7a6400; }
+    .tag-medium { background: #e8f0fe; color: var(--accent); }
+    .tag-low { background: #e6f4ea; color: var(--success); }
+    .tag-phase { background: #f3f2f1; color: #323130; }
+
+    /* ── Trajectory bar ───────────────────────────────────── */
+    .trajectory { display: flex; align-items: center; gap: 0; margin: 16px 0; }
+    .trajectory .step { flex: 1; text-align: center; padding: 14px 8px; border: 1px solid var(--border); position: relative; background: var(--card-bg); }
+    .trajectory .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .trajectory .step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+    .trajectory .step .pct { font-size: 28px; font-weight: 700; }
+    .trajectory .step .lbl { font-size: 12px; color: var(--muted); }
+    .trajectory .arrow { font-size: 22px; color: var(--accent); padding: 0 2px; flex-shrink: 0; }
+
+    /* ── Toggle modes ─────────────────────────────────────── */
+    .mode-bar { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+    .mode-btn { padding: 6px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: all .15s; }
+    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; }
+
+    /* ── Evidence vs assumption ────────────────────────────── */
+    .conf-evidence { color: var(--success); font-weight: 600; }
+    .conf-assumption { color: var(--warn); font-weight: 600; }
+
+    /* ── Question cards ───────────────────────────────────── */
+    .q-domain { margin-bottom: 16px; }
+    .q-domain h3 { margin-bottom: 6px; }
+    .q-item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .q-item:last-child { border-bottom: none; }
+    .q-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Section spacing ──────────────────────────────────── */
+    .section { margin-bottom: 32px; }
+
+    /* ── Print ────────────────────────────────────────────── */
+    @media print {
+      nav.toc { display: none; }
+      .mode-bar { display: none; }
+      .mode-panel { display: block !important; }
+      body { background: #fff; }
+      .container { max-width: 100%; padding: 12px; }
+    }
   </style>
 </head>
 <body>
+<div class="container">
 
-<h1>Azure Landing Zone Assessment Report</h1>
+<!-- ════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ════════════════════════════════════════════════════════════════ -->
+<nav class="toc">
+  <a href="#snapshot">Platform Readiness</a>
+  <a href="#blockers">Adoption Blockers</a>
+  <a href="#sequence">Remediation Sequence</a>
+  <a href="#trajectory">Maturity Trajectory</a>
+  <a href="#capabilities">Capability Unlock</a>
+  <a href="#deepdive">Domain Deep Dive</a>
+  <a href="#confidence">Scope &amp; Confidence</a>
+  <a href="#validation">Customer Validation</a>
+</nav>
 
-<div class="card">
-  <h2>Scorecard</h2>
-  <div class="grid">
-    <div>
-      <div class="metric">
-        {% if scoring.overall_maturity_percent is not none %}
-          {{ scoring.overall_maturity_percent }}%
-        {% else %}
-          N/A
-        {% endif %}
-      </div>
-      <div>Overall maturity (automated controls)</div>
+<h1>Azure Landing Zone — Platform Readiness Report
+  <br><small>{{ meta.timestamp[:10] if meta and meta.timestamp else '' }} · Run {{ meta.run_id if meta else '' }}</small>
+</h1>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1. PLATFORM READINESS SNAPSHOT
+     ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="snapshot">
+  <h2>1 &middot; Platform Readiness Snapshot</h2>
+
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="kpi {{ 'danger' if readiness_snapshot.overall_score is not none and readiness_snapshot.overall_score < 40 else ('warn' if readiness_snapshot.overall_score is not none and readiness_snapshot.overall_score < 65 else 'ok') }}">
+      <div class="value">{% if readiness_snapshot.overall_score is not none %}{{ readiness_snapshot.overall_score }}%{% else %}N/A{% endif %}</div>
+      <div class="label">Overall Maturity</div>
     </div>
-    <div>
-      <div class="metric">{{ scoring.automation_coverage.data_driven }}</div>
-      <div>Data-driven (signal evidence)</div>
+    <div class="kpi">
+      <div class="value">{{ readiness_snapshot.automated_controls }}/{{ readiness_snapshot.total_controls }}</div>
+      <div class="label">Automated Controls</div>
     </div>
-    <div>
-      <div class="metric">{{ scoring.automation_coverage.requires_customer_input }}</div>
-      <div>Requires customer input</div>
+    <div class="kpi {{ 'danger' if readiness_snapshot.readiness_score is not none and readiness_snapshot.readiness_score < 30 else ('warn' if readiness_snapshot.readiness_score is not none and readiness_snapshot.readiness_score < 60 else 'ok') }}">
+      <div class="value">{% if readiness_snapshot.readiness_score is not none %}{{ readiness_snapshot.readiness_score }}{% else %}N/A{% endif %}</div>
+      <div class="label">Enterprise Readiness Score</div>
+    </div>
+    <div class="kpi">
+      <div class="value">{% if readiness_snapshot.ready_for_enterprise_scale is not none %}{{ 'Yes' if readiness_snapshot.ready_for_enterprise_scale else 'No' }}{% else %}N/A{% endif %}</div>
+      <div class="label">Enterprise-Scale Ready</div>
     </div>
   </div>
-  <p style="margin-top:8px;color:#666;">Assessment coverage: {{ scoring.automation_coverage.total_controls }} controls total</p>
+
+  {% if readiness_snapshot.platform_readiness_text %}
+  <div class="card">
+    <h3>Platform Scale Implication</h3>
+    <p>{{ readiness_snapshot.platform_readiness_text }}</p>
+    {% if readiness_snapshot.max_subscriptions is not none %}
+    <p style="margin-top:8px;color:var(--muted);font-size:13px;">Estimated max supported subscriptions in current state: <strong>{{ readiness_snapshot.max_subscriptions }}</strong></p>
+    {% endif %}
+  </div>
+  {% endif %}
 </div>
 
-<div class="card">
-  <h2>Priority Improvement Areas</h2>
-  <table>
-    <tr>
-      <th>Section</th>
-      <th>Maturity</th>
-      <th>Status counts</th>
-    </tr>
-    {% for s in scoring.top_failing_sections %}
-    <tr>
-      <td>{{ s.section }}</td>
-      <td>
-        {% if s.maturity_percent is not none %}
-          {{ s.maturity_percent }}%
-        {% else %}
-          <span class="tag">No automation yet</span>
+<!-- ════════════════════════════════════════════════════════════════
+     2. LANDING ZONE ADOPTION BLOCKERS
+     ════════════════════════════════════════════════════════════════ -->
+{% if lz_blockers %}
+<div class="section" id="blockers">
+  <h2>2 &middot; Landing Zone Adoption Blockers</h2>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Capability Missing</th>
+        <th>Why This Blocks ALZ Adoption</th>
+        <th>Severity</th>
+        <th>Primary Remediation Initiative</th>
+      </tr>
+      {% for b in lz_blockers %}
+      <tr>
+        <td><strong>{{ b.capability }}</strong></td>
+        <td>{{ b.description }}</td>
+        <td><span class="tag tag-{{ b.severity | lower if b.severity else 'medium' }}">{{ b.severity or 'Medium' }}</span></td>
+        <td>{{ b.remediation_initiative }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     3. HIGHEST-IMPACT REMEDIATION SEQUENCE
+     ════════════════════════════════════════════════════════════════ -->
+{% if initiative_sequence %}
+<div class="section" id="sequence">
+  <h2>3 &middot; Highest-Impact Remediation Sequence</h2>
+  <div class="card">
+    <table>
+      <tr>
+        <th>#</th>
+        <th>Initiative</th>
+        <th>Controls</th>
+        <th>Depends On</th>
+        <th>Phase</th>
+        <th>Capability Unlocked</th>
+      </tr>
+      {% for s in initiative_sequence %}
+      <tr>
+        <td>{{ s.priority or loop.index }}</td>
+        <td><strong>{{ s.title }}</strong></td>
+        <td style="text-align:center;">{{ s.controls_count }}</td>
+        <td>
+          {% if s.depends_on %}
+            {% for dep in s.depends_on %}
+              <span style="font-size:13px;">{{ dep[:60] }}{% if not loop.last %},{% endif %}</span>
+            {% endfor %}
+          {% else %}
+            <span style="color:var(--muted);">—</span>
+          {% endif %}
+        </td>
+        <td>{% if s.phase %}<span class="tag tag-phase">{{ s.phase | replace('_', ' ') }}</span>{% endif %}</td>
+        <td style="font-size:13px;">{{ s.capability_unlocked }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     4. MATURITY AFTER ROADMAP EXECUTION
+     ════════════════════════════════════════════════════════════════ -->
+{% if trajectory %}
+<div class="section" id="trajectory">
+  <h2>4 &middot; Maturity After Roadmap Execution</h2>
+
+  <div class="trajectory">
+    <div class="step">
+      <div class="pct" style="color:var(--danger);">{{ trajectory.current_maturity_percent | default('?') }}%</div>
+      <div class="lbl">Current</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="pct" style="color:var(--warn);">{{ trajectory.projected_30_day_percent | default('?') }}%</div>
+      <div class="lbl">After Phase 1 (30 d)</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="pct" style="color:var(--accent);">{{ trajectory.projected_60_day_percent | default('?') }}%</div>
+      <div class="lbl">After Phase 2 (60 d)</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="pct" style="color:var(--success);">{{ trajectory.projected_90_day_percent | default('?') }}%</div>
+      <div class="lbl">After Phase 3 (90 d)</div>
+    </div>
+  </div>
+
+  {% if trajectory.assumptions %}
+  <div class="card" style="margin-top:8px;">
+    <h3>Assumptions</h3>
+    <ul style="padding-left:18px;font-size:13px;color:var(--muted);">
+      {% for a in trajectory.assumptions %}
+      <li>{{ a }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     5. CAPABILITY UNLOCK VIEW
+     ════════════════════════════════════════════════════════════════ -->
+{% if capability_unlock_map %}
+<div class="section" id="capabilities">
+  <h2>5 &middot; Capability Unlock View</h2>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Initiative</th>
+        <th>Platform Capability Enabled</th>
+        <th>ALZ Design Area</th>
+      </tr>
+      {% for c in capability_unlock_map %}
+      <tr>
+        <td><strong>{{ c.initiative }}</strong></td>
+        <td>{{ c.capability_enabled }}</td>
+        <td><span class="tag tag-medium">{{ c.alz_design_area }}</span></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     6. DOMAIN DEEP DIVE (ASSESSMENT MODE TOGGLE)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="deepdive">
+  <h2>6 &middot; Domain Deep Dive</h2>
+
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="switchMode(this, 'overview')">Overview</button>
+    <button class="mode-btn" onclick="switchMode(this, 'scale')">Scale</button>
+    <button class="mode-btn" onclick="switchMode(this, 'security')">Security</button>
+    <button class="mode-btn" onclick="switchMode(this, 'operations')">Operations</button>
+    <button class="mode-btn" onclick="switchMode(this, 'cost')">Cost</button>
+    <button class="mode-btn" onclick="switchMode(this, 'dataconf')">Data Confidence</button>
+  </div>
+
+  <!-- Overview -->
+  <div class="mode-panel active" id="mode-overview">
+    <div class="card">
+      <table>
+        <tr>
+          <th>Design Area</th>
+          <th>Maturity</th>
+          <th>Pass</th>
+          <th>Partial</th>
+          <th>Fail</th>
+          <th>Manual</th>
+          <th>Total</th>
+        </tr>
+        {% for s in scoring.section_scores %}
+        <tr>
+          <td><strong>{{ s.section }}</strong></td>
+          <td>
+            {% if s.maturity_percent is not none %}
+              <span style="color:{{ 'var(--danger)' if s.maturity_percent < 40 else ('var(--warn)' if s.maturity_percent < 65 else 'var(--success)') }}; font-weight:600;">{{ s.maturity_percent }}%</span>
+            {% else %}
+              <span style="color:var(--muted);">No signal</span>
+            {% endif %}
+          </td>
+          <td>{{ s.counts.get('Pass', 0) }}</td>
+          <td>{{ s.counts.get('Partial', 0) }}</td>
+          <td>{{ s.counts.get('Fail', 0) }}</td>
+          <td>{{ s.counts.get('Manual', 0) }}</td>
+          <td>{{ s.total_controls }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <!-- Scale -->
+  <div class="mode-panel" id="mode-scale">
+    <div class="card">
+      <h3>Scale — Management Groups, RBAC, Policy Scope</h3>
+      {% if assessment_modes.Scale %}
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        {% for s in assessment_modes.Scale %}
+        <tr>
+          <td>{{ s.section }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p style="color:var(--muted);">No scale-related sections with signal data.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Security -->
+  <div class="mode-panel" id="mode-security">
+    <div class="card">
+      <h3>Security — PIM, Private Endpoints, SOC Topology</h3>
+      {% if assessment_modes.Security %}
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        {% for s in assessment_modes.Security %}
+        <tr>
+          <td>{{ s.section }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p style="color:var(--muted);">No security-related sections with signal data.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Operations -->
+  <div class="mode-panel" id="mode-operations">
+    <div class="card">
+      <h3>Operations — Diagnostics, Alert→Action Mapping, Change Tracking</h3>
+      {% if assessment_modes.Operations %}
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        {% for s in assessment_modes.Operations %}
+        <tr>
+          <td>{{ s.section }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p style="color:var(--muted);">No operations sections with signal data.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Cost -->
+  <div class="mode-panel" id="mode-cost">
+    <div class="card">
+      <h3>Cost — Budgets, Forecast Delta, Idle Resources</h3>
+      {% if assessment_modes.Cost %}
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        {% for s in assessment_modes.Cost %}
+        <tr>
+          <td>{{ s.section }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+      {% else %}
+      <p style="color:var(--muted);">No cost-related sections with signal data.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Data Confidence -->
+  <div class="mode-panel" id="mode-dataconf">
+    <div class="card">
+      <h3>Data Confidence — Scope &amp; Signal Availability</h3>
+      <div class="grid-3" style="margin-bottom:12px;">
+        <div class="kpi">
+          <div class="value">{{ data_confidence.automated_controls }}</div>
+          <div class="label"><span class="conf-evidence">Evidence-based</span> controls</div>
+        </div>
+        <div class="kpi">
+          <div class="value">{{ data_confidence.manual_controls }}</div>
+          <div class="label"><span class="conf-assumption">Assumption-based</span> controls</div>
+        </div>
+        <div class="kpi">
+          <div class="value">{{ data_confidence.automation_percent }}%</div>
+          <div class="label">Automation Coverage</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);">
+        <strong>{{ data_confidence.automated_controls }}</strong> controls scored from live platform signals (evidence).
+        <strong>{{ data_confidence.manual_controls }}</strong> controls require customer input (assumption).
+        {% if data_confidence.limitations %}
+        <br>Limitations: {{ data_confidence.limitations | join(', ') }}
         {% endif %}
-      </td>
-      <td>
-        Pass: {{ s.counts.get("Pass", 0) }},
-        Partial: {{ s.counts.get("Partial", 0) }},
-        Fail: {{ s.counts.get("Fail", 0) }},
-        Manual: {{ s.counts.get("Manual", 0) }}
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
+      </p>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-  <h2>Most impactful gaps</h2>
-  <table>
-    <tr>
-      <th>Control</th>
-      <th>Status</th>
-      <th>Severity</th>
-      <th>Evidence</th>
-      <th>Risk Score</th>
-      <th>Question</th>
-    </tr>
-    {% for g in scoring.most_impactful_gaps %}
-    <tr>
-      <td>{{ g.control_id }}</td>
-      <td>{{ g.status }}</td>
-      <td>{{ g.severity or "N/A" }}</td>
-      <td>{{ g.evidence_count }}</td>
-      <td>{{ g.risk_score }}</td>
-      <td>{{ g.question }}</td>
-    </tr>
-    {% endfor %}
-  </table>
+<!-- ════════════════════════════════════════════════════════════════
+     7. ASSESSMENT SCOPE & CONFIDENCE
+     ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="confidence">
+  <h2>7 &middot; Assessment Scope &amp; Confidence</h2>
+  <div class="card">
+    <div class="grid-4" style="margin-bottom:14px;">
+      <div class="kpi">
+        <div class="value">{{ data_confidence.subscription_count }}</div>
+        <div class="label">Subscriptions Assessed</div>
+      </div>
+      <div class="kpi">
+        <div class="value">{{ 'Yes' if data_confidence.mg_visibility else 'No' }}</div>
+        <div class="label">MG Hierarchy Visible</div>
+      </div>
+      <div class="kpi">
+        <div class="value">{{ 'Yes' if data_confidence.graph_access else 'No' }}</div>
+        <div class="label">Graph API Access</div>
+      </div>
+      <div class="kpi">
+        <div class="value">{{ data_confidence.identity_type }}</div>
+        <div class="label">Identity Type</div>
+      </div>
+    </div>
+    <table>
+      <tr><th>Dimension</th><th>Source</th><th>Confidence</th></tr>
+      <tr>
+        <td>Control scores ({{ data_confidence.automated_controls }} controls)</td>
+        <td>Live platform signals</td>
+        <td><span class="conf-evidence">Evidence</span></td>
+      </tr>
+      <tr>
+        <td>Manual controls ({{ data_confidence.manual_controls }} controls)</td>
+        <td>Customer questionnaire required</td>
+        <td><span class="conf-assumption">Assumption</span></td>
+      </tr>
+      <tr>
+        <td>Management Group hierarchy</td>
+        <td>{% if data_confidence.mg_visibility %}ARM Management Groups API{% else %}Not available{% endif %}</td>
+        <td><span class="{{ 'conf-evidence' if data_confidence.mg_visibility else 'conf-assumption' }}">{{ 'Evidence' if data_confidence.mg_visibility else 'Assumption' }}</span></td>
+      </tr>
+      <tr>
+        <td>Identity &amp; PIM signals</td>
+        <td>{% if data_confidence.graph_access %}Microsoft Graph API{% else %}Not available — Directory.Read.All required{% endif %}</td>
+        <td><span class="{{ 'conf-evidence' if data_confidence.graph_access else 'conf-assumption' }}">{{ 'Evidence' if data_confidence.graph_access else 'Assumption' }}</span></td>
+      </tr>
+    </table>
+  </div>
 </div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     8. CUSTOMER VALIDATION REQUIRED
+     ════════════════════════════════════════════════════════════════ -->
+{% if validation_questions %}
+<div class="section" id="validation">
+  <h2>8 &middot; Customer Validation Required</h2>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:14px;">These questions must be validated with the customer during the discovery workshop. Grouped by domain.</p>
+
+  {% for domain in ['Identity', 'Networking', 'Governance', 'Operations'] %}
+    {% if validation_questions.get(domain) %}
+    <div class="card q-domain">
+      <h3>{{ domain }}</h3>
+      {% for q in validation_questions[domain] %}
+      <div class="q-item">
+        {{ q.question }}
+        <div class="q-meta">
+          Type: {{ q.type | default('open') }}
+          · Resolves {{ q.resolves_controls | length if q.resolves_controls else 0 }} control(s)
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  {# Render any remaining domains not in the priority list #}
+  {% for domain, questions in validation_questions.items() %}
+    {% if domain not in ['Identity', 'Networking', 'Governance', 'Operations'] %}
+    <div class="card q-domain">
+      <h3>{{ domain }}</h3>
+      {% for q in questions %}
+      <div class="q-item">
+        {{ q.question }}
+        <div class="q-meta">
+          Type: {{ q.type | default('open') }}
+          · Resolves {{ q.resolves_controls | length if q.resolves_controls else 0 }} control(s)
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     TOP BUSINESS RISKS (from AI executive)
+     ════════════════════════════════════════════════════════════════ -->
+{% if top_business_risks %}
+<div class="section" id="risks">
+  <h2>Top Business Risks</h2>
+  {% for risk in top_business_risks %}
+  <div class="card">
+    <h3>{{ risk.title }}</h3>
+    <p><strong>Business impact:</strong> {{ risk.business_impact }}</p>
+    <p style="margin-top:6px;"><strong>Technical cause:</strong> {{ risk.technical_cause }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+</div><!-- /.container -->
+
+<script>
+function switchMode(btn, mode) {
+  document.querySelectorAll('.mode-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  var panel = document.getElementById('mode-' + mode);
+  if (panel) panel.classList.add('active');
+  btn.classList.add('active');
+}
+</script>
 
 </body>
 </html>

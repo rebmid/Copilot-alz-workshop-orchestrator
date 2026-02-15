@@ -1,5 +1,268 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-import os
+import os, re
+
+
+# ── Capability labels derived from initiative titles ─────────────
+_CAPABILITY_MAP = {
+    "management group": "Platform management group hierarchy → enables subscription vending & policy inheritance",
+    "diagnostics": "Centralized diagnostics & monitoring → enables operational visibility",
+    "governance polic": "Governance policy baseline → enables compliant resource provisioning",
+    "hub": "Hub connectivity & centralized egress → enables landing zone networking model",
+    "spoke": "Hub connectivity & centralized egress → enables landing zone networking model",
+    "network": "Hub connectivity & centralized egress → enables landing zone networking model",
+    "defender": "Defender for Cloud coverage → enables unified security posture management",
+    "security": "Security baseline enforcement → enables SOC integration",
+    "identity": "Identity & Entra ID integration → enables PIM and break-glass governance",
+    "rbac": "RBAC scoping & delegation → enables subscription-level team autonomy",
+    "policy": "Policy-driven guardrails → enables safe self-service for landing zone teams",
+    "cost": "Cost governance controls → enables FinOps visibility across landing zones",
+    "vending": "Subscription vending automation → enables repeatable landing zone provisioning",
+    "automation": "Platform automation & IaC → enables GitOps-driven landing zone lifecycle",
+}
+
+
+def _capability_label(title: str) -> str:
+    """Derive a short platform capability label from an initiative title."""
+    t = title.lower()
+    for keyword, label in _CAPABILITY_MAP.items():
+        if keyword in t:
+            return label
+    return "Platform capability improvement"
+
+
+def _domain_for_question(question: dict, results_by_id: dict) -> str:
+    """Best-effort domain assignment for a smart question."""
+    # Check explicit domain/category field first
+    for key in ("domain", "category"):
+        val = question.get(key)
+        if val:
+            return val
+
+    # Infer from resolved controls
+    sections: dict[str, int] = {}
+    for cid in question.get("resolves_controls", []):
+        ctrl = results_by_id.get(cid)
+        if ctrl:
+            s = ctrl.get("section", "Other")
+            sections[s] = sections.get(s, 0) + 1
+    if sections:
+        return max(sections, key=sections.get)
+    return "General"
+
+
+_DOMAIN_BUCKETS = {
+    "Identity": ["Identity and Access Management", "Azure Billing and Microsoft Entra ID Tenants", "Identity"],
+    "Networking": ["Networking", "Network Topology and Connectivity"],
+    "Governance": ["Governance", "Resource Organization"],
+    "Operations": ["Management", "Platform Automation and DevOps"],
+}
+
+
+def _bucket_domain(raw: str) -> str:
+    for bucket, members in _DOMAIN_BUCKETS.items():
+        if raw in members:
+            return bucket
+    return raw
+
+
+# ── Assessment-mode filter sets ──────────────────────────────────
+_MODE_SECTIONS = {
+    "Scale": ["Resource Organization", "Azure Billing and Microsoft Entra ID Tenants",
+              "Identity and Access Management", "Governance"],
+    "Security": ["Security", "Identity and Access Management"],
+    "Operations": ["Management", "Platform Automation and DevOps"],
+    "Cost": ["Governance"],
+    "Data Confidence": [],
+}
+
+
+def _build_report_context(output: dict) -> dict:
+    """
+    Derive all report-specific fields from the raw run JSON.
+    Returns a new dict to be merged into the template context.
+    """
+    scoring = output.get("scoring", {})
+    ai = output.get("ai", {})
+    meta = output.get("meta", {})
+    exec_ctx = output.get("execution_context", {})
+    results = output.get("results", [])
+    results_by_id = {r["control_id"]: r for r in results if "control_id" in r}
+
+    # ── 1. Platform Readiness Snapshot ────────────────────────────
+    esr = ai.get("enterprise_scale_readiness", {})
+    executive = ai.get("executive", {})
+    overall_score = scoring.get("overall_maturity_percent")
+    auto_cov = scoring.get("automation_coverage", {})
+
+    platform_readiness_text = (
+        esr.get("summary")
+        or executive.get("summary", "")
+    )
+    # If summary is empty, build from scaling_recommendations
+    if not platform_readiness_text:
+        recs = esr.get("scaling_recommendations", [])
+        if recs:
+            platform_readiness_text = " ".join(recs[:3])
+
+    readiness_snapshot = {
+        "overall_score": overall_score,
+        "automation_percent": auto_cov.get("automation_percent"),
+        "automated_controls": auto_cov.get("automated_controls", auto_cov.get("data_driven", 0)),
+        "total_controls": auto_cov.get("total_controls", 0),
+        "ready_for_enterprise_scale": esr.get("ready_for_enterprise_scale"),
+        "readiness_score": esr.get("readiness_score"),
+        "max_subscriptions": esr.get("max_supported_subscriptions_current_state"),
+        "platform_readiness_text": platform_readiness_text,
+    }
+
+    # ── 2. Landing Zone Adoption Blockers ─────────────────────────
+    blockers = esr.get("blockers", [])
+    initiatives = ai.get("initiatives", [])
+    init_by_id = {i["initiative_id"]: i for i in initiatives if "initiative_id" in i}
+
+    lz_blockers = []
+    for b in blockers:
+        resolving_id = b.get("resolving_initiative", "")
+        resolving_init = init_by_id.get(resolving_id, {})
+        lz_blockers.append({
+            "capability": b.get("category", "Unknown"),
+            "description": b.get("description", ""),
+            "severity": b.get("severity", ""),
+            "remediation_initiative": resolving_init.get("title", resolving_id),
+        })
+
+    # Fallback: if no ESR blockers, derive from failing controls grouped by initiative
+    if not lz_blockers and initiatives:
+        for init in initiatives:
+            failing = [results_by_id.get(c, {}) for c in init.get("controls", [])
+                       if results_by_id.get(c, {}).get("status") in ("Fail", "Partial")]
+            if failing:
+                lz_blockers.append({
+                    "capability": init.get("caf_discipline", "Unknown"),
+                    "description": init.get("why_it_matters", ""),
+                    "severity": init.get("blast_radius", ""),
+                    "remediation_initiative": init.get("title", ""),
+                })
+
+    # ── 3. Highest-Impact Remediation Sequence ────────────────────
+    roadmap = ai.get("transformation_roadmap", {})
+    dep_graph = roadmap.get("dependency_graph", [])
+
+    # Build a lookup from action prefix to dep_graph entry
+    dep_lookup: dict[str, dict] = {}
+    for dg in dep_graph if isinstance(dep_graph, list) else []:
+        dep_lookup[dg.get("action", "")[:40]] = dg
+
+    initiative_sequence = []
+    for init in sorted(initiatives, key=lambda x: x.get("priority", 99)):
+        title = init.get("title", "")
+        iid = init.get("initiative_id", "")
+        depends = init.get("depends_on", [])
+
+        # Try matching dep_graph for phase info
+        phase = ""
+        for dg in dep_graph if isinstance(dep_graph, list) else []:
+            if title[:30].lower() in dg.get("action", "").lower():
+                phase = dg.get("phase", "")
+                if not depends:
+                    depends = dg.get("depends_on", [])
+                break
+
+        # Resolve dependency IDs to titles
+        dep_titles = []
+        for dep in depends:
+            if dep in init_by_id:
+                dep_titles.append(init_by_id[dep].get("title", dep))
+            else:
+                dep_titles.append(str(dep)[:60])
+
+        initiative_sequence.append({
+            "initiative_id": iid,
+            "title": title,
+            "priority": init.get("priority"),
+            "controls_count": len(init.get("controls", [])),
+            "depends_on": dep_titles,
+            "capability_unlocked": _capability_label(title),
+            "phase": phase,
+            "caf_discipline": init.get("caf_discipline", ""),
+        })
+
+    # ── 4. Maturity After Roadmap Execution ───────────────────────
+    trajectory = roadmap.get("maturity_trajectory", {})
+
+    # ── 5. Capability Unlock View ─────────────────────────────────
+    capability_unlock_map = []
+    for init in sorted(initiatives, key=lambda x: x.get("priority", 99)):
+        title = init.get("title", "")
+        capability_unlock_map.append({
+            "initiative": title,
+            "initiative_id": init.get("initiative_id", ""),
+            "capability_enabled": _capability_label(title),
+            "alz_design_area": init.get("caf_discipline", "General"),
+        })
+
+    # ── 6. Domain Deep Dive – assessment modes ────────────────────
+    section_scores = scoring.get("section_scores", [])
+    section_by_name = {s["section"]: s for s in section_scores}
+
+    assessment_modes: dict[str, list] = {}
+    for mode, section_list in _MODE_SECTIONS.items():
+        mode_sections = []
+        for sname in section_list:
+            ss = section_by_name.get(sname)
+            if ss:
+                mode_sections.append(ss)
+        assessment_modes[mode] = mode_sections
+
+    # Data Confidence mode: built differently
+    data_confidence = {
+        "subscription_count": len(meta.get("subscription_ids", [])),
+        "subscription_ids": meta.get("subscription_ids", []),
+        "mg_visibility": exec_ctx.get("management_group_access", False),
+        "identity_type": exec_ctx.get("identity_type", "Unknown"),
+        "tenant_id": exec_ctx.get("tenant_id", ""),
+        "total_controls": auto_cov.get("total_controls", 0),
+        "automated_controls": auto_cov.get("automated_controls", auto_cov.get("data_driven", 0)),
+        "manual_controls": auto_cov.get("manual_controls", auto_cov.get("requires_customer_input", 0)),
+        "automation_percent": auto_cov.get("automation_percent", 0),
+        "limitations": output.get("limitations", []),
+    }
+
+    # Graph access: infer from whether identity-related signals returned data
+    graph_access = False
+    for r in results:
+        sig = r.get("signal_used") or ""
+        if "graph_api" in sig.lower() or "pim" in sig.lower() or "break_glass" in sig.lower():
+            if r.get("evidence_count", 0) > 0 or r.get("status") not in ("Manual",):
+                graph_access = True
+                break
+    data_confidence["graph_access"] = graph_access
+
+    # ── 7. Assessment Scope & Confidence (dedicated section) ──────
+    # (reuses data_confidence dict above)
+
+    # ── 8. Customer Validation Questions ──────────────────────────
+    smart_qs = ai.get("smart_questions", [])
+    validation_questions: dict[str, list] = {}
+    for q in smart_qs:
+        domain = _bucket_domain(_domain_for_question(q, results_by_id))
+        validation_questions.setdefault(domain, []).append(q)
+
+    # top business risks
+    top_business_risks = executive.get("top_business_risks", [])
+
+    return {
+        "readiness_snapshot": readiness_snapshot,
+        "lz_blockers": lz_blockers,
+        "initiative_sequence": initiative_sequence,
+        "trajectory": trajectory if isinstance(trajectory, dict) else {},
+        "capability_unlock_map": capability_unlock_map,
+        "assessment_modes": assessment_modes,
+        "data_confidence": data_confidence,
+        "validation_questions": validation_questions,
+        "top_business_risks": top_business_risks,
+        "platform_readiness_text": platform_readiness_text,
+    }
 
 
 def generate_report(output: dict, template_name: str = "report_template.html", out_path: str = None):
@@ -9,8 +272,12 @@ def generate_report(output: dict, template_name: str = "report_template.html", o
         autoescape=select_autoescape(["html", "xml"])
     )
 
+    # Build derived report context and merge
+    report_ctx = _build_report_context(output)
+    context = {**output, **report_ctx}
+
     template = env.get_template(template_name)
-    html = template.render(**output)
+    html = template.render(**context)
 
     if out_path is None:
         out_path = os.path.join(os.getcwd(), "report.html")

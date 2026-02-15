@@ -1,6 +1,8 @@
 # Azure Landing Zone Assessor (`lz-assessor`)
 
-A comprehensive, automated Azure Landing Zone assessment tool designed for **Cloud Solution Architects (CSAs)** conducting landing zone assessments. It evaluates an Azure tenant against Microsoft's [Azure Landing Zone (ALZ) checklist](https://github.com/Azure/review-checklists), scores controls deterministically, then enriches the results with AI-generated advisory output — producing a ready-to-deliver **CSA workbook**, **executive HTML report**, and **target architecture** in a single command.
+A comprehensive, automated Azure Landing Zone assessment tool designed for **Cloud Solution Architects (CSAs)** conducting landing zone assessments. It evaluates all subscriptions visible to the authenticated identity (tenant-wide with appropriate RBAC) against Microsoft's [Azure Landing Zone (ALZ) checklist](https://github.com/Azure/review-checklists), scores controls deterministically, then enriches the results with AI-generated advisory output — producing a ready-to-deliver **CSA workbook**, **executive HTML report**, and **target architecture** in a single command.
+
+Designed to support CSA discovery workshops and partner landing zone engagements.
 
 ## Why This Matters
 
@@ -40,7 +42,7 @@ This agent:
 | Capability | Description |
 |---|---|
 | **Live ALZ Checklist** | Always fetches the latest checklist from the `Azure/review-checklists` GitHub repo — never stale |
-| **40 Automated Evaluators** | 39 signal providers across Resource Graph, Defender, Policy, Management Groups, Microsoft Graph, Cost Management, Update Manager, and Monitor — scoring controls as Pass / Fail / Partial |
+| **40 Automated Evaluators** | 39 signal providers across Resource Graph, Defender, Policy, Management Groups, Microsoft Graph, Cost Management, Update Manager, and Monitor — scoring controls as Pass / Fail / Partial. Automation coverage depends on signal availability and RBAC scope. |
 | **Weighted Scoring** | Domain-weighted maturity model with severity multipliers across 8 design areas |
 | **7-Pass AI Advisory Pipeline** | Generates enterprise readiness, top risks, 30-60-90 roadmap, initiatives, backlog, and target architecture |
 | **Microsoft Learn MCP Grounding** | Official MCP SDK retrieves real guidance, code samples, and full documentation |
@@ -48,9 +50,9 @@ This agent:
 | **Executive HTML Report** | Visual maturity score, risk heatmap, and gap analysis |
 | **Delta Tracking** | Shows control-level progress between runs |
 | **8 Preflight Probes** | Validates RBAC, Resource Graph, Policy, Defender, Log Analytics, Entra ID, Cost Management, and Microsoft Graph API access before a full scan |
-| **Identity & PIM Deep Signals** | PIM maturity scoring, break-glass validation, service principal owner risk, admin Conditional Access coverage via Microsoft Graph |
-| **Operations Maturity Signals** | Alert→Action Group mapping, action group coverage, SLO/availability, patch posture, change tracking |
-| **Cost Governance Signals** | Forecast vs actual delta, idle resource detection |
+| **Identity & PIM Deep Signals** | When Microsoft Graph Directory.Read.All is available, the assessor scores PIM maturity, break-glass validation, service principal owner risk, and admin Conditional Access coverage |
+| **Operations Maturity Signals** | Alert→Action Group mapping, action group coverage, availability monitoring coverage and SLO signal readiness, patch posture, change tracking |
+| **Cost Governance Signals** | Forecast vs actual delta, idle resource heuristics based on low utilization signals |
 | **Intent-Based Assessment** | Evaluates only relevant controls based on user intent |
 | **Resilient JSON Parsing** | Model output sanitizer fixes trailing commas, JS comments, and single-quoted strings before parsing — with truncation repair and retry |
 | **Pluggable AI Provider** | Swap AOAI for another model in one line |
@@ -86,7 +88,7 @@ Builds advisor payload from scored controls, then runs a **7-pass reasoning pipe
 |------|------|--------|
 | 1 | **Roadmap & Initiatives** | 30-60-90 plan + initiative dependency graph |
 | 2 | **Executive Briefing** | Top risks + maturity narrative |
-| 3 | **Enterprise-Scale Readiness** | Readiness assessment against ALZ design areas |
+| 3 | **Enterprise-Scale Readiness** | Enterprise-scale readiness assessed against ALZ design capabilities |
 | 4 | **Smart Questions** | Targeted discovery questions for the customer |
 | 5 | **Implementation Backlog** | Per-initiative execution plans |
 | 6 | **Microsoft Learn Grounding** | MCP SDK retrieval + AI contextualisation |
