@@ -257,7 +257,7 @@ lz-assessor/
 ├── reporting/                   # Output generation
 │   ├── render.py                #   Jinja2 HTML report generator
 │   ├── report_template.html     #   HTML template for executive report
-│   └── csa_workbook.py          #   CSA workbook builder (3-sheet Excel)
+│   └── csa_workbook.py          #   CSA workbook builder (4-sheet Excel)
 │
 └── out/                         # Output directory (git-ignored)
     ├── run-YYYYMMDD-HHMM.json   #   Raw assessment data
@@ -349,7 +349,17 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configure environment variables
+### 4. Try it immediately — no Azure required
+
+You can explore the full output format using the bundled demo fixture and skipping AI:
+
+```bash
+python scan.py --demo --no-ai
+```
+
+This runs all evaluators against sample data, generates the HTML report and CSA workbook, and writes everything to `out/` — zero external dependencies.
+
+### 5. Configure Azure OpenAI *(optional — for AI features)*
 
 Create a `.env` file in the project root (this file is git-ignored):
 
@@ -358,7 +368,9 @@ AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
 AZURE_OPENAI_KEY=<your-api-key>
 ```
 
-### 5. Authenticate with Azure
+> **Note:** If you skip this step the tool still runs — you just won't get the 7-pass AI advisory output (executive summary, roadmap, etc.). You can add AI later by creating the `.env` file and re-running.
+
+### 6. Authenticate with Azure
 
 ```bash
 az login
@@ -370,7 +382,7 @@ If you have multiple tenants, target the correct one:
 az login --tenant <tenant-id>
 ```
 
-### 6. Run the assessment
+### 7. Run the assessment against your environment
 
 ```bash
 python scan.py
@@ -438,6 +450,9 @@ python scan.py --preflight
 # Full run, print JSON to console
 python scan.py --pretty
 
+# Demo mode — full pipeline against bundled sample data, no Azure needed
+python scan.py --demo --no-ai
+
 # Explain why Networking is the top risk (uses latest run)
 python scan.py --why Networking
 
@@ -458,7 +473,7 @@ All outputs are written to the `out/` directory:
 |---|---|
 | `run-YYYYMMDD-HHMM.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
 | `report.html` | Interactive executive HTML report with score breakdowns and gap analysis |
-| `CSA_Workbook_v1.xlsx` | 3-sheet CSA deliverable workbook (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
+| `CSA_Workbook_v1.xlsx` | 4-sheet CSA deliverable workbook (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
 | `target_architecture.json` | AI-generated target architecture with component recommendations and Learn references |
 | `preflight.json` | *(preflight mode only)* Access probe results |
 
@@ -491,7 +506,7 @@ The **Signal Bus** architecture routes collected data through registered evaluat
 2. Each control is matched to one of the 40 registered evaluators (or marked `Manual` if no automated check exists)
 3. Evaluators emit `Pass`, `Fail`, `Partial`, or `Info` verdicts with evidence
 4. The **scoring engine** applies domain weights and severity multipliers to produce a composite risk score
-5. **Automation coverage** is calculated — typically 20-30% of controls have automated evidence, with the rest requiring customer conversation
+5. **Automation coverage** is calculated — typically 8-20% of controls have automated evidence depending on signal availability, with the rest requiring customer conversation
 
 ### 3. AI Reasoning Engine
 

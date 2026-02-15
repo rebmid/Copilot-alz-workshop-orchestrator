@@ -9,6 +9,7 @@ fastapi
 uvicorn
 openpyxl
 openai
+python-dotenv
 mcp
 
  
