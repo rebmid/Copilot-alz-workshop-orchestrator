@@ -89,10 +89,12 @@ def evaluate_control(
         "status": result.status,
         "severity": result.severity,
         "confidence": result.confidence,
+        "confidence_score": result.confidence_score,
         "evidence": result.evidence,
         "reason": result.reason,
         "signals_used": result.signals_used or list(signal_bundle.keys()),
         "next_checks": result.next_checks,
+        "coverage": result.coverage.to_dict() if result.coverage else None,
         "telemetry": {"duration_ms": ms, "cache_hit": cache_hit},
     }
 

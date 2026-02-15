@@ -2,6 +2,7 @@ azure-identity
 azure-mgmt-resourcegraph
 azure-mgmt-managementgroups
 azure-mgmt-resource
+azure-mgmt-authorization
 requests
 jinja2
 fastapi

@@ -9,14 +9,17 @@ DOMAIN_WEIGHTS = {
     "Governance": 1.3,
     "Identity": 1.4,
     "Platform": 1.2,
-    "Management": 1.1
+    "Management": 1.1,
+    "Data Protection": 1.3,
+    "Resilience": 1.2,
 }
 
 STATUS_MULTIPLIER = {
     "Fail": 1.0,
     "Partial": 0.6,
     "Pass": 0,
-    "Manual": 0
+    "Manual": 0,
+    "NotApplicable": 0,
 }
 
 SEVERITY_WEIGHTS = {
@@ -28,19 +31,26 @@ SEVERITY_WEIGHTS = {
     None: 0
 }
 
+# Confidence scale: numeric 0-1 discount factor
+# Higher confidence = more weight in scoring
+CONFIDENCE_FLOOR = 0.3  # minimum weight even for low-confidence results
+
 PASS_STATUSES = {"Pass"}
 FAIL_STATUSES = {"Fail"}
-AUTO_STATUSES = {"Pass", "Fail", "Partial", "Info"}  # anything not Manual is "automated evidence"
+AUTO_STATUSES = {"Pass", "Fail", "Partial", "Info", "NotApplicable"}
 MANUAL_STATUSES = {"Manual"}
+NA_STATUSES = {"NotApplicable"}
 
 def automation_coverage(results: List[Dict[str, Any]], total_controls: int) -> Dict[str, Any]:
     automated = sum(1 for r in results if (r.get("status") in AUTO_STATUSES))
     manual = sum(1 for r in results if (r.get("status") in MANUAL_STATUSES))
+    not_applicable = sum(1 for r in results if (r.get("status") in NA_STATUSES))
     pct = round((automated / total_controls) * 100.0, 1) if total_controls else 0.0
     return {
         "total_controls": total_controls,
         "automated_controls": automated,
         "manual_controls": manual,
+        "not_applicable_controls": not_applicable,
         "automation_percent": pct,
         # Assessment coverage: conversation-guide framing
         "data_driven": automated,
@@ -59,15 +69,33 @@ def section_scores(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         for r in items:
             counts[r.get("status") or "Unknown"] += 1
 
-        automated_items = [r for r in items if r.get("status") in AUTO_STATUSES]
+        # Exclude NotApplicable from maturity calculation
+        automated_items = [r for r in items
+                           if r.get("status") in AUTO_STATUSES
+                           and r.get("status") not in NA_STATUSES]
         auto_total = len(automated_items)
         auto_pass = sum(1 for r in automated_items if r.get("status") == "Pass")
         auto_fail = sum(1 for r in automated_items if r.get("status") == "Fail")
 
-        # Maturity is ONLY based on automated evidence
+        # Confidence-weighted maturity
         maturity = None
         if auto_total > 0:
-            maturity = round((auto_pass / auto_total) * 100.0, 1)
+            total_weight = 0.0
+            pass_weight = 0.0
+            for r in automated_items:
+                conf = _effective_confidence(r)
+                total_weight += conf
+                if r.get("status") == "Pass":
+                    pass_weight += conf
+            maturity = round((pass_weight / total_weight) * 100.0, 1) if total_weight else 0.0
+
+        # Coverage-based summary (from coverage evaluators)
+        coverage_items = [r for r in items if r.get("coverage_ratio") is not None]
+        avg_coverage = None
+        if coverage_items:
+            avg_coverage = round(
+                sum(r["coverage_ratio"] for r in coverage_items) / len(coverage_items) * 100, 1
+            )
 
         out.append({
             "section": section,
@@ -76,12 +104,24 @@ def section_scores(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "automated_pass": auto_pass,
             "automated_fail": auto_fail,
             "total_controls": len(items),
-            "maturity_percent": maturity
+            "maturity_percent": maturity,
+            "avg_coverage_percent": avg_coverage,
         })
 
     # sort: lowest maturity first, None at end
     out.sort(key=lambda x: (x["maturity_percent"] is None, x["maturity_percent"] if x["maturity_percent"] is not None else 9999))
     return out
+
+
+def _effective_confidence(r: Dict[str, Any]) -> float:
+    """Extract numeric confidence from a result dict, with floor."""
+    cs = r.get("confidence_score")
+    if cs is not None and isinstance(cs, (int, float)):
+        return max(cs, CONFIDENCE_FLOOR)
+    # Fall back to label mapping
+    from signals.types import CONFIDENCE_LABEL
+    label = r.get("confidence", "High")
+    return max(CONFIDENCE_LABEL.get(label, 0.7), CONFIDENCE_FLOOR)
 
 def overall_maturity(sections: List[Dict[str, Any]]) -> float:
     # Weighted by automated_controls
@@ -110,8 +150,9 @@ def most_impactful_gaps(results: List[Dict[str, Any]], top_n: int = 10) -> List[
         domain_weight = DOMAIN_WEIGHTS.get(r.get("section", "Unknown"), 1.0)
         status_multiplier = STATUS_MULTIPLIER.get(status, 0)
         evidence_factor = 1 + min(evidence_count, 50) / 20
+        confidence = _effective_confidence(r)
 
-        risk_score = severity_weight * domain_weight * status_multiplier * evidence_factor
+        risk_score = severity_weight * domain_weight * status_multiplier * evidence_factor * confidence
 
         gaps.append({
             "control_id": r.get("control_id"),
@@ -120,6 +161,8 @@ def most_impactful_gaps(results: List[Dict[str, Any]], top_n: int = 10) -> List[
             "status": status,
             "severity": severity,
             "evidence_count": evidence_count,
+            "confidence_score": round(confidence, 2),
+            "coverage_ratio": r.get("coverage_ratio"),
             "risk_score": round(risk_score, 2),
             "notes": r.get("notes")
         })

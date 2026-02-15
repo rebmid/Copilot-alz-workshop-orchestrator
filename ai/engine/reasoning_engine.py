@@ -14,9 +14,6 @@ from ai.mcp_retriever import (
     build_grounding_context,
 )
 
-# Backward compat aliases used elsewhere
-enrich_with_mcp = ground_initiatives
-
 
 class ReasoningEngine:
     """

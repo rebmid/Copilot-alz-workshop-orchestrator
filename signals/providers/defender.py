@@ -37,7 +37,7 @@ def fetch_secure_score(subscription_id: str) -> SignalResult:
     signal_name = "defender:secure_score"
     try:
         client = build_client(subscription_id=subscription_id)
-        data = collect_secure_score(client)
+        data = collect_secure_score(client, subscription_id)
         status = SignalStatus.OK if data.get("status") == "OK" else SignalStatus.NOT_AVAILABLE
         ms = (time.perf_counter_ns() - start) // 1_000_000
         return SignalResult(

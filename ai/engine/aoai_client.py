@@ -80,6 +80,7 @@ class AOAIClient:
                 )
                 raw = response.choices[0].message.content or ""
                 raw = self._strip_fences(raw)
+                raw = self._sanitize_json(raw)
                 parsed = json.loads(raw)
                 self._lint(parsed)
                 return parsed
@@ -164,6 +165,103 @@ class AOAIClient:
         if stripped.endswith("```"):
             stripped = stripped[:-3].rstrip()
         return stripped
+
+    @staticmethod
+    def _sanitize_json(text: str) -> str:
+        """Fix common LLM JSON quirks before parsing.
+
+        Single-pass, string-boundary-aware.  Handles:
+        - Trailing commas before ``}`` or ``]``
+        - Single-line JS comments (``// …``) — only outside strings
+        - Multi-line JS comments  (``/* … */``) — only outside strings
+        - Single-quoted strings   (``{'key': 'val'}``)
+        """
+        out: list[str] = []
+        i = 0
+        n = len(text)
+        in_double = False
+        in_single = False
+
+        while i < n:
+            ch = text[i]
+
+            # ── inside a double-quoted string ──────────────────────
+            if in_double:
+                if ch == "\\" and i + 1 < n:
+                    out.append(ch)
+                    out.append(text[i + 1])
+                    i += 2
+                    continue
+                if ch == '"':
+                    in_double = False
+                out.append(ch)
+                i += 1
+                continue
+
+            # ── inside a single-quoted string (converted to double) ─
+            if in_single:
+                if ch == "\\" and i + 1 < n:
+                    out.append(ch)
+                    out.append(text[i + 1])
+                    i += 2
+                    continue
+                if ch == "'":
+                    in_single = False
+                    out.append('"')      # close as double-quote
+                    i += 1
+                    continue
+                out.append(ch)
+                i += 1
+                continue
+
+            # ── outside any string ─────────────────────────────────
+            # Multi-line comment
+            if ch == "/" and i + 1 < n and text[i + 1] == "*":
+                end = text.find("*/", i + 2)
+                i = end + 2 if end != -1 else n
+                continue
+
+            # Single-line comment (must NOT match inside ://)
+            if (
+                ch == "/"
+                and i + 1 < n
+                and text[i + 1] == "/"
+                and (i == 0 or text[i - 1] != ":")
+            ):
+                nl = text.find("\n", i)
+                i = nl if nl != -1 else n
+                continue
+
+            # Trailing comma — peek ahead past whitespace
+            if ch == ",":
+                j = i + 1
+                while j < n and text[j] in " \t\r\n":
+                    j += 1
+                if j < n and text[j] in "}]":
+                    i = j          # skip the comma, land on closer
+                    continue
+                out.append(ch)
+                i += 1
+                continue
+
+            # Open double-quoted string
+            if ch == '"':
+                in_double = True
+                out.append(ch)
+                i += 1
+                continue
+
+            # Open single-quoted string → convert to double
+            if ch == "'":
+                in_single = True
+                out.append('"')
+                i += 1
+                continue
+
+            out.append(ch)
+            i += 1
+
+        return "".join(out)
 
     @staticmethod
     def _lint(data: dict) -> None:

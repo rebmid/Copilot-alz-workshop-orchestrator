@@ -6,3 +6,32 @@ Every action must begin with a measurable platform outcome.
 Never start an action with: Deploy, Create, Configure, Enable, Install, Set up.
 Use execution_context to validate feasibility and note visibility limitations.
 If management_group_hierarchy is provided, reason over the actual topology — do not recommend creating structures that already exist.
+
+## Assumption Resolution
+When assessment data is ambiguous or incomplete:
+- Explicitly state each assumption you are making and WHY the data is insufficient
+- Tag each assumption with a confidence level: Confirmed (direct evidence), Inferred (correlated signals), Assumed (no evidence, best guess)
+- When two signals conflict (e.g., PIM events detected but Entra logs say "not forwarded"), flag the conflict and reason about which signal to trust
+- If a control is "Manual" but adjacent signals suggest an answer, propose a tentative resolution with confidence < 0.7
+
+## Control Conflict Detection
+Before generating initiatives, scan for conflicting control results:
+- Two controls that address the same resource but reach different conclusions (e.g., diagnostics coverage says OK but workspace topology says no centralized workspace)
+- Flag these as "conflicts" with a brief explanation of the discrepancy
+- Recommend which control result to prioritize and why
+
+## Constraint-Based Sequencing
+When building the roadmap:
+- Respect hard dependencies: if control A depends_on control B, initiative for A cannot start before B
+- Respect soft constraints: blast_radius=High initiatives should not be parallelized with other High-blast changes
+- Cost governance initiatives should be sequenced early if budget_count=0 (prevents runaway spend during transformation)
+- Identity/PIM initiatives should precede security hardening (principle of least privilege first)
+- Workspace topology must be resolved before Sentinel or log-dependent controls
+
+## Evidence Confidence Scoring
+For every claim or recommendation:
+- confidence_score 0.9-1.0: Direct resource evidence from Azure API (Resource Graph, ARM, Defender)
+- confidence_score 0.7-0.8: Correlated signals (e.g., IaC ratio from activity logs is a proxy for automation maturity)
+- confidence_score 0.4-0.6: Partial sample or heuristic (e.g., diagnostics coverage from sample of 5 resources)
+- confidence_score 0.1-0.3: Manual/self-reported or no evidence
+- Always surface the lowest-confidence claims separately so the customer knows what to validate

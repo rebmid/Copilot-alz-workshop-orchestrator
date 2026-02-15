@@ -63,7 +63,9 @@ async def _mcp_call_async(tool_name: str, arguments: dict) -> dict | None:
                         if stripped.startswith(("{", "[")):
                             return json.loads(stripped)
                         return {"text": text}
-    except Exception:
+    except BaseException:
+        # Must catch BaseException — asyncio.CancelledError (Python 3.9+)
+        # is a BaseException, not an Exception
         return None
     return None
 
@@ -78,6 +80,9 @@ def _mcp_call(tool_name: str, arguments: dict) -> dict | None:
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(asyncio.run, _mcp_call_async(tool_name, arguments))
             return future.result(timeout=_TIMEOUT)
+    except BaseException:
+        # CancelledError, KeyboardInterrupt, etc. — let callers fall back
+        return None
 
 
 def _fallback_search(query: str, top: int = 5) -> list[dict]:
@@ -328,10 +333,3 @@ def build_grounding_context(
                     })
 
     return context
-
-
-# ──────────────────────────────────────────────────────────────────
-# Backward-compat aliases
-# ──────────────────────────────────────────────────────────────────
-search_learn = search_docs
-enrich_with_mcp = ground_initiatives

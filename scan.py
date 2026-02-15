@@ -34,6 +34,12 @@ from agent.why_ai import generate_why_explanation
 import evaluators.networking   # noqa: F401
 import evaluators.governance   # noqa: F401
 import evaluators.security     # noqa: F401
+import evaluators.data_protection  # noqa: F401
+import evaluators.resilience       # noqa: F401
+import evaluators.identity         # noqa: F401
+import evaluators.network_coverage # noqa: F401
+import evaluators.management       # noqa: F401
+import evaluators.cost             # noqa: F401
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "out")
 
@@ -233,6 +239,12 @@ def main():
         subscription_ids=subscription_ids,
     )
     bus = SignalBus()
+
+    # ── Signal availability matrix ────────────────────────────────
+    from signals.availability import probe_signal_availability, print_signal_matrix
+    sig_matrix = probe_signal_availability(bus, scope)
+    print_signal_matrix(sig_matrix)
+
     results = run_evaluators_for_scoring(
         scope, bus, run_id=run_id, checklist=checklist,
     )
@@ -266,6 +278,7 @@ def main():
         },
         "execution_context": execution_context,
         "limitations": limitations,
+        "signal_availability": sig_matrix,
         "scoring": scoring,
         "rollups": dict(rollup_by_section(results)),
         "results": results,

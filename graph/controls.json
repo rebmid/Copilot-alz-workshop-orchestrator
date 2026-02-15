@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Control Knowledge Graph — maps control dependencies, signal requirements, CAF alignment, and question resolvers.",
 
   "caf_disciplines": {
@@ -8,25 +8,31 @@
     "network":       "Network Topology & Connectivity",
     "management":    "Management & Monitoring",
     "automation":    "Platform Automation & DevOps",
-    "organization":  "Resource Organization"
+    "organization":  "Resource Organization",
+    "cost":          "Cost Governance"
   },
 
   "intent_bundles": {
     "enterprise_readiness": {
       "label": "Enterprise-Scale Readiness",
-      "description": "Full ALZ assessment — all 21 automated controls",
+      "description": "Full ALZ assessment — all automated controls",
       "controls": [
         "2df27ee4", "61623a76", "92481607", "8bbac757",
         "5c986cb2", "3829e7e3", "d8a2adb1", "49b82111",
         "e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5",
         "09945bda", "77425f48", "36a72a48", "15833ee7",
-        "a56888b2", "67e7a8ed", "1cf0b8da"
+        "a56888b2", "67e7a8ed", "1cf0b8da",
+        "entra-lo", "pim-usag", "monitor-", "activity",
+        "cost-mgm", "netwatch", "update-m",
+        "pim-matu", "breakgla", "sp-owner", "admin-ca",
+        "alert-ac", "action-g", "availabi", "change-t",
+        "cost-for", "idle-res"
       ]
     },
     "network_review": {
       "label": "Network Topology Review",
-      "description": "Validate hub-spoke, firewall, IP governance, DDoS",
-      "controls": ["e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5"]
+      "description": "Validate hub-spoke, firewall, IP governance, DDoS, network observability",
+      "controls": ["e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5", "netwatch"]
     },
     "governance_review": {
       "label": "Governance & Policy Review",
@@ -54,6 +60,21 @@
       "label": "Defender Posture Check",
       "description": "Defender plans coverage and secure score",
       "controls": ["09945bda", "77425f48", "36a72a48", "15833ee7"]
+    },
+    "identity_review": {
+      "label": "Identity & PIM Review",
+      "description": "RBAC hygiene, Entra ID log availability, PIM maturity, break-glass, SP risk, CA coverage",
+      "controls": ["rbac-hyg", "entra-lo", "pim-usag", "pim-matu", "breakgla", "sp-owner", "admin-ca"]
+    },
+    "management_review": {
+      "label": "Management & Monitoring Review",
+      "description": "Workspace topology, automation maturity, update posture, alert coverage, availability, change tracking",
+      "controls": ["monitor-", "activity", "update-m", "alert-ac", "action-g", "availabi", "change-t"]
+    },
+    "cost_review": {
+      "label": "Cost Governance Review",
+      "description": "Budgets, cost alerts, forecast accuracy, idle resources",
+      "controls": ["cost-mgm", "cost-for", "idle-res"]
     }
   },
 
@@ -317,6 +338,240 @@
       ],
       "caf_reference": null,
       "question_resolvers": ["Q-LOG-ANALYTICS-WORKSPACE", "Q-ENTRA-LICENSING"]
+    },
+
+    "entra-lo": {
+      "name": "Entra ID Log Availability",
+      "evaluator_module": "evaluators.identity",
+      "full_id": "entra-log-availability-001",
+      "requires_signals": ["identity:entra_log_availability"],
+      "depends_on": ["1cf0b8da"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "identity", "weight": 0.25},
+        {"discipline": "management", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "question_resolvers": ["Q-ENTRA-LICENSING", "Q-ENTRA-LOG-DESTINATION"]
+    },
+    "pim-usag": {
+      "name": "PIM Usage",
+      "evaluator_module": "evaluators.identity",
+      "full_id": "pim-usage-001",
+      "requires_signals": ["identity:pim_usage"],
+      "depends_on": ["entra-lo"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "identity", "weight": 0.20},
+        {"discipline": "security", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "question_resolvers": ["Q-ENTRA-LICENSING", "Q-PIM-ROLLOUT"]
+    },
+
+    "monitor-": {
+      "name": "SOC Workspace Topology",
+      "evaluator_module": "evaluators.management",
+      "full_id": "monitor-workspace-topology-001",
+      "requires_signals": ["monitor:workspace_topology"],
+      "depends_on": ["67e7a8ed"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "management", "weight": 0.25},
+        {"discipline": "security", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-LOG-ANALYTICS-WORKSPACE", "Q-SIEM-TOOL"]
+    },
+    "activity": {
+      "name": "Platform Automation Maturity",
+      "evaluator_module": "evaluators.management",
+      "full_id": "activity-log-analysis-001",
+      "requires_signals": ["monitor:activity_log_analysis"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "automation", "weight": 0.30},
+        {"discipline": "management", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops",
+      "question_resolvers": ["Q-IAC-TOOLCHAIN", "Q-DEPLOYMENT-CADENCE"]
+    },
+    "update-m": {
+      "name": "Update Manager Posture",
+      "evaluator_module": "evaluators.management",
+      "full_id": "update-manager-001",
+      "requires_signals": ["manage:update_manager"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "management", "weight": 0.15},
+        {"discipline": "security", "weight": 0.05}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-PATCH-CADENCE"]
+    },
+
+    "cost-mgm": {
+      "name": "Cost Management Posture",
+      "evaluator_module": "evaluators.cost",
+      "full_id": "cost-management-001",
+      "requires_signals": ["cost:management_posture"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "cost", "weight": 0.40}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management",
+      "question_resolvers": ["Q-BUDGET-OWNER", "Q-COST-ANOMALY-PROCESS"]
+    },
+
+    "netwatch": {
+      "name": "Network Watcher Observability",
+      "evaluator_module": "evaluators.network_coverage",
+      "full_id": "network-watcher-001",
+      "requires_signals": ["network:watcher_posture"],
+      "depends_on": ["e6c4cfd3"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "network", "weight": 0.15},
+        {"discipline": "management", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "question_resolvers": ["Q-FLOW-LOG-STRATEGY"]
+    },
+
+    "pim-matu": {
+      "name": "PIM Maturity for Privileged Roles",
+      "evaluator_module": "evaluators.identity",
+      "full_id": "pim-maturity-001",
+      "requires_signals": ["identity:pim_maturity"],
+      "depends_on": ["pim-usag"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "identity", "weight": 0.25},
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "question_resolvers": ["Q-ENTRA-LICENSING", "Q-PIM-ROLLOUT"]
+    },
+    "breakgla": {
+      "name": "Break-Glass Account Validation",
+      "evaluator_module": "evaluators.identity",
+      "full_id": "breakglass-validation-001",
+      "requires_signals": ["identity:breakglass_validation"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "identity", "weight": 0.20},
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/entra/identity/role-based-access-control/security-emergency-access",
+      "question_resolvers": ["Q-BREAKGLASS-PROCESS"]
+    },
+    "sp-owner": {
+      "name": "Service Principal Owner Risk",
+      "evaluator_module": "evaluators.identity",
+      "full_id": "sp-owner-risk-001",
+      "requires_signals": ["identity:sp_owner_risk"],
+      "depends_on": ["rbac-hyg"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "identity", "weight": 0.15},
+        {"discipline": "security", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "question_resolvers": ["Q-SP-GOVERNANCE"]
+    },
+    "admin-ca": {
+      "name": "Admin Conditional Access Coverage",
+      "evaluator_module": "evaluators.identity",
+      "full_id": "admin-ca-coverage-001",
+      "requires_signals": ["identity:admin_ca_coverage"],
+      "depends_on": ["rbac-hyg"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "identity", "weight": 0.25},
+        {"discipline": "security", "weight": 0.20}
+      ],
+      "caf_reference": "https://learn.microsoft.com/entra/identity/conditional-access/howto-conditional-access-policy-admin-mfa",
+      "question_resolvers": ["Q-ENTRA-LICENSING", "Q-CA-STRATEGY"]
+    },
+
+    "alert-ac": {
+      "name": "Alert to Action Group Mapping",
+      "evaluator_module": "evaluators.management",
+      "full_id": "alert-action-mapping-001",
+      "requires_signals": ["monitor:alert_action_mapping"],
+      "depends_on": ["monitor-"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "management", "weight": 0.15}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-ALERT-STRATEGY"]
+    },
+    "action-g": {
+      "name": "Action Group Coverage",
+      "evaluator_module": "evaluators.management",
+      "full_id": "action-group-coverage-001",
+      "requires_signals": ["monitor:action_group_coverage"],
+      "depends_on": ["alert-ac"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "management", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-ALERT-STRATEGY"]
+    },
+    "availabi": {
+      "name": "SLO & Availability Signals",
+      "evaluator_module": "evaluators.management",
+      "full_id": "availability-signals-001",
+      "requires_signals": ["monitor:availability_signals"],
+      "depends_on": ["monitor-"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "management", "weight": 0.15},
+        {"discipline": "security", "weight": 0.05}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-SLO-TARGETS"]
+    },
+    "change-t": {
+      "name": "Change Tracking Enabled",
+      "evaluator_module": "evaluators.management",
+      "full_id": "change-tracking-001",
+      "requires_signals": ["monitor:change_tracking"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "management", "weight": 0.10},
+        {"discipline": "automation", "weight": 0.10}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "question_resolvers": ["Q-CHANGE-MANAGEMENT"]
+    },
+
+    "cost-for": {
+      "name": "Cost Forecast Accuracy",
+      "evaluator_module": "evaluators.cost",
+      "full_id": "cost-forecast-001",
+      "requires_signals": ["cost:forecast_accuracy"],
+      "depends_on": ["cost-mgm"],
+      "defer_if_parent_fails": false,
+      "affects": [
+        {"discipline": "cost", "weight": 0.25}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management",
+      "question_resolvers": ["Q-BUDGET-OWNER"]
+    },
+    "idle-res": {
+      "name": "Idle Resource Detection",
+      "evaluator_module": "evaluators.cost",
+      "full_id": "idle-resources-001",
+      "requires_signals": ["cost:idle_resources"],
+      "depends_on": [],
+      "affects": [
+        {"discipline": "cost", "weight": 0.35}
+      ],
+      "caf_reference": "https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-opt-recommendations",
+      "question_resolvers": ["Q-COST-ANOMALY-PROCESS"]
     }
   },
 
@@ -383,8 +638,78 @@
     },
     "Q-ENTRA-LICENSING": {
       "question": "What Entra ID licensing tier is in use (Free, P1, P2)?",
-      "resolves_controls": ["1cf0b8da"],
-      "resolution_effect": "P1/P2 enables richer identity diagnostics; Free tier limits available logs."
+      "resolves_controls": ["1cf0b8da", "entra-lo", "pim-usag"],
+      "resolution_effect": "P1/P2 enables richer identity diagnostics; Free tier limits available logs. P2 required for PIM."
+    },
+    "Q-ENTRA-LOG-DESTINATION": {
+      "question": "Where are Entra ID sign-in and audit logs forwarded (Log Analytics, Event Hub, Storage, third-party SIEM)?",
+      "resolves_controls": ["entra-lo"],
+      "resolution_effect": "If logs go to a third-party SIEM via Event Hub, diagnostic settings to LA may not be required."
+    },
+    "Q-PIM-ROLLOUT": {
+      "question": "Is Privileged Identity Management (PIM) in use or planned for privileged role management?",
+      "resolves_controls": ["pim-usag"],
+      "resolution_effect": "If PIM is planned but not yet activated, absence of PIM events is expected."
+    },
+    "Q-IAC-TOOLCHAIN": {
+      "question": "What Infrastructure-as-Code toolchain is used (Bicep, Terraform, ARM templates, Pulumi)?",
+      "resolves_controls": ["activity"],
+      "resolution_effect": "Identifies expected IaC patterns in activity logs and clarifies automation maturity expectations."
+    },
+    "Q-DEPLOYMENT-CADENCE": {
+      "question": "What is the typical deployment cadence (weekly, monthly, ad-hoc)?",
+      "resolves_controls": ["activity"],
+      "resolution_effect": "Low activity volume may be normal for stable environments rather than indicating manual operations."
+    },
+    "Q-PATCH-CADENCE": {
+      "question": "What is the patching cadence and strategy (Update Manager, third-party, manual)?",
+      "resolves_controls": ["update-m"],
+      "resolution_effect": "Third-party patching tools may mean Update Manager absence is by design."
+    },
+    "Q-BUDGET-OWNER": {
+      "question": "Who owns cost management governance, and are budgets set per subscription or per team?",
+      "resolves_controls": ["cost-mgm"],
+      "resolution_effect": "Clarifies budget scoping model and whether sub-level budgets are expected."
+    },
+    "Q-COST-ANOMALY-PROCESS": {
+      "question": "Is there a formal cost anomaly detection and response process?",
+      "resolves_controls": ["cost-mgm"],
+      "resolution_effect": "Manual monitoring may mean automated cost alerts are not configured but anomalies are tracked."
+    },
+    "Q-FLOW-LOG-STRATEGY": {
+      "question": "Is NSG flow log v2 or VNet flow logging enabled, and is Traffic Analytics configured?",
+      "resolves_controls": ["netwatch"],
+      "resolution_effect": "VNet flow logs may replace NSG-level flow logs in newer deployments."
+    },
+    "Q-BREAKGLASS-PROCESS": {
+      "question": "Are emergency access (break-glass) accounts documented, CA-excluded, and periodically tested?",
+      "resolves_controls": ["breakgla"],
+      "resolution_effect": "If break-glass accounts are managed outside Entra naming conventions, absence in Graph is expected."
+    },
+    "Q-SP-GOVERNANCE": {
+      "question": "Is there a governance process for service principal role assignments (e.g., Owner, UAA)?",
+      "resolves_controls": ["sp-owner"],
+      "resolution_effect": "Documented SP Owner assignments with justification reduce severity from Fail to Partial."
+    },
+    "Q-CA-STRATEGY": {
+      "question": "What is the Conditional Access strategy for privileged admin roles?",
+      "resolves_controls": ["admin-ca"],
+      "resolution_effect": "Third-party MFA or per-user MFA may cover admins outside CA policy detection."
+    },
+    "Q-ALERT-STRATEGY": {
+      "question": "What is the alerting strategy — are alerts managed centrally or per-team?",
+      "resolves_controls": ["alert-ac", "action-g"],
+      "resolution_effect": "Centralized third-party monitoring may mean Azure-native alerts are intentionally minimal."
+    },
+    "Q-SLO-TARGETS": {
+      "question": "Are there defined SLO/SLA targets for critical workloads, and how are they monitored?",
+      "resolves_controls": ["availabi"],
+      "resolution_effect": "External SLO monitoring tools may replace Azure-native Service Health alerts."
+    },
+    "Q-CHANGE-MANAGEMENT": {
+      "question": "Is there a change management process in place (e.g., Change Analysis, ServiceNow, Jira)?",
+      "resolves_controls": ["change-t"],
+      "resolution_effect": "External change management tools may mean Azure Change Analysis is not required."
     }
   }
 }

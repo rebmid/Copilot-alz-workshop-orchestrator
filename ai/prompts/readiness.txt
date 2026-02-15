@@ -28,6 +28,11 @@ Evaluation criteria for enterprise-scale readiness:
 - Diagnostics: centralized logging to Log Analytics covering >80% of resources
 - Identity: PIM enabled, break-glass accounts documented, identity logs centralized
 - Subscription vending: automated process or at minimum documented standards
+- Cost governance: budgets defined with notification rules and anomaly detection
+- Management: centralized Log Analytics workspace with Sentinel, ≥90d retention
+- Automation maturity: ≥50% IaC ratio in activity logs, active policy remediation
+- Network observability: Network Watcher active, NSG flow logs v2, Traffic Analytics
+- Patch posture: Update Manager or equivalent with maintenance windows configured
 
 Rules:
 - ready_for_enterprise_scale is true ONLY if all critical blockers are resolved

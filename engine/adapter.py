@@ -26,6 +26,9 @@ _DESIGN_AREA_SECTION = {
     "network": "Networking",
     "governance": "Governance",
     "security": "Security",
+    "data_protection": "Data Protection",
+    "resilience": "Resilience",
+    "identity": "Identity",
 }
 
 _PACK_CONTROLS_PATH = os.path.join(
@@ -60,6 +63,20 @@ def adapt_evaluator_result(
     name = meta.get("name", control_id)
     evidence = eval_result.get("evidence", [])
 
+    # Extract coverage ratio if present
+    coverage = eval_result.get("coverage")
+    coverage_ratio = None
+    if isinstance(coverage, dict):
+        coverage_ratio = coverage.get("ratio")
+    elif hasattr(coverage, "ratio"):
+        coverage_ratio = coverage.ratio
+
+    # Numeric confidence: prefer confidence_score, fall back to label
+    confidence_score = eval_result.get("confidence_score")
+    if confidence_score is None:
+        from signals.types import CONFIDENCE_LABEL
+        confidence_score = CONFIDENCE_LABEL.get(eval_result.get("confidence", "High"), 0.7)
+
     return {
         "control_id": meta.get("full_id", control_id),
         "category": section,
@@ -72,6 +89,8 @@ def adapt_evaluator_result(
         "evidence": evidence,
         "signal_used": ", ".join(eval_result.get("signals_used", [])) or None,
         "confidence": eval_result.get("confidence", "Low"),
+        "confidence_score": round(confidence_score, 2),
+        "coverage_ratio": round(coverage_ratio, 4) if coverage_ratio is not None else None,
         "notes": eval_result.get("reason", ""),
     }
 

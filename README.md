@@ -19,9 +19,9 @@ This agent:
 
 ## Demo Screenshots
 
-| Reasoning Engine | Control Evaluation |
+| 7-Pass Reasoning Pipeline | Control Evaluation |
 |---|---|
-| ![Reasoning Engine](docs/demo/01_reasoning-engine.png) | ![Control Evaluation](docs/demo/02_control-evaluation.png) |
+| ![7-Pass Reasoning Pipeline](docs/demo/01_reasoning-engine.png) | ![Control Evaluation](docs/demo/02_control-evaluation.png) |
 
 | Roadmap Traceability | Executive Briefing |
 |---|---|
@@ -32,44 +32,97 @@ This agent:
 | Capability | Description |
 |---|---|
 | **Live ALZ Checklist** | Always fetches the latest checklist from the `Azure/review-checklists` GitHub repo — never stale |
-| **Automated Evaluators** | Azure Resource Graph, Defender, Policy, and Management Group queries score controls as Pass / Fail / Partial |
-| **Weighted Scoring** | Domain-weighted maturity model with severity multipliers |
+| **40 Automated Evaluators** | 39 signal providers across Resource Graph, Defender, Policy, Management Groups, Microsoft Graph, Cost Management, Update Manager, and Monitor — scoring controls as Pass / Fail / Partial |
+| **Weighted Scoring** | Domain-weighted maturity model with severity multipliers across 8 design areas |
 | **7-Pass AI Advisory Pipeline** | Generates enterprise readiness, top risks, 30-60-90 roadmap, initiatives, backlog, and target architecture |
 | **Microsoft Learn MCP Grounding** | Official MCP SDK retrieves real guidance, code samples, and full documentation |
-| **CSA Workbook (Excel)** | Executive Summary, traceable 30-60-90 roadmap, and full Control Details sheet |
+| **CSA Workbook (Excel)** | Executive Summary, traceable 30-60-90 roadmap, Control Details, and Risk Analysis sheets |
 | **Executive HTML Report** | Visual maturity score, risk heatmap, and gap analysis |
 | **Delta Tracking** | Shows control-level progress between runs |
-| **Preflight Probes** | Validates RBAC access before a full scan |
+| **8 Preflight Probes** | Validates RBAC, Resource Graph, Policy, Defender, Log Analytics, Entra ID, Cost Management, and Microsoft Graph API access before a full scan |
+| **Identity & PIM Deep Signals** | PIM maturity scoring, break-glass validation, service principal owner risk, admin Conditional Access coverage via Microsoft Graph |
+| **Operations Maturity Signals** | Alert→Action Group mapping, action group coverage, SLO/availability, patch posture, change tracking |
+| **Cost Governance Signals** | Forecast vs actual delta, idle resource detection |
 | **Intent-Based Assessment** | Evaluates only relevant controls based on user intent |
+| **Resilient JSON Parsing** | Model output sanitizer fixes trailing commas, JS comments, and single-quoted strings before parsing — with truncation repair and retry |
 | **Pluggable AI Provider** | Swap AOAI for another model in one line |
 
 
 ---
 
-## Architecture Overview
+## End-to-End Reasoning Architecture
+
+### 1. Input
+
+- Live Azure tenant via `az login` or sanitized demo fixture
+- CLI modes: `--demo`, `--preflight`, `--on-demand`, `--why DOMAIN`
+
+### 2. Data Collection
+
+- Azure Resource Graph
+- Policy + Compliance
+- Defender for Cloud
+- Management Group hierarchy
+
+### 3. Evaluation Engine
+
+- Signal Bus routes platform telemetry → control evaluators
+- ALZ control pack scoring → Pass / Fail / Partial / Manual
+- Weighted maturity + risk model
+
+### 🤖 4. AI Reasoning Engine
+
+Builds advisor payload from scored controls, then runs a **7-pass reasoning pipeline**:
+
+| Pass | Name | Output |
+|------|------|--------|
+| 1 | **Roadmap & Initiatives** | 30-60-90 plan + initiative dependency graph |
+| 2 | **Executive Briefing** | Top risks + maturity narrative |
+| 3 | **Enterprise-Scale Readiness** | Readiness assessment against ALZ design areas |
+| 4 | **Smart Questions** | Targeted discovery questions for the customer |
+| 5 | **Implementation Backlog** | Per-initiative execution plans |
+| 6 | **Microsoft Learn Grounding** | MCP SDK retrieval + AI contextualisation |
+| 7 | **Target Architecture** | Recommended architecture with execution units |
+
+### 🧩 5. Why-Risk Agent (Deterministic Reasoning Layer)
+
+- Failing controls → dependency graph impact
+- Root cause → cascade effect
+- Roadmap action that fixes it
+- Microsoft Learn remediation reference
+
+### 📦 6. Deliverables
+
+| Output | Description |
+|--------|-------------|
+| 📊 CSA Workbook (Excel) | 4-sheet deliverable: Executive Summary, 30-60-90 Roadmap, Control Details, Risk Analysis |
+| 🌐 Executive HTML Report | Browser-based assessment report |
+| 🧾 Run JSON | Full traceable assessment data |
+| 🏗 Target Architecture JSON | AI-generated target architecture |
+| ❓ Why-Analysis JSON | Causal reasoning output per risk domain |
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                          scan.py                                 │
-│                   (Composition Root / CLI)                        │
-└────────┬───────────────────┬──────────────────┬──────────────────┘
-         │                   │                  │
-    ┌────▼────┐      ┌──────▼──────┐    ┌──────▼──────┐
-    │Collectors│      │  Evaluators  │    │  AI Engine   │
-    │ (Azure)  │      │(Signal Bus)  │    │ (7 passes)   │
-    └────┬────┘      └──────┬──────┘    └──────┬──────┘
-         │                   │                  │
-  Resource Graph      Control Packs      Azure OpenAI
-  Defender            Scoring Engine     MCP Retriever
-  Policy              Domain Weights     Prompt Templates
-  Mgmt Groups         Delta Engine       Grounding (Learn)
-         │                   │                  │
-         └───────────┬───────┘──────────┬───────┘
-                     │                  │
-              ┌──────▼──────┐   ┌──────▼──────┐
-              │  CSA Workbook│   │ HTML Report  │
-              │  (Excel)     │   │ (Jinja2)     │
-              └─────────────┘   └─────────────┘
+Azure Tenant / Demo
+        │
+        ▼
+Deterministic ALZ Assessment
+(Resource Graph + Policy + Defender)
+        │
+        ▼
+Control Scoring Engine
+        │
+        ├────────► CSA Workbook
+        │
+        ▼
+AI Reasoning Engine
+(Roadmap + Exec Brief + Target Architecture)
+        │
+        ▼
+WHY Reasoning Layer
+(Knowledge Graph + Dependency Impact)
+        │
+        ▼
+Traceable Business Risk Explanation
 ```
 
 ---
@@ -93,28 +146,54 @@ lz-assessor/
 │   └── loader.py                #   Fetches live from GitHub main branch
 │
 ├── collectors/                  # Azure data collectors
+│   ├── azure_client.py          #   AzureClient (ARM/RG) + GraphClient (Microsoft Graph API)
 │   ├── resource_graph.py        #   Resource Graph queries (VNets, firewalls, IPs, NSGs, …)
 │   ├── defender.py              #   Microsoft Defender for Cloud status
+│   ├── diagnostics.py           #   Diagnostic settings coverage
 │   ├── management_groups.py     #   Management group hierarchy
-│   ├── policy.py                #   Azure Policy definitions
-│   ├── policy_assignments.py    #   Policy assignment status
-│   └── policy_compliance.py     #   Policy compliance data
+│   └── policy.py                #   Azure Policy definitions, assignments, and compliance
 │
-├── signals/                     # Signal Bus architecture
+├── signals/                     # Signal Bus architecture (39 providers)
 │   ├── types.py                 #   EvalScope, Signal, EvalResult type definitions
 │   ├── registry.py              #   SignalBus — routes signals to evaluators
 │   ├── cache.py                 #   Signal caching layer
+│   ├── availability.py          #   Signal availability matrix (runtime diagnostic)
 │   └── providers/               #   Signal data providers
-│       ├── resource_graph.py    #     Resource Graph signal provider
+│       ├── resource_graph.py    #     Resource Graph signal provider (paginated)
 │       ├── policy.py            #     Policy signal provider
 │       ├── defender.py          #     Defender signal provider
 │       ├── management_groups.py #     MG tree signal provider
-│       └── diagnostics.py       #     Diagnostics signal provider
+│       ├── diagnostics.py       #     Diagnostics signal provider
+│       ├── storage.py           #     Storage account posture (coverage-based)
+│       ├── keyvault.py          #     Key Vault posture (coverage-based)
+│       ├── sql.py               #     SQL server posture (coverage-based)
+│       ├── app_services.py      #     App Service posture (coverage-based)
+│       ├── containers.py        #     AKS + ACR posture (coverage-based)
+│       ├── private_endpoints.py #     Private endpoint coverage
+│       ├── nsg_coverage.py      #     NSG subnet coverage + empty NSG detection
+│       ├── resource_locks.py    #     Resource lock inventory
+│       ├── backup.py            #     VM backup coverage
+│       ├── rbac.py              #     RBAC hygiene (multi-subscription)
+│       ├── identity_graph.py    #     Microsoft Graph: PIM maturity, break-glass, SP risk, admin CA
+│       ├── alert_coverage.py    #     Alert→Action Group mapping + action group coverage
+│       ├── change_tracking.py   #     Change tracking via Activity Log
+│       ├── cost_management.py   #     Cost forecast delta + idle resource detection
+│       ├── update_manager.py    #     Azure Update Manager patch posture
+│       ├── activity_log.py      #     Activity log analysis
+│       ├── entra_logs.py        #     Entra diagnostic log availability
+│       ├── monitor_topology.py  #     Log Analytics workspace topology
+│       └── network_watcher.py   #     Network Watcher posture
 │
-├── evaluators/                  # Control evaluators (auto-register on import)
+├── evaluators/                  # Control evaluators (40 auto-registered on import)
 │   ├── networking.py            #   Network controls (VNet, firewall, NSG, DDoS, …)
 │   ├── governance.py            #   Governance controls (tags, naming, policy, …)
 │   ├── security.py              #   Security controls (Defender, encryption, RBAC, …)
+│   ├── data_protection.py       #   PaaS posture (Storage, KV, SQL, App Svc, ACR, PE)
+│   ├── resilience.py            #   Backup coverage, resource locks
+│   ├── identity.py              #   RBAC hygiene, PIM maturity, break-glass, SP risk, admin CA
+│   ├── network_coverage.py      #   NSG subnet coverage, AKS posture
+│   ├── management.py            #   Alert mapping, action groups, availability, change tracking
+│   ├── cost.py                  #   Cost forecast accuracy, idle resource detection
 │   └── registry.py              #   Evaluator registration infrastructure
 │
 ├── control_packs/               # Control pack definitions
@@ -159,6 +238,8 @@ lz-assessor/
 ├── agent/                       # Agent / workshop mode
 │   ├── intent_orchestrator.py   #   Routes user intents to evaluators
 │   ├── why_reasoning.py         #   "Why is X the top risk?" causal reasoning agent
+│   ├── why_ai.py                #   AI narration for why-risk analysis
+│   ├── run_loader.py            #   Load existing assessment runs for --why mode
 │   ├── workshop.py              #   Workshop agent loop
 │   └── session.py               #   Session state management
 │
@@ -189,6 +270,45 @@ lz-assessor/
 | **Azure Permissions** | Reader role (minimum) on target subscriptions. Management Group Reader for full hierarchy visibility. |
 | **Azure OpenAI** | Required for AI features. Needs a `gpt-4.1` deployment (or any chat-completion model). Set env vars (see [Configuration](#configuration)). |
 | **Git** | For cloning the repository |
+
+### Required Azure Resource Providers
+
+The tool queries Azure Resource Graph and ARM APIs using **read-only** calls. The following resource providers must be registered on the target subscriptions for all signals to return data. Most are registered by default on any subscription that has used the service — but if a signal returns empty, missing provider registration is the most common cause.
+
+| Resource Provider | Signal(s) | Registered by Default? |
+|---|---|---|
+| `Microsoft.ResourceGraph` | All Resource Graph queries | ✅ Yes |
+| `Microsoft.Network` | Firewalls, VNets, Public IPs, NSGs, Route Tables, Private Endpoints, DDoS, Network Watcher | ✅ Yes |
+| `Microsoft.Storage` | Storage Account Posture | ✅ Yes |
+| `Microsoft.KeyVault` | Key Vault Posture | ✅ Yes |
+| `Microsoft.Sql` | SQL Server Posture | Only if SQL is used |
+| `Microsoft.Web` | App Service Posture | Only if App Service is used |
+| `Microsoft.ContainerRegistry` | Container Registry Posture | Only if ACR is used |
+| `Microsoft.ContainerService` | AKS Cluster Posture | Only if AKS is used |
+| `Microsoft.RecoveryServices` | VM Backup Coverage | Only if Backup is configured |
+| `Microsoft.Compute` | VM inventory (for backup/update coverage) | ✅ Yes |
+| `Microsoft.Security` | Defender plans, Secure Score | ✅ Yes |
+| `Microsoft.Authorization` | RBAC hygiene, Resource Locks, Policy assignments | ✅ Yes (built-in) |
+| `Microsoft.PolicyInsights` | Policy compliance summary | ✅ Yes |
+| `Microsoft.Management` | Management Group hierarchy | ✅ Yes |
+| `Microsoft.Insights` | Diagnostics coverage, Alert rules, Action groups, Activity log | ✅ Yes |
+| `Microsoft.CostManagement` | Cost forecast vs actual, idle resource detection | ✅ Yes |
+| `Microsoft.Maintenance` | Update Manager maintenance configurations | Only if Update Manager is used |
+| `Microsoft.Graph` | PIM maturity, break-glass accounts, SP owner risk, admin CA coverage | Requires Microsoft Graph API permissions (Directory.Read.All) |
+
+To check registration status:
+
+```bash
+az provider show -n Microsoft.RecoveryServices --query "registrationState" -o tsv
+```
+
+To register a missing provider (requires Contributor or Owner):
+
+```bash
+az provider register -n Microsoft.RecoveryServices
+```
+
+> **Note:** If a resource type doesn't exist in the subscription (e.g., no AKS clusters), the evaluator returns **NotApplicable** — not an error. Missing provider registration only matters when you *have* those resources but the signal returns empty.
 
 ---
 
@@ -348,6 +468,10 @@ The **collectors** module queries Azure APIs via Resource Graph, Defender, Polic
 - **Defender** — security score, coverage tier, recommendations
 - **Policy** — policy definitions, assignments, and compliance state
 - **Management Groups** — full hierarchy tree
+- **Microsoft Graph** — PIM role assignments, break-glass accounts, service principal owners, Conditional Access policies
+- **Cost Management** — forecast vs actual spend, idle resource detection
+- **Monitor** — alert rules, action groups, Log Analytics topology, activity log, availability signals
+- **Update Manager** — patch posture with maintenance configuration correlation
 
 All queries use `AzureCliCredential` — the same identity you authenticated with via `az login`.
 
@@ -356,7 +480,7 @@ All queries use `AzureCliCredential` — the same identity you authenticated wit
 The **Signal Bus** architecture routes collected data through registered evaluators:
 
 1. The ALZ checklist is fetched live from GitHub (~243 controls across Security, Networking, Governance, Identity, Platform, and Management domains)
-2. Each control is matched to an evaluator (or marked `Manual` if no automated check exists)
+2. Each control is matched to one of the 40 registered evaluators (or marked `Manual` if no automated check exists)
 3. Evaluators emit `Pass`, `Fail`, `Partial`, or `Info` verdicts with evidence
 4. The **scoring engine** applies domain weights and severity multipliers to produce a composite risk score
 5. **Automation coverage** is calculated — typically 20-30% of controls have automated evidence, with the rest requiring customer conversation
@@ -376,6 +500,7 @@ When AI is enabled, a **7-pass pipeline** runs against Azure OpenAI:
 | 7 | `target_architecture.txt` | Target architecture + `grounding.txt` enrichment | 8000 |
 
 The `AOAIClient` includes built-in resilience:
+- **JSON sanitiser** — fixes trailing commas, JS comments, and single-quoted strings in model output before parsing
 - **JSON fence stripping** — removes markdown ````json```` wrappers from model output
 - **Truncation repair** — closes dangling brackets and strings when output is cut off
 - **Retry loop** — up to 2 retries on invalid JSON responses
@@ -413,7 +538,7 @@ Grounding runs for:
 
 ## CSA Workbook Deep Dive
 
-The workbook is the primary **customer-facing deliverable** — a 3-sheet Excel file ready for CSA engagements:
+The workbook is the primary **customer-facing deliverable** — a 4-sheet Excel file ready for CSA engagements:
 
 ### Sheet 0: `0_Executive_Summary`
 
@@ -459,7 +584,7 @@ All ~243 controls in a flat table with 19 columns:
 | P: Grounded Fetch | Full-page markdown excerpt |
 | Q: Related Initiatives | Initiative IDs related to this control |
 | R: Category | ALZ category |
-| S: Questions to Ask | Customer discovery questions mapped by control (224/243 populated) |
+| S: Discussion Points | Customer discovery items mapped by control (224/243 populated) |
 
 ---
 
@@ -523,6 +648,10 @@ Preflight probes check:
 - Management group read access
 - Defender API access
 - Policy read access
+- Log Analytics workspace access
+- Entra ID diagnostic log access
+- Cost Management API access
+- Microsoft Graph API access
 
 Results are saved to `out/preflight.json` and printed to the console with pass/fail indicators.
 
@@ -571,7 +700,7 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 | `AZURE_OPENAI_KEY / AZURE_OPENAI_ENDPOINT not set` | Create a `.env` file with your Azure OpenAI credentials, or run with `--no-ai` |
 | `No subscriptions found` | Ensure `az login` succeeded and your identity has Reader on at least one subscription |
 | `Management group hierarchy not visible` | Your identity needs Management Group Reader — the tool still works, but MG-related controls will be `Manual` |
-| `Unterminated string` / JSON parse errors in AI output | The tool auto-repairs truncated JSON. If it persists, check your Azure OpenAI quota and model deployment |
+| `Unterminated string` / JSON parse errors in AI output | The tool auto-repairs truncated JSON and sanitises common LLM quirks (trailing commas, comments). If it persists, check your Azure OpenAI quota and model deployment |
 | `MCP connection failed` | The tool falls back to the public Learn search API automatically. No action needed. |
 | `ModuleNotFoundError` | Ensure your virtual environment is activated and `pip install -r requirements.txt` completed successfully |
 | `az: command not found` | Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) |

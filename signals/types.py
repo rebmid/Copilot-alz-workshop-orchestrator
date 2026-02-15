@@ -24,6 +24,17 @@ class SignalResult:
 
 
 @dataclass
+class CoveragePayload:
+    """Normalized coverage summary returned by posture providers."""
+    applicable: int = 0
+    compliant: int = 0
+    ratio: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"applicable": self.applicable, "compliant": self.compliant, "ratio": self.ratio}
+
+
+@dataclass
 class EvalScope:
     """Scope targeting for on-demand evaluation."""
     tenant_id: str | None = None
@@ -32,16 +43,27 @@ class EvalScope:
     resource_group: str | None = None
 
 
+# Confidence scale: 1.0 = direct resource evidence, 0.8 = inferred,
+# 0.5 = partial sample, 0.3 = heuristic, 0.0 = manual/no evidence.
+CONFIDENCE_LABEL = {
+    "High": 1.0,
+    "Medium": 0.7,
+    "Low": 0.3,
+}
+
+
 @dataclass
 class ControlResult:
     """Deterministic result from a single control evaluator."""
-    status: str  # Pass | Fail | Partial | Manual | Unknown | Error
+    status: str  # Pass | Fail | Partial | Manual | NotApplicable | Unknown | Error
     severity: str = "Medium"
     confidence: str = "High"
+    confidence_score: float = 1.0  # numeric 0-1 (overrides label when set)
     reason: str = ""
     evidence: list[dict[str, Any]] = field(default_factory=list)
     signals_used: list[str] = field(default_factory=list)
     next_checks: list[dict[str, str]] = field(default_factory=list)
+    coverage: CoveragePayload | None = None  # populated by coverage-based evaluators
 
 
 @dataclass

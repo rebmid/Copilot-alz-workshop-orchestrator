@@ -181,6 +181,74 @@ def _probe_log_analytics(ctx: AzureContext) -> ProbeResult:
         return {"ok": False, "detail": str(e)[:200], "duration_ms": ms}
 
 
+def _probe_aad_diagnostics(ctx: AzureContext) -> ProbeResult:
+    """Can we read AAD diagnostic settings (Entra log routing)?"""
+    start = time.perf_counter_ns()
+    try:
+        r = requests.get(
+            f"{ARM}/providers/microsoft.aadiam/diagnosticSettings",
+            headers=ctx.headers(),
+            params={"api-version": "2017-04-01"},
+            timeout=5,
+        )
+        ms = (time.perf_counter_ns() - start) // 1_000_000
+        if r.status_code == 200:
+            count = len(r.json().get("value", []))
+            return {"ok": True, "detail": f"{count} AAD diagnostic setting(s)", "duration_ms": ms}
+        return {"ok": False, "detail": f"HTTP {r.status_code}: {r.reason}", "duration_ms": ms}
+    except Exception as e:
+        ms = (time.perf_counter_ns() - start) // 1_000_000
+        return {"ok": False, "detail": str(e)[:200], "duration_ms": ms}
+
+
+def _probe_cost_management(ctx: AzureContext) -> ProbeResult:
+    """Can we query Cost Management budgets?"""
+    start = time.perf_counter_ns()
+    if not ctx.subscription_ids:
+        return {"ok": False, "detail": "No subscriptions in scope", "duration_ms": 0}
+    try:
+        sub = ctx.subscription_ids[0]
+        r = requests.get(
+            f"{ARM}/subscriptions/{sub}/providers/Microsoft.Consumption/budgets",
+            headers=ctx.headers(),
+            params={"api-version": "2023-05-01"},
+            timeout=5,
+        )
+        ms = (time.perf_counter_ns() - start) // 1_000_000
+        if r.status_code == 200:
+            count = len(r.json().get("value", []))
+            return {"ok": True, "detail": f"{count} budget(s) visible", "duration_ms": ms}
+        return {"ok": False, "detail": f"HTTP {r.status_code}: {r.reason}", "duration_ms": ms}
+    except Exception as e:
+        ms = (time.perf_counter_ns() - start) // 1_000_000
+        return {"ok": False, "detail": str(e)[:200], "duration_ms": ms}
+
+
+GRAPH = "https://graph.microsoft.com"
+
+
+def _probe_graph_api(ctx: AzureContext) -> ProbeResult:
+    """Can we read Microsoft Graph API (directory roles)?"""
+    start = time.perf_counter_ns()
+    try:
+        graph_token = ctx.credential.get_token(f"{GRAPH}/.default")
+        headers = {"Authorization": f"Bearer {graph_token.token}"}
+        r = requests.get(
+            f"{GRAPH}/v1.0/directoryRoles",
+            headers=headers,
+            params={"$top": "1"},
+            timeout=5,
+        )
+        ms = (time.perf_counter_ns() - start) // 1_000_000
+        if r.status_code == 200:
+            count = len(r.json().get("value", []))
+            return {"ok": True, "detail": f"Graph API accessible, {count} role(s) sampled", "duration_ms": ms}
+        return {"ok": False, "detail": f"HTTP {r.status_code}: {r.reason}", "duration_ms": ms}
+    except Exception as e:
+        ms = (time.perf_counter_ns() - start) // 1_000_000
+        return {"ok": False, "detail": str(e)[:200], "duration_ms": ms}
+
+
 # ── Probe registry ────────────────────────────────────────────────
 
 PROBES: dict[str, tuple[Any, dict[str, str]]] = {
@@ -227,6 +295,33 @@ PROBES: dict[str, tuple[Any, dict[str, str]]] = {
             "mode": "Estimated",
             "reason": "Log Analytics workspace listing not accessible",
             "action": "Grant Log Analytics Reader on subscription scope",
+        },
+    ),
+    "aad_diagnostics": (
+        _probe_aad_diagnostics,
+        {
+            "area": "Identity",
+            "mode": "Estimated",
+            "reason": "Entra ID diagnostic settings not accessible — sign-in/audit log routing unknown",
+            "action": "Grant Reader on the subscription to list AAD diagnostic settings",
+        },
+    ),
+    "cost_management_reader": (
+        _probe_cost_management,
+        {
+            "area": "Cost Governance",
+            "mode": "Estimated",
+            "reason": "Cost Management data not accessible — budgets/alerts unknown",
+            "action": "Grant Cost Management Reader on subscription scope",
+        },
+    ),
+    "graph_api_reader": (
+        _probe_graph_api,
+        {
+            "area": "Identity",
+            "mode": "Estimated",
+            "reason": "Microsoft Graph API not accessible — PIM, break-glass, CA coverage unavailable",
+            "action": "Grant Directory.Read.All or Global Reader in Entra ID",
         },
     ),
 }

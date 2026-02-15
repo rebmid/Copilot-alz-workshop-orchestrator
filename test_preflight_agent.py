@@ -29,7 +29,7 @@ def test_knowledge_graph() -> bool:
     print(f"  Questions: {summary['total_questions']}")
     print(f"  Disciplines: {', '.join(summary['disciplines'])}")
 
-    assert summary["total_controls"] == 20, f"Expected 20, got {summary['total_controls']}"
+    assert summary["total_controls"] == 37, f"Expected 37, got {summary['total_controls']}"
 
     # Test signal sharing
     sharing = summary["signal_sharing"]
@@ -147,6 +147,10 @@ def test_evaluator_registry() -> bool:
     import evaluators.networking   # noqa: F401
     import evaluators.governance   # noqa: F401
     import evaluators.security     # noqa: F401
+    import evaluators.management   # noqa: F401
+    import evaluators.cost         # noqa: F401
+    import evaluators.identity     # noqa: F401
+    import evaluators.network_coverage  # noqa: F401
 
     from evaluators.registry import EVALUATORS
 
@@ -154,7 +158,7 @@ def test_evaluator_registry() -> bool:
     for cid, ev in sorted(EVALUATORS.items()):
         print(f"    {cid[:8]}… signals={ev.required_signals}")
 
-    assert len(EVALUATORS) >= 20, f"Expected ≥20 evaluators, got {len(EVALUATORS)}"
+    assert len(EVALUATORS) >= 38, f"Expected ≥38 evaluators, got {len(EVALUATORS)}"
 
     # Verify all evaluators from the knowledge graph are registered
     from graph.knowledge_graph import ControlKnowledgeGraph
@@ -182,7 +186,7 @@ def test_preflight_structure() -> bool:
     for name, (fn, meta) in PROBES.items():
         print(f"    {name:30s} area={meta['area']:20s} mode={meta['mode']}")
 
-    assert len(PROBES) == 5, f"Expected 5 probes, got {len(PROBES)}"
+    assert len(PROBES) == 8, f"Expected 8 probes, got {len(PROBES)}"
 
     # Verify impact metadata
     for name, (fn, meta) in PROBES.items():

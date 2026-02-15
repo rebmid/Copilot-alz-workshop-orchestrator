@@ -547,10 +547,10 @@ def build_csa_workbook(
         "Evidence Count",  # M
         "Evidence Summary", # N — first evidence resource IDs
         "Notes",           # O
-        "Learn Link",      # P — from checklist
-        "Training Link",   # Q — from checklist
-        "Grounded References",  # R — from AI grounding
-        "Questions to Ask",     # S — from customer_questions + MCP docs
+        "Discussion Points",    # P — from customer_questions + MCP docs
+        "Learn Link",      # Q — from checklist
+        "Training Link",   # R — from checklist
+        "Grounded References",  # S — from AI grounding
     ]
 
     # Build control GUID → customer questions lookup
@@ -614,15 +614,22 @@ def build_csa_workbook(
         # O: Notes
         ws.cell(row=row, column=15, value=c.get("notes", "")).alignment = _WRAP
 
-        # P: Learn Link (from checklist)
+        # P: Discussion Points (from customer_questions mapped to this control)
+        qs = question_lookup.get(cid, [])
+        if qs:
+            ws.cell(row=row, column=16, value="\n\n".join(
+                f"• {q}" for q in qs[:5]
+            )).alignment = _WRAP
+
+        # Q: Learn Link (from checklist)
         learn_link = cl_item.get("link", "")
-        ws.cell(row=row, column=16, value=learn_link)
+        ws.cell(row=row, column=17, value=learn_link)
 
-        # Q: Training Link (from checklist)
+        # R: Training Link (from checklist)
         training_link = cl_item.get("training", "")
-        ws.cell(row=row, column=17, value=training_link)
+        ws.cell(row=row, column=18, value=training_link)
 
-        # R: Grounded References (from AI MCP grounding)
+        # S: Grounded References (from AI MCP grounding)
         grounded = grounded_map.get(cid, [])
         if grounded:
             ref_lines = []
@@ -630,14 +637,7 @@ def build_csa_workbook(
                 title = ref.get("title", "")
                 url = ref.get("url", "")
                 ref_lines.append(f"{title}\n{url}" if url else title)
-            ws.cell(row=row, column=18, value="\n\n".join(ref_lines)).alignment = _WRAP
-
-        # S: Questions to Ask (from customer_questions mapped to this control)
-        qs = question_lookup.get(cid, [])
-        if qs:
-            ws.cell(row=row, column=19, value="\n\n".join(
-                f"• {q}" for q in qs[:5]
-            )).alignment = _WRAP
+            ws.cell(row=row, column=19, value="\n\n".join(ref_lines)).alignment = _WRAP
 
         row += 1
 
@@ -646,7 +646,7 @@ def build_csa_workbook(
         ("A", 12), ("B", 14), ("C", 22), ("D", 22), ("E", 50),
         ("F", 14), ("G", 14), ("H", 10), ("I", 10), ("J", 10),
         ("K", 12), ("L", 28), ("M", 8), ("N", 40), ("O", 40),
-        ("P", 45), ("Q", 45), ("R", 50), ("S", 55),
+        ("P", 55), ("Q", 45), ("R", 45), ("S", 50),
     ]:
         ws.column_dimensions[col_letter].width = width
 

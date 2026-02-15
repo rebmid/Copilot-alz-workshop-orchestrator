@@ -115,6 +115,17 @@ Sequencing rules from signals:
 - No hub-spoke detected → 60_days: network topology (Ready)
 - Defender coverage partial → 60_days: security baseline (Secure)
 - Identity logs not centralized → 90_days: identity integration (Secure)
+- No budgets or cost alerts → 30_days: cost governance (Govern) — prevents runaway spend during transformation
+- PIM not active → 60_days: establish least-privilege model before expanding access
+- Workspace not centralized → 30_days: must precede Sentinel and log-dependent controls
+- Update Manager not configured → 60_days: patch posture (Manage)
+- Network Watcher flow logs missing → 60_days: network observability (Ready)
+- High manual write ratio in activity log → 60_days: IaC adoption (Adopt)
+
+Conflict detection rules:
+- If diagnostics coverage says OK but workspace topology says no centralized workspace → flag conflict, prioritize workspace topology
+- If PIM events detected but Entra logs say "not forwarded" → flag conflict, note PIM data may be incomplete
+- If cost_management has budgets but no notifications → partial, not full pass
 
 Blast radius rules:
 - Governance / MG / Policy / Logging = High

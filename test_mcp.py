@@ -1,6 +1,6 @@
-from ai.mcp_retriever import search_learn
+from ai.mcp_retriever import search_docs
 
-results = search_learn("Azure Firewall hub spoke architecture")
+results = search_docs("Azure Firewall hub spoke architecture")
 
 print("Results:")
 for r in results:

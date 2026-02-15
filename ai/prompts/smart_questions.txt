@@ -32,5 +32,19 @@ Rules:
 - Do not ask questions that the automated assessment already answered
 - Do not ask about things that can be verified via Azure APIs
 
+Assumption Resolution:
+- When the automated assessment returns a "Manual" or low-confidence result, check if adjacent signals
+  provide enough context to propose an assumption. If so, phrase the question to confirm or deny that assumption.
+- For example: if workspace topology shows 1 workspace but Sentinel status is unknown, ask:
+  "Is Microsoft Sentinel enabled on your centralized Log Analytics workspace?" (rather than a generic "Do you use Sentinel?")
+- Tag each question with the confidence_score of the underlying signal that triggered it.
+  Lower-confidence signals should generate higher-priority questions.
+
+Conflict Resolution:
+- If two signals conflict, generate a clarifying question that resolves the conflict.
+  For example: "Activity logs show PIM activations, but Entra diagnostic settings show no sign-in logs forwarded.
+  Which describes your current state: (a) PIM is active with logs sent to a different sink, (b) Logs are being forwarded
+  but the diagnostic check had insufficient permissions, (c) PIM is not yet fully configured?"
+
 Assessment Data:
 {{ASSESSMENT}}

@@ -161,7 +161,7 @@ def _ground_initiatives(initiatives: List[dict]) -> List[dict]:
                 {"title": r.get("title", ""), "url": r.get("url", "")}
                 for r in refs
             ]
-        except Exception:
+        except BaseException:
             init["learn_references"] = []
     return initiatives
 
