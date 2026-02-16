@@ -29,6 +29,7 @@ from agent.intent_orchestrator import IntentOrchestrator
 from agent.run_loader import load_run
 from agent.why_reasoning import build_why_payload, print_why_report
 from agent.why_ai import generate_why_explanation
+from discovery.resolver import run_workshop
 
 # Import evaluator modules so register_evaluator() calls fire
 import evaluators.networking   # noqa: F401
@@ -93,6 +94,8 @@ def parse_args():
                    help="Explain why a domain is a top risk (e.g. Networking, Security)")
     p.add_argument("--demo", action="store_true",
                    help="Run in demo mode using sample data (no Azure connection required)")
+    p.add_argument("--workshop", action="store_true",
+                   help="Run interactive discovery workshop to resolve Manual controls")
     return p.parse_args()
 
 
@@ -158,13 +161,41 @@ def main():
             print(json.dumps(payload, indent=2, default=str))
         return
 
+    # ── Workshop mode (interactive discovery — no Azure needed) ───
+    if args.workshop:
+        run = load_run(demo=args.demo)
+        os.makedirs(OUT_DIR, exist_ok=True)
+
+        # Run the interactive workshop
+        updated = run_workshop(run, verbose=True)
+
+        # Persist updated JSON
+        ws_path = os.path.join(OUT_DIR, "workshop-run.json")
+        with open(ws_path, "w", encoding="utf-8") as f:
+            json.dump(updated, f, indent=2, default=str)
+        with open("assessment.json", "w", encoding="utf-8") as f:
+            json.dump(updated, f, indent=2, default=str)
+        print(f"\n  Workshop run saved: {ws_path}")
+
+        # Re-generate HTML report with updated scoring
+        if not args.no_html:
+            report_path = os.path.join(
+                OUT_DIR, "Contoso-ALZ-Platform-Readiness-Report-Sample.html"
+            )
+            generate_report(updated, out_path=report_path)
+            print(f"  Report updated:     {report_path}")
+
+        if args.pretty:
+            print(json.dumps(updated, indent=2, default=str))
+        return
+
     # ── Timing + paths ────────────────────────────────────────────
     now = datetime.now(timezone.utc)
     run_id = now.strftime("run-%Y%m%d-%H%M")
     os.makedirs(OUT_DIR, exist_ok=True)
 
     run_json_path = os.path.join(OUT_DIR, f"{run_id}.json")
-    report_path   = os.path.join(OUT_DIR, "report.html")
+    report_path   = os.path.join(OUT_DIR, "Contoso-ALZ-Platform-Readiness-Report-Sample.html")
 
     # ── Execution context ─────────────────────────────────────────
     credential = AzureCliCredential(process_timeout=30)
@@ -174,7 +205,9 @@ def main():
     print(f"  Tenant:          {tenant_id or '(unknown)'}")
     print(f"  Subscriptions:   {execution_context.get('subscription_count_visible', '?')}")
     print(f"  MG access:       {execution_context.get('management_group_access')}")
-    print(f"  Identity:        {execution_context.get('identity_type')}")
+    print(f"  Credential:      {execution_context.get('credential_method', '?')}")
+    print(f"  RBAC role:       {execution_context.get('rbac_highest_role', '?')}")
+    print(f"  RBAC scope:      {execution_context.get('rbac_scope', '?')}")
 
     # ── Preflight-only mode ───────────────────────────────────────
     if args.preflight:

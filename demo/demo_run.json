@@ -1,7 +1,7 @@
 {
   "meta": {
     "tool": "lz-assessor",
-    "run_id": "demo-run",
+    "run_id": "DEMO-LAB-ALZ-ASSESSMENT",
     "timestamp": "2026-02-14T00:00:00+00:00",
     "total_controls": 243,
     "subscription_ids": [
@@ -5523,12 +5523,12 @@
     }
   ],
   "executive_summary": {
-    "summary": "Current cloud platform maturity is low, with an overall score of 31.6%. The most critical risks are concentrated in networking and security, where automated controls show high failure rates and diagnostic coverage is severely lacking. This posture exposes the organization to significant threats to operational continuity and regulatory compliance, particularly in the visible subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70). Key gaps include absence of DDoS protection, missing Azure Firewall, and insufficient centralized security visibility, all of which increase the likelihood of undetected breaches and service outages.\n\nGovernance structures are incomplete, with missing platform and landing zone management groups, further compounding the risk of inconsistent policy enforcement and resource sprawl. Identity and access management controls are entirely manual, indicating potential vulnerabilities in access control and auditability. Investments should prioritize risk reduction in networking and security, as these areas present the greatest threat to business continuity and reputation if left unaddressed.",
+    "summary": "Current platform maturity is 31.6%. The most critical gaps are in networking and governance, where automated controls show high failure rates and the management group hierarchy required for policy inheritance is absent. Without a hub-spoke topology and centralized egress, the platform cannot enforce consistent connectivity policy across landing zones. Diagnostics coverage is 2.1%, preventing centralized operations monitoring.\n\nGovernance structures are incomplete — no Platform or Landing Zones management groups exist, blocking delegated ownership and scalable policy assignment. Identity controls are entirely manual, with no evidence of PIM or break-glass account configuration. The platform currently supports only a single subscription and cannot scale to enterprise-scale operations without addressing these foundational ALZ design capabilities.",
     "top_business_risks": [
       {
-        "title": "Exposure to Network-Based Attacks",
-        "business_impact": "A successful DDoS or targeted network attack could result in prolonged service outages, loss of customer trust, and direct revenue impact.",
-        "technical_cause": "No DDoS protection and Azure Firewall present in visible subscriptions; hub-spoke topology not implemented.",
+        "title": "Missing Centralized Network Topology",
+        "business_impact": "Blocks delegated ownership of landing zone connectivity; prevents consistent egress and DNS policy across subscriptions.",
+        "technical_cause": "No hub-spoke topology, Azure Firewall, or DDoS protection detected in visible subscriptions.",
         "severity": "Critical",
         "affected_controls": [
           "088137f5-e6c4-4cfd-9e50-4547c2447ec6",
@@ -5537,9 +5537,9 @@
         ]
       },
       {
-        "title": "Insufficient Security Visibility and Monitoring",
-        "business_impact": "Limited ability to detect and respond to threats increases risk of data breaches, regulatory penalties, and reputational damage.",
-        "technical_cause": "Centralized security visibility is lacking; diagnostics coverage is only 2.1%. Entra ID logs are not centralized.",
+        "title": "Platform Diagnostics and Security Visibility Gap",
+        "business_impact": "Limits landing zone rollout — without centralized diagnostics, operations teams cannot monitor workloads across subscriptions.",
+        "technical_cause": "Diagnostics coverage is only 2.1%. Entra ID logs are not centralized. Defender for Cloud coverage is incomplete.",
         "severity": "High",
         "affected_controls": [
           "a56888b2-7e83-4404-bd31-b886528502d1",
@@ -5548,9 +5548,9 @@
         ]
       },
       {
-        "title": "Fragmented Governance and Policy Enforcement",
-        "business_impact": "Inconsistent resource management and policy enforcement may lead to uncontrolled cloud spend, compliance violations, and increased operational risk.",
-        "technical_cause": "Platform and landing zone management groups are missing; public IP governance is incomplete.",
+        "title": "No Management Group Hierarchy for Policy Inheritance",
+        "business_impact": "Prevents policy inheritance and blocks delegated ownership — the platform cannot support subscription vending or landing zone governance at scale.",
+        "technical_cause": "Platform and landing zone management groups are missing; policy cannot be inherited across subscription lifecycle.",
         "severity": "High",
         "affected_controls": [
           "61623a76-5a91-47e1-b348-ef254c27d42e",
@@ -5562,27 +5562,27 @@
     "investment_priorities": [
       {
         "priority": 1,
-        "initiative": "Strengthen network security posture by addressing DDoS protection, Azure Firewall presence, and hub-spoke topology gaps.",
+        "initiative": "Implement hub-spoke network topology with centralized egress and Azure Firewall to enable connectivity policy inheritance.",
         "estimated_effort": "Moderate",
-        "business_value": "Reduces risk of service outages and protects revenue by mitigating external attack vectors."
+        "business_value": "Unblocks delegated landing zone connectivity and consistent network policy across subscriptions."
       },
       {
         "priority": 2,
-        "initiative": "Expand centralized security visibility and diagnostics coverage across all resources, including identity logs.",
+        "initiative": "Centralize diagnostics, Defender for Cloud, and Entra ID logs to enable platform-wide operations monitoring.",
         "estimated_effort": "Moderate",
-        "business_value": "Enables rapid threat detection and response, supporting compliance and reducing breach risk."
+        "business_value": "Enables centralized operations baseline required before landing zone rollout to workload teams."
       },
       {
         "priority": 3,
-        "initiative": "Establish governance structures for platform and landing zones, and enforce public IP policies.",
+        "initiative": "Establish management group hierarchy with policy assignments to enable subscription lifecycle and guardrails.",
         "estimated_effort": "Low",
-        "business_value": "Improves policy consistency, cost control, and regulatory alignment across the cloud estate."
+        "business_value": "Enables policy inheritance, subscription vending, and delegated landing zone ownership."
       }
     ],
     "expected_outcomes_90_days": [
-      "Network security controls (DDoS protection, Azure Firewall, hub-spoke topology) implemented in the visible subscription.",
-      "Centralized diagnostics coverage increased to at least 60% of resources, including Entra ID logs.",
-      "Platform and landing zone governance structures established, with public IP policy compliance above 80%."
+      "Hub-spoke topology with centralized egress deployed; connectivity policy inherited by landing zone subscriptions.",
+      "Centralized diagnostics coverage increased to at least 60% of resources, including Entra ID logs to Log Analytics.",
+      "Management group hierarchy established with platform policy assignments; subscription vending process documented."
     ]
   },
   "transformation_plan": {
@@ -6153,12 +6153,12 @@
       "tenant_id": ""
     },
     "executive": {
-      "summary": "Current cloud platform maturity is low, with an overall score of 31.6%. The most critical risks are concentrated in networking and security, where automated controls show high failure rates and diagnostic coverage is severely lacking. This posture exposes the organization to significant threats to operational continuity and regulatory compliance, particularly in the visible subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70). Key gaps include absence of DDoS protection, missing Azure Firewall, and insufficient centralized security visibility, all of which increase the likelihood of undetected breaches and service outages.\n\nGovernance structures are incomplete, with missing platform and landing zone management groups, further compounding the risk of inconsistent policy enforcement and resource sprawl. Identity and access management controls are entirely manual, indicating potential vulnerabilities in access control and auditability. Investments should prioritize risk reduction in networking and security, as these areas present the greatest threat to business continuity and reputation if left unaddressed.",
+      "summary": "Current platform maturity is 31.6%. The most critical gaps are in networking and governance, where automated controls show high failure rates and the management group hierarchy required for policy inheritance is absent. Without a hub-spoke topology and centralized egress, the platform cannot enforce consistent connectivity policy across landing zones. Diagnostics coverage is 2.1%, preventing centralized operations monitoring.\n\nGovernance structures are incomplete — no Platform or Landing Zones management groups exist, blocking delegated ownership and scalable policy assignment. Identity controls are entirely manual, with no evidence of PIM or break-glass account configuration. The platform currently supports only a single subscription and cannot scale to enterprise-scale operations without addressing these foundational ALZ design capabilities.",
       "top_business_risks": [
         {
-          "title": "Exposure to Network-Based Attacks",
-          "business_impact": "A successful DDoS or targeted network attack could result in prolonged service outages, loss of customer trust, and direct revenue impact.",
-          "technical_cause": "No DDoS protection and Azure Firewall present in visible subscriptions; hub-spoke topology not implemented.",
+          "title": "Missing Centralized Network Topology",
+          "business_impact": "Blocks delegated ownership of landing zone connectivity; prevents consistent egress and DNS policy across subscriptions.",
+          "technical_cause": "No hub-spoke topology, Azure Firewall, or DDoS protection detected in visible subscriptions.",
           "severity": "Critical",
           "affected_controls": [
             "088137f5-e6c4-4cfd-9e50-4547c2447ec6",
@@ -6167,9 +6167,9 @@
           ]
         },
         {
-          "title": "Insufficient Security Visibility and Monitoring",
-          "business_impact": "Limited ability to detect and respond to threats increases risk of data breaches, regulatory penalties, and reputational damage.",
-          "technical_cause": "Centralized security visibility is lacking; diagnostics coverage is only 2.1%. Entra ID logs are not centralized.",
+          "title": "Platform Diagnostics and Security Visibility Gap",
+          "business_impact": "Limits landing zone rollout — without centralized diagnostics, operations teams cannot monitor workloads across subscriptions.",
+          "technical_cause": "Diagnostics coverage is only 2.1%. Entra ID logs are not centralized. Defender for Cloud coverage is incomplete.",
           "severity": "High",
           "affected_controls": [
             "a56888b2-7e83-4404-bd31-b886528502d1",
@@ -6178,9 +6178,9 @@
           ]
         },
         {
-          "title": "Fragmented Governance and Policy Enforcement",
-          "business_impact": "Inconsistent resource management and policy enforcement may lead to uncontrolled cloud spend, compliance violations, and increased operational risk.",
-          "technical_cause": "Platform and landing zone management groups are missing; public IP governance is incomplete.",
+          "title": "No Management Group Hierarchy for Policy Inheritance",
+          "business_impact": "Prevents policy inheritance and blocks delegated ownership — the platform cannot support subscription vending or landing zone governance at scale.",
+          "technical_cause": "Platform and landing zone management groups are missing; policy cannot be inherited across subscription lifecycle.",
           "severity": "High",
           "affected_controls": [
             "61623a76-5a91-47e1-b348-ef254c27d42e",
@@ -6192,27 +6192,27 @@
       "investment_priorities": [
         {
           "priority": 1,
-          "initiative": "Strengthen network security posture by addressing DDoS protection, Azure Firewall presence, and hub-spoke topology gaps.",
+          "initiative": "Implement hub-spoke network topology with centralized egress and Azure Firewall to enable connectivity policy inheritance.",
           "estimated_effort": "Moderate",
-          "business_value": "Reduces risk of service outages and protects revenue by mitigating external attack vectors."
+          "business_value": "Unblocks delegated landing zone connectivity and consistent network policy across subscriptions."
         },
         {
           "priority": 2,
-          "initiative": "Expand centralized security visibility and diagnostics coverage across all resources, including identity logs.",
+          "initiative": "Centralize diagnostics, Defender for Cloud, and Entra ID logs to enable platform-wide operations monitoring.",
           "estimated_effort": "Moderate",
-          "business_value": "Enables rapid threat detection and response, supporting compliance and reducing breach risk."
+          "business_value": "Enables centralized operations baseline required before landing zone rollout to workload teams."
         },
         {
           "priority": 3,
-          "initiative": "Establish governance structures for platform and landing zones, and enforce public IP policies.",
+          "initiative": "Establish management group hierarchy with policy assignments to enable subscription lifecycle and guardrails.",
           "estimated_effort": "Low",
-          "business_value": "Improves policy consistency, cost control, and regulatory alignment across the cloud estate."
+          "business_value": "Enables policy inheritance, subscription vending, and delegated landing zone ownership."
         }
       ],
       "expected_outcomes_90_days": [
-        "Network security controls (DDoS protection, Azure Firewall, hub-spoke topology) implemented in the visible subscription.",
-        "Centralized diagnostics coverage increased to at least 60% of resources, including Entra ID logs.",
-        "Platform and landing zone governance structures established, with public IP policy compliance above 80%."
+        "Hub-spoke topology with centralized egress deployed; connectivity policy inherited by landing zone subscriptions.",
+        "Centralized diagnostics coverage increased to at least 60% of resources, including Entra ID logs to Log Analytics.",
+        "Management group hierarchy established with platform policy assignments; subscription vending process documented."
       ]
     },
     "enterprise_scale_readiness": {
@@ -6228,19 +6228,19 @@
         },
         {
           "category": "Networking",
-          "description": "No hub-spoke topology or Azure Firewall detected. Centralized network architecture is absent, exposing resources to unmanaged connectivity and security risks.",
+          "description": "No hub-spoke topology or Azure Firewall detected. This platform cannot support delegated landing zone connectivity or centralized egress policy.",
           "severity": "Critical",
           "resolving_initiative": "INIT-002"
         },
         {
           "category": "Security",
-          "description": "Centralized security visibility is lacking. Diagnostics coverage is only 2.1%, and Defender for Cloud coverage is incomplete, undermining threat detection and compliance.",
+          "description": "Platform diagnostics baseline missing. Diagnostics coverage is only 2.1%, and Defender for Cloud coverage is incomplete — operations teams cannot monitor workloads across landing zones.",
           "severity": "Critical",
           "resolving_initiative": "INIT-003"
         },
         {
           "category": "Identity",
-          "description": "Low diagnostics coverage suggests Entra ID logs are not centralized. PIM and break-glass accounts are not evidenced, risking privileged access management.",
+          "description": "Platform identity baseline missing. Entra ID logs are not centralized; PIM and break-glass accounts are not evidenced — blocks delegated identity governance for landing zones.",
           "severity": "Critical",
           "resolving_initiative": "INIT-004"
         },

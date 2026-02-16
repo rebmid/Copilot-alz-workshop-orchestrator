@@ -1,0 +1,85 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "identity",
+  "domain": "Identity and Access Management",
+  "description": "Resolves manual controls for RBAC model, managed identities, Entra ID groups, PIM, and conditional access.",
+  "questions": [
+    {
+      "id": "iam-rbac-model",
+      "text": "Have you defined and enforced a RBAC model that aligns to your cloud operating model (scoped assignments across management groups)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["348ef254-c27d-442e-abba-c7571559ab91"],
+        "partial": [],
+        "no": ["348ef254-c27d-442e-abba-c7571559ab91"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "iam-managed-identities",
+      "text": "Are managed identities used instead of service principals for authentication to Azure services?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["4348bf81-7573-4512-8f46-9061cc198fea"],
+        "partial": [],
+        "no": ["4348bf81-7573-4512-8f46-9061cc198fea"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "iam-work-school-only",
+      "text": "Is the authentication type restricted to 'Work or school account' for all account types (no personal MSA)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["12e7f983-f630-4472-8dd6-9c5b5c2622f5"],
+        "partial": [],
+        "no": ["12e7f983-f630-4472-8dd6-9c5b5c2622f5"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "iam-entra-groups",
+      "text": "Are Microsoft Entra groups used to assign permissions, with on-premises groups synced to Entra ID?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["4b69bad3-3aad-45e8-a68e-1d76667313b4"],
+        "partial": [],
+        "no": ["4b69bad3-3aad-45e8-a68e-1d76667313b4"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "iam-pim-maturity",
+      "text": "What is the maturity of your Privileged Identity Management (PIM) implementation?\n  1 = Not started\n  2 = PIM enabled for some roles\n  3 = PIM enforced for all privileged roles with access reviews",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["d505ebcb-79b1-4274-9c0d-a27c8bea489c"],
+        "2": ["d505ebcb-79b1-4274-9c0d-a27c8bea489c"],
+        "3": ["d505ebcb-79b1-4274-9c0d-a27c8bea489c"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "iam-conditional-access",
+      "text": "Are Conditional Access policies and MFA enforced for all users with rights to the Azure environment?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["53e8908a-e28c-484c-93b6-b7808b9fe5c4", "1049d403-a923-4c34-94d0-0018ac6a9e01"],
+        "partial": [],
+        "no": ["53e8908a-e28c-484c-93b6-b7808b9fe5c4", "1049d403-a923-4c34-94d0-0018ac6a9e01"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "iam-break-glass",
+      "text": "Have emergency access (break-glass) accounts been implemented with passkey (FIDO2) or certificate-based MFA?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["984a859c-773e-47d2-9162-3a765a917e1f"],
+        "partial": [],
+        "no": ["984a859c-773e-47d2-9162-3a765a917e1f"]
+      },
+      "weight": 1.0
+    }
+  ]
+}

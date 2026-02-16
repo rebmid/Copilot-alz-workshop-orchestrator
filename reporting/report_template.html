@@ -88,7 +88,19 @@
     .q-domain h3 { margin-bottom: 6px; }
     .q-item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
     .q-item:last-child { border-bottom: none; }
+    .q-text { font-weight: 500; margin-bottom: 4px; }
     .q-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .q-maturity { display: flex; flex-direction: column; gap: 3px; margin: 6px 0 4px 12px; font-size: 13px; }
+    .q-maturity .maturity-level { padding: 2px 0; color: var(--text); }
+    .q-maturity .maturity-level strong { display: inline-block; width: 18px; text-align: center; border-radius: 3px; font-size: 12px; }
+    .q-maturity .maturity-level:nth-child(1) strong { background: #fde7e9; color: var(--danger); }
+    .q-maturity .maturity-level:nth-child(2) strong { background: #fff4ce; color: #7a6400; }
+    .q-maturity .maturity-level:nth-child(3) strong { background: #e6f4ea; color: var(--success); }
+
+    /* ── Maturity color utilities ──────────────────────────── */
+    .maturity-danger { color: var(--danger); font-weight: 600; }
+    .maturity-warn   { color: var(--warn);   font-weight: 600; }
+    .maturity-ok     { color: var(--success); font-weight: 600; }
 
     /* ── Section spacing ──────────────────────────────────── */
     .section { margin-bottom: 32px; }
@@ -118,6 +130,7 @@
   <a href="#deepdive">Domain Deep Dive</a>
   <a href="#confidence">Scope &amp; Confidence</a>
   <a href="#validation">Customer Validation</a>
+  <a href="#alz-references">ALZ References</a>
 </nav>
 
 <h1>Azure Landing Zone — Platform Readiness Report
@@ -321,14 +334,14 @@
           <th>Manual</th>
           <th>Total</th>
         </tr>
-        {% for s in scoring.section_scores %}
+        {% for s in scoring.section_scores if s.section != 'Unknown' %}
         <tr>
           <td><strong>{{ s.section }}</strong></td>
           <td>
             {% if s.maturity_percent is not none %}
-              <span style="color:{{ 'var(--danger)' if s.maturity_percent < 40 else ('var(--warn)' if s.maturity_percent < 65 else 'var(--success)') }}; font-weight:600;">{{ s.maturity_percent }}%</span>
+              <span class="{{ 'maturity-danger' if s.maturity_percent < 40 else ('maturity-warn' if s.maturity_percent < 65 else 'maturity-ok') }}">{{ s.maturity_percent }}%</span>
             {% else %}
-              <span style="color:var(--muted);">No signal</span>
+              <span style="color:var(--muted);">Customer operating model validation required</span>
             {% endif %}
           </td>
           <td>{{ s.counts.get('Pass', 0) }}</td>
@@ -352,7 +365,7 @@
         {% for s in assessment_modes.Scale %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
           <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
         </tr>
         {% endfor %}
@@ -373,7 +386,7 @@
         {% for s in assessment_modes.Security %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
           <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
         </tr>
         {% endfor %}
@@ -394,7 +407,7 @@
         {% for s in assessment_modes.Operations %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
           <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
         </tr>
         {% endfor %}
@@ -415,7 +428,7 @@
         {% for s in assessment_modes.Cost %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">No signal</span>{% endif %}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
           <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
         </tr>
         {% endfor %}
@@ -451,6 +464,17 @@
         <br>Limitations: {{ data_confidence.limitations | join(', ') }}
         {% endif %}
       </p>
+      {% if data_confidence.workshop_applied %}
+      <div style="margin-top:14px; padding:12px 16px; background:rgba(0,200,83,0.08); border-left:3px solid #00c853; border-radius:4px;">
+        <strong style="color:#00c853;">Workshop Completed</strong>
+        <span style="font-size:13px;color:var(--muted);margin-left:8px;">
+          {{ data_confidence.workshop_resolved }} controls resolved
+          &middot; {{ data_confidence.workshop_questions_answered }} questions answered
+          &middot; Completion: {{ data_confidence.workshop_completion }}%
+          &middot; Confidence: <strong>{{ data_confidence.workshop_confidence }}</strong>
+        </span>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -475,8 +499,9 @@
         <div class="label">Graph API Access</div>
       </div>
       <div class="kpi">
-        <div class="value">{{ data_confidence.identity_type }}</div>
-        <div class="label">Identity Type</div>
+        <div class="value" style="font-size:16px;line-height:1.3;">{{ data_confidence.exec_context_label }}</div>
+        <div class="label">Assessment Execution Context</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">{{ data_confidence.exec_context_detail }}</div>
       </div>
     </div>
     <table>
@@ -501,6 +526,13 @@
         <td>{% if data_confidence.graph_access %}Microsoft Graph API{% else %}Not available — Directory.Read.All required{% endif %}</td>
         <td><span class="{{ 'conf-evidence' if data_confidence.graph_access else 'conf-assumption' }}">{{ 'Evidence' if data_confidence.graph_access else 'Assumption' }}</span></td>
       </tr>
+      {% if data_confidence.workshop_applied %}
+      <tr>
+        <td>Discovery workshop ({{ data_confidence.workshop_resolved }} controls resolved)</td>
+        <td>Interactive questionnaire — {{ data_confidence.workshop_completion }}% complete</td>
+        <td><span class="conf-evidence">{{ data_confidence.workshop_confidence }}</span></td>
+      </tr>
+      {% endif %}
     </table>
   </div>
 </div>
@@ -513,16 +545,24 @@
   <h2>8 &middot; Customer Validation Required</h2>
   <p style="font-size:14px;color:var(--muted);margin-bottom:14px;">These questions must be validated with the customer during the discovery workshop. Grouped by domain.</p>
 
-  {% for domain in ['Identity', 'Networking', 'Governance', 'Operations'] %}
+  {% for domain in ['Identity and Access Management', 'Network Topology and Connectivity', 'Governance', 'Security', 'Management and Operations'] %}
     {% if validation_questions.get(domain) %}
     <div class="card q-domain">
       <h3>{{ domain }}</h3>
       {% for q in validation_questions[domain] %}
       <div class="q-item">
-        {{ q.question }}
+        <div class="q-text">{{ q.question }}</div>
+        {% if q.maturity_levels %}
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; {{ q.maturity_levels['1'] }}</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; {{ q.maturity_levels['2'] }}</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; {{ q.maturity_levels['3'] }}</span>
+        </div>
+        {% endif %}
         <div class="q-meta">
-          Type: {{ q.type | default('open') }}
-          · Resolves {{ q.resolves_controls | length if q.resolves_controls else 0 }} control(s)
+          {% if q.alz_design_area %}ALZ Area: {{ q.alz_design_area }} · {% endif %}
+          {% if q.alz_checklist_ids %}Ref: {{ q.alz_checklist_ids | join(', ') }} · {% endif %}
+          Resolves {{ q.resolves_controls | length if q.resolves_controls else 0 }} control(s)
         </div>
       </div>
       {% endfor %}
@@ -532,15 +572,23 @@
 
   {# Render any remaining domains not in the priority list #}
   {% for domain, questions in validation_questions.items() %}
-    {% if domain not in ['Identity', 'Networking', 'Governance', 'Operations'] %}
+    {% if domain not in ['Identity and Access Management', 'Network Topology and Connectivity', 'Governance', 'Security', 'Management and Operations'] %}
     <div class="card q-domain">
       <h3>{{ domain }}</h3>
       {% for q in questions %}
       <div class="q-item">
-        {{ q.question }}
+        <div class="q-text">{{ q.question }}</div>
+        {% if q.maturity_levels %}
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; {{ q.maturity_levels['1'] }}</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; {{ q.maturity_levels['2'] }}</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; {{ q.maturity_levels['3'] }}</span>
+        </div>
+        {% endif %}
         <div class="q-meta">
-          Type: {{ q.type | default('open') }}
-          · Resolves {{ q.resolves_controls | length if q.resolves_controls else 0 }} control(s)
+          {% if q.alz_design_area %}ALZ Area: {{ q.alz_design_area }} · {% endif %}
+          {% if q.alz_checklist_ids %}Ref: {{ q.alz_checklist_ids | join(', ') }} · {% endif %}
+          Resolves {{ q.resolves_controls | length if q.resolves_controls else 0 }} control(s)
         </div>
       </div>
       {% endfor %}
@@ -551,18 +599,40 @@
 {% endif %}
 
 <!-- ════════════════════════════════════════════════════════════════
-     TOP BUSINESS RISKS (from AI executive)
+     TOP PLATFORM RISKS (from AI executive)
      ════════════════════════════════════════════════════════════════ -->
 {% if top_business_risks %}
 <div class="section" id="risks">
-  <h2>Top Business Risks</h2>
+  <h2>Top Platform Adoption Risks</h2>
   {% for risk in top_business_risks %}
   <div class="card">
     <h3>{{ risk.title }}</h3>
-    <p><strong>Business impact:</strong> {{ risk.business_impact }}</p>
+    {% if risk.alz_design_area %}<p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: {{ risk.alz_design_area }}</p>{% endif %}
+    <p><strong>Platform impact:</strong> {{ risk.business_impact }}</p>
     <p style="margin-top:6px;"><strong>Technical cause:</strong> {{ risk.technical_cause }}</p>
   </div>
   {% endfor %}
+</div>
+{% endif %}
+
+<!-- ════════════════════════════════════════════════════════════════
+     ALZ DESIGN AREA REFERENCES (from MCP grounding)
+     ════════════════════════════════════════════════════════════════ -->
+{% if alz_design_area_urls %}
+<div class="section" id="alz-references">
+  <h2>ALZ Design Area References</h2>
+  <div class="card">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Official Microsoft Learn documentation for each Azure Landing Zone design area, sourced via MCP.</p>
+    <table>
+      <tr><th>Design Area</th><th>Microsoft Learn Reference</th></tr>
+      {% for area, url in alz_design_area_urls.items() %}
+      <tr>
+        <td><strong>{{ area }}</strong></td>
+        <td><a href="{{ url }}" target="_blank" style="color:var(--accent);text-decoration:none;">{{ url | truncate(80) }}</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
 </div>
 {% endif %}
 

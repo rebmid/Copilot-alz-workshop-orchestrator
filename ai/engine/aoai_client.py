@@ -28,7 +28,7 @@ class AOAIClient:
         key: str | None = None,
         api_version: str = "2024-02-15-preview",
         temperature: float = 0.3,
-        max_tokens: int = 4000,
+        max_tokens: int = 16000,
     ):
         self.model = model or "gpt-4.1"
         self.endpoint = endpoint or os.environ.get("AZURE_OPENAI_ENDPOINT", "")

@@ -1,0 +1,63 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "management",
+  "domain": "Management",
+  "description": "Resolves manual controls for monitoring topology, log retention, update management, and configuration drift.",
+  "questions": [
+    {
+      "id": "mgmt-workspace-topology",
+      "text": "What is your Azure Monitor Logs workspace topology?\n  1 = No centralized workspace\n  2 = Single workspace per region\n  3 = Centralized workspace with regional data-collection rules",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["7418ada9-4199-4c28-8286-d15e9433e8f3"],
+        "2": ["7418ada9-4199-4c28-8286-d15e9433e8f3"],
+        "3": ["7418ada9-4199-4c28-8286-d15e9433e8f3"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "mgmt-log-retention",
+      "text": "Are logs exported to Azure Storage for retention beyond twelve years (if required by compliance)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["5e6c4cfd-3e50-4454-9c24-47ec66138a72"],
+        "partial": [],
+        "no": ["5e6c4cfd-3e50-4454-9c24-47ec66138a72"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "mgmt-config-drift",
+      "text": "Is OS-level VM configuration drift monitored using Azure Policy (machine configuration)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["859c3900-4514-41eb-b010-475d695abd74"],
+        "partial": [],
+        "no": ["859c3900-4514-41eb-b010-475d695abd74"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "mgmt-update-manager",
+      "text": "Is Azure Update Manager used as the patching mechanism for Windows and Linux VMs (including Azure Arc-enabled servers)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["c806c048-26b7-4ddf-b4c2-b4f0c476925d"],
+        "partial": [],
+        "no": ["c806c048-26b7-4ddf-b4c2-b4f0c476925d"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "mgmt-alerting-maturity",
+      "text": "What is the maturity of your Azure Monitor alerting and action mapping?\n  1 = No alerts configured\n  2 = Basic metric alerts on critical resources\n  3 = Full alert-to-action-group mapping with ITSM integration (ServiceNow/PagerDuty)",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["7418ada9-4199-4c28-8286-d15e9433e8f3"],
+        "2": ["7418ada9-4199-4c28-8286-d15e9433e8f3"],
+        "3": ["7418ada9-4199-4c28-8286-d15e9433e8f3"]
+      },
+      "weight": 1.2
+    }
+  ]
+}

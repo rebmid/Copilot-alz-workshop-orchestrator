@@ -51,10 +51,11 @@ def _domain_for_question(question: dict, results_by_id: dict) -> str:
 
 
 _DOMAIN_BUCKETS = {
-    "Identity": ["Identity and Access Management", "Azure Billing and Microsoft Entra ID Tenants", "Identity"],
-    "Networking": ["Networking", "Network Topology and Connectivity"],
+    "Identity and Access Management": ["Identity and Access Management", "Azure Billing and Microsoft Entra ID Tenants", "Identity"],
+    "Network Topology and Connectivity": ["Networking", "Network Topology and Connectivity"],
     "Governance": ["Governance", "Resource Organization"],
-    "Operations": ["Management", "Platform Automation and DevOps"],
+    "Security": ["Security"],
+    "Management and Operations": ["Management", "Platform Automation and DevOps", "Operations"],
 }
 
 
@@ -71,7 +72,7 @@ _MODE_SECTIONS = {
               "Identity and Access Management", "Governance"],
     "Security": ["Security", "Identity and Access Management"],
     "Operations": ["Management", "Platform Automation and DevOps"],
-    "Cost": ["Governance"],
+    "Cost": ["Governance", "Azure Billing and Microsoft Entra ID Tenants"],
     "Data Confidence": [],
 }
 
@@ -198,11 +199,11 @@ def _build_report_context(output: dict) -> dict:
             "initiative": title,
             "initiative_id": init.get("initiative_id", ""),
             "capability_enabled": _capability_label(title),
-            "alz_design_area": init.get("caf_discipline", "General"),
+            "alz_design_area": init.get("alz_design_area", init.get("caf_discipline", "General")),
         })
 
     # ── 6. Domain Deep Dive – assessment modes ────────────────────
-    section_scores = scoring.get("section_scores", [])
+    section_scores = [s for s in scoring.get("section_scores", []) if s.get("section") != "Unknown"]
     section_by_name = {s["section"]: s for s in section_scores}
 
     assessment_modes: dict[str, list] = {}
@@ -215,11 +216,25 @@ def _build_report_context(output: dict) -> dict:
         assessment_modes[mode] = mode_sections
 
     # Data Confidence mode: built differently
+    # ── Execution context label ───────────────────────────────────
+    _id_type = exec_ctx.get("identity_type", "unknown").replace("_", " ").title()
+    _cred = exec_ctx.get("credential_method", "")
+    _role = exec_ctx.get("rbac_highest_role", "")
+    _scope = exec_ctx.get("rbac_scope", "")
+    if _cred:
+        exec_context_label = f"Delegated {_id_type} via {_cred}"
+        exec_context_detail = f"Delegated {_id_type} · {_role or 'Unknown Role'} · {_scope + ' Scope' if _scope else 'Unknown Scope'}"
+    else:
+        exec_context_label = f"Delegated {_id_type}"
+        exec_context_detail = _id_type
+
     data_confidence = {
         "subscription_count": len(meta.get("subscription_ids", [])),
         "subscription_ids": meta.get("subscription_ids", []),
         "mg_visibility": exec_ctx.get("management_group_access", False),
         "identity_type": exec_ctx.get("identity_type", "Unknown"),
+        "exec_context_label": exec_context_label,
+        "exec_context_detail": exec_context_detail,
         "tenant_id": exec_ctx.get("tenant_id", ""),
         "total_controls": auto_cov.get("total_controls", 0),
         "automated_controls": auto_cov.get("automated_controls", auto_cov.get("data_driven", 0)),
@@ -238,6 +253,22 @@ def _build_report_context(output: dict) -> dict:
                 break
     data_confidence["graph_access"] = graph_access
 
+    # ── Workshop overlay ──────────────────────────────────────────
+    workshop = output.get("workshop", {})
+    if workshop:
+        data_confidence["workshop_applied"] = True
+        data_confidence["workshop_completion"] = workshop.get("completion_percent", 0)
+        data_confidence["workshop_resolved"] = workshop.get("controls_resolved", 0)
+        data_confidence["workshop_remaining"] = workshop.get("manual_remaining",
+                                                              data_confidence.get("manual_controls", 0))
+        data_confidence["workshop_confidence"] = workshop.get("confidence_level", "Low")
+        data_confidence["workshop_questions_answered"] = workshop.get("questions_answered", 0)
+        # Recalculate manual controls from workshop perspective
+        data_confidence["manual_controls"] = workshop.get("manual_remaining",
+                                                           data_confidence.get("manual_controls", 0))
+    else:
+        data_confidence["workshop_applied"] = False
+
     # ── 7. Assessment Scope & Confidence (dedicated section) ──────
     # (reuses data_confidence dict above)
 
@@ -251,6 +282,10 @@ def _build_report_context(output: dict) -> dict:
     # top business risks
     top_business_risks = executive.get("top_business_risks", [])
 
+    # ALZ design area references from MCP grounding
+    alz_design_area_refs = output.get("alz_design_area_references", {})
+    alz_design_area_urls = output.get("alz_design_area_urls", {})
+
     return {
         "readiness_snapshot": readiness_snapshot,
         "lz_blockers": lz_blockers,
@@ -262,6 +297,9 @@ def _build_report_context(output: dict) -> dict:
         "validation_questions": validation_questions,
         "top_business_risks": top_business_risks,
         "platform_readiness_text": platform_readiness_text,
+        "workshop": output.get("workshop", {}),
+        "alz_design_area_references": alz_design_area_refs,
+        "alz_design_area_urls": alz_design_area_urls,
     }
 
 

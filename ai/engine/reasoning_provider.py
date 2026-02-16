@@ -48,7 +48,7 @@ class AOAIReasoningProvider:
         key: str | None = None,
         api_version: str = "2024-02-15-preview",
         temperature: float = 0.3,
-        max_tokens: int = 4000,
+        max_tokens: int = 16000,
     ):
         # Defer import so the module is loadable without Azure deps
         from ai.engine.aoai_client import AOAIClient

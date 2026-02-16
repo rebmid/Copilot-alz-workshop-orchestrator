@@ -1,0 +1,85 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "networking",
+  "domain": "Network Topology and Connectivity",
+  "description": "Resolves manual controls for hub-spoke topology, ExpressRoute, DNS, DDoS, WAF, and NVA patterns.",
+  "questions": [
+    {
+      "id": "net-topology-model",
+      "text": "Which network topology model is deployed?\n  1 = No centralized topology (flat VNets)\n  2 = Hub-spoke with VNet peering\n  3 = Virtual WAN hub-spoke",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["7dd61623-a364-4a90-9eca-e48ebd54cd7d"],
+        "2": ["7dd61623-a364-4a90-9eca-e48ebd54cd7d"],
+        "3": ["7dd61623-a364-4a90-9eca-e48ebd54cd7d"]
+      },
+      "weight": 1.4
+    },
+    {
+      "id": "net-multi-region",
+      "text": "Are connectivity resources (ExpressRoute gateways, VPN gateways) deployed in multiple regions?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["7bc1c396-2461-4698-b57f-30ca69525252"],
+        "partial": [],
+        "no": ["7bc1c396-2461-4698-b57f-30ca69525252"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "net-content-delivery",
+      "text": "Is there a documented standard for securing the delivery of application content from workload spokes (CDN/Front Door/App Gateway)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["373f482f-3e39-4d39-8aa4-7e566f6082b6"],
+        "partial": [],
+        "no": ["373f482f-3e39-4d39-8aa4-7e566f6082b6"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "net-nva-vendor",
+      "text": "When deploying partner networking technologies (NVAs), is the partner vendor's guidance followed for HA and scalability?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["e2e8abac-3571-4559-ab91-53e89f89dc7b"],
+        "partial": [],
+        "no": ["e2e8abac-3571-4559-ab91-53e89f89dc7b"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "net-dns-centralized",
+      "text": "Is DNS resolution centralized using Azure Private DNS Zones linked to the hub, with conditional forwarders for on-premises?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["153e8908-ae28-4c84-a33b-6b7808b9fe5c"],
+        "partial": [],
+        "no": ["153e8908-ae28-4c84-a33b-6b7808b9fe5c"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "net-ddos-protection",
+      "text": "Is Azure DDoS Network or IP Protection enabled to protect public IP address endpoints within landing zone virtual networks?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["088137f5-e6c4-4cfd-9e50-4547c2447ec6"],
+        "partial": [],
+        "no": ["088137f5-e6c4-4cfd-9e50-4547c2447ec6"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "net-egress-maturity",
+      "text": "What is the maturity of your centralized egress/ingress filtering?\n  1 = No centralized filtering\n  2 = Azure Firewall or NVA in hub (basic rules)\n  3 = Full IDPS-enabled Azure Firewall Premium with TLS inspection and threat intelligence",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["e6c4cfd3-e504-4547-a244-7ec66138a720", "c10d51ef-f999-455d-bba0-5c90ece07447"],
+        "2": ["e6c4cfd3-e504-4547-a244-7ec66138a720", "c10d51ef-f999-455d-bba0-5c90ece07447"],
+        "3": ["e6c4cfd3-e504-4547-a244-7ec66138a720", "c10d51ef-f999-455d-bba0-5c90ece07447"]
+      },
+      "weight": 1.2
+    }
+  ]
+}

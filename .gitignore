@@ -20,6 +20,9 @@ out/
 *.html
 !reporting/report_template.html
 
+# Temp files
+*.tmp
+
 # One-shot scripts
 _make_demo.py
 run_*.json

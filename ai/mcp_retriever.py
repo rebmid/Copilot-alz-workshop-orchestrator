@@ -8,6 +8,9 @@ Available tools:
   2. microsoft_code_sample_search — code snippets by language
   3. microsoft_docs_fetch         — full page as markdown
 
+Enriched with ALZ design-area-aware grounding — every search is scoped to
+an official Azure Landing Zone design area when applicable.
+
 Falls back to the public Learn search API if MCP is unreachable.
 """
 from __future__ import annotations
@@ -16,6 +19,14 @@ import asyncio
 import json
 import requests
 from typing import Any
+
+from alz.loader import (
+    ALZ_DESIGN_AREAS,
+    get_design_area_learn_urls,
+    get_items_by_design_area,
+    build_prompt_checklist_context,
+    get_design_area_summary,
+)
 
 # Lazy MCP imports — avoids hard failure when mcp SDK is not installed
 # (e.g. --why / --demo mode only needs mcp_retriever's REST fallback)
@@ -181,7 +192,90 @@ def fetch_doc(url: str) -> str:
 # Grounding functions (used by the reasoning engine)
 # ──────────────────────────────────────────────────────────────────
 
-# Tailored queries by initiative topic area
+# ── ALZ Design-Area-Aware Microsoft Learn Queries ─────────────────
+# Every search is scoped to an official ALZ design area so results
+# are authoritative and aligned to the review checklist.
+_ALZ_DESIGN_AREA_QUERIES: dict[str, list[str]] = {
+    "Azure Billing and Microsoft Entra ID Tenants": [
+        "Azure landing zone billing Microsoft Entra tenant design area",
+        "Cloud Adoption Framework Azure billing subscription organization",
+    ],
+    "Identity and Access Management": [
+        "Azure landing zone identity access management RBAC PIM Entra ID",
+        "Cloud Adoption Framework identity design area conditional access break-glass",
+    ],
+    "Network Topology and Connectivity": [
+        "Azure landing zone network topology hub spoke Virtual WAN connectivity",
+        "Cloud Adoption Framework network design area Azure Firewall DNS Private Link",
+    ],
+    "Security": [
+        "Azure landing zone security design area Defender for Cloud CSPM Sentinel",
+        "Cloud Adoption Framework security baseline Microsoft Defender plans",
+    ],
+    "Management": [
+        "Azure landing zone management design area monitoring Log Analytics diagnostics",
+        "Cloud Adoption Framework management Azure Monitor Update Manager",
+    ],
+    "Resource Organization": [
+        "Azure landing zone resource organization management groups subscriptions",
+        "Cloud Adoption Framework resource organization naming tagging conventions",
+    ],
+    "Platform Automation and DevOps": [
+        "Azure landing zone platform automation DevOps IaC Bicep subscription vending",
+        "Cloud Adoption Framework platform automation GitOps Azure Verified Modules",
+    ],
+    "Governance": [
+        "Azure landing zone governance design area Azure Policy compliance",
+        "Cloud Adoption Framework governance policy initiatives cost management",
+    ],
+}
+
+# Initiative-topic → ALZ design area mapping (enriches grounding)
+_TOPIC_TO_DESIGN_AREA: dict[str, str] = {
+    "security": "Security",
+    "defender": "Security",
+    "sentinel": "Security",
+    "siem": "Security",
+    "soc": "Security",
+    "network": "Network Topology and Connectivity",
+    "hub": "Network Topology and Connectivity",
+    "spoke": "Network Topology and Connectivity",
+    "firewall": "Network Topology and Connectivity",
+    "dns": "Network Topology and Connectivity",
+    "ddos": "Network Topology and Connectivity",
+    "private endpoint": "Network Topology and Connectivity",
+    "connectivity": "Network Topology and Connectivity",
+    "governance": "Governance",
+    "policy": "Governance",
+    "compliance": "Governance",
+    "cost": "Governance",
+    "budget": "Governance",
+    "identity": "Identity and Access Management",
+    "rbac": "Identity and Access Management",
+    "pim": "Identity and Access Management",
+    "entra": "Identity and Access Management",
+    "conditional access": "Identity and Access Management",
+    "break-glass": "Identity and Access Management",
+    "logging": "Management",
+    "monitor": "Management",
+    "diagnostic": "Management",
+    "update manager": "Management",
+    "log analytics": "Management",
+    "management group": "Resource Organization",
+    "subscription": "Resource Organization",
+    "naming": "Resource Organization",
+    "tagging": "Resource Organization",
+    "resource org": "Resource Organization",
+    "automation": "Platform Automation and DevOps",
+    "iac": "Platform Automation and DevOps",
+    "bicep": "Platform Automation and DevOps",
+    "vending": "Platform Automation and DevOps",
+    "devops": "Platform Automation and DevOps",
+    "billing": "Azure Billing and Microsoft Entra ID Tenants",
+    "tenant": "Azure Billing and Microsoft Entra ID Tenants",
+}
+
+# Tailored queries by initiative topic area (kept for backward compat)
 _INITIATIVE_QUERIES: dict[str, str] = {
     "security": "Azure landing zone security baseline Defender for Cloud CSPM",
     "network": "Azure landing zone hub spoke connectivity Azure Firewall network topology",
@@ -205,13 +299,134 @@ def _pick_query(title: str) -> str:
     return f"Azure landing zone {title}"
 
 
+def _infer_design_area(title: str) -> str | None:
+    """Infer the ALZ design area from initiative title keywords."""
+    title_lower = title.lower()
+    for keyword, area in _TOPIC_TO_DESIGN_AREA.items():
+        if keyword in title_lower:
+            return area
+    return None
+
+
+# ──────────────────────────────────────────────────────────────────
+# ALZ Design-Area-Aware Grounding (NEW)
+# ──────────────────────────────────────────────────────────────────
+
+def ground_by_design_area(design_area: str, top: int = 5) -> list[dict]:
+    """Search Microsoft Learn for a specific ALZ design area.
+
+    Uses the curated queries from _ALZ_DESIGN_AREA_QUERIES and
+    supplements with a fetch of the canonical design area page.
+    """
+    queries = _ALZ_DESIGN_AREA_QUERIES.get(design_area, [])
+    refs: list[dict] = []
+    seen_urls: set[str] = set()
+
+    for query in queries:
+        try:
+            results = search_docs(query, top=3)
+            for r in results:
+                url = r.get("url", "")
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    refs.append(r)
+        except Exception:
+            pass
+
+    # Always include the canonical CAF design area page
+    canonical_urls = get_design_area_learn_urls()
+    canonical = canonical_urls.get(design_area)
+    if canonical and canonical not in seen_urls:
+        refs.insert(0, {
+            "title": f"ALZ Design Area — {design_area}",
+            "url": canonical,
+            "excerpt": f"Official Cloud Adoption Framework guidance for {design_area}.",
+        })
+
+    return refs[:top]
+
+
+def fetch_design_area_guidance(design_area: str) -> str:
+    """Fetch the full Microsoft Learn page for an ALZ design area.
+
+    Returns the page content as markdown for deep grounding.
+    """
+    canonical_urls = get_design_area_learn_urls()
+    url = canonical_urls.get(design_area)
+    if not url:
+        return ""
+    return fetch_doc(url)
+
+
+def ground_all_design_areas(top_per_area: int = 3) -> dict[str, list[dict]]:
+    """Ground all 8 ALZ design areas with Microsoft Learn references.
+
+    Returns {design_area: [refs]} for the full set.
+    """
+    grounded: dict[str, list[dict]] = {}
+    for area in ALZ_DESIGN_AREAS:
+        try:
+            grounded[area] = ground_by_design_area(area, top=top_per_area)
+        except Exception as e:
+            print(f"  ⚠ Grounding failed for '{area}': {e}")
+            grounded[area] = []
+    return grounded
+
+
+def build_alz_grounding_block() -> str:
+    """Build a text block of ALZ checklist + Learn references for prompt injection.
+
+    Combines the official checklist items with the canonical Learn URLs
+    so LLMs have authoritative grounding for every recommendation.
+    """
+    lines = [
+        "## Official Azure Landing Zone Design Areas",
+        "Source: Azure/review-checklists GitHub repo + Microsoft Learn CAF",
+        "",
+    ]
+
+    canonical_urls = get_design_area_learn_urls()
+    try:
+        summary = get_design_area_summary()
+    except Exception:
+        summary = []
+
+    for i, area in enumerate(ALZ_DESIGN_AREAS, 1):
+        url = canonical_urls.get(area, "")
+        area_summary = next((s for s in summary if s["design_area"] == area), None)
+        item_count = area_summary["total_items"] if area_summary else "?"
+        lines.append(f"{i}. **{area}** ({item_count} checklist items)")
+        if url:
+            lines.append(f"   Learn: {url}")
+        if area_summary and area_summary.get("severity_breakdown"):
+            sevs = ", ".join(
+                f"{k}: {v}" for k, v in area_summary["severity_breakdown"].items()
+            )
+            lines.append(f"   Severity: {sevs}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
 def ground_initiatives(initiatives: list[dict]) -> list[dict]:
     """
     Enrich each initiative with up to 3 Microsoft Learn references.
-    Uses MCP search with tailored queries.
+    Uses MCP search with ALZ-design-area-aware queries.
     """
     for init in initiatives:
         title = init.get("title", "")
+        # Primary: use ALZ design area query if we can infer it
+        design_area = _infer_design_area(title)
+        if design_area:
+            try:
+                refs = ground_by_design_area(design_area, top=3)
+                init["learn_references"] = refs
+                init["alz_design_area_grounded"] = design_area
+                continue
+            except Exception:
+                pass
+
+        # Fallback: topic-based query
         query = _pick_query(title)
         try:
             refs = search_docs(query, top=3)
@@ -225,18 +440,31 @@ def ground_initiatives(initiatives: list[dict]) -> list[dict]:
 def ground_gaps(gaps: list[dict]) -> list[dict]:
     """
     For each top gap, retrieve authoritative Microsoft Learn references.
+    Scopes queries to the gap's ALZ design area when available.
     Returns enriched gap dicts with a 'references' key.
     """
     grounded = []
     for gap in gaps:
         query = gap.get("question") or gap.get("notes") or gap.get("control_id", "")
         query = query[:120]
+
+        # Try infer ALZ design area from domain/section/query
+        domain_hint = gap.get("domain", "") or gap.get("section", "")
+        design_area = _infer_design_area(domain_hint) or _infer_design_area(query)
+
         try:
-            refs = search_docs(f"Azure Landing Zone {query}", top=2)
+            if design_area:
+                refs = ground_by_design_area(design_area, top=2)
+            else:
+                refs = search_docs(f"Azure Landing Zone {query}", top=2)
         except Exception as e:
             print(f"  ⚠ Learn search failed for '{query[:60]}': {e}")
             refs = []
-        grounded.append({**gap, "references": refs})
+        grounded.append({
+            **gap,
+            "references": refs,
+            "alz_design_area": design_area or "",
+        })
     return grounded
 
 
@@ -244,6 +472,7 @@ def ground_target_architecture(target_arch: dict) -> dict:
     """
     Enrich target architecture execution units and design areas
     with Microsoft Learn references and code samples.
+    Uses ALZ design area mapping for scoped, authoritative results.
     """
     if not target_arch:
         return target_arch
@@ -252,18 +481,31 @@ def ground_target_architecture(target_arch: dict) -> dict:
     for phase in target_arch.get("implementation_plan", {}).get("phases", []):
         for eu in phase.get("execution_units", []):
             capability = eu.get("capability", "")
-            query = f"Azure landing zone {capability}"
-            try:
-                refs = search_docs(query, top=2)
-                eu["learn_references"] = refs
-            except Exception:
-                eu["learn_references"] = []
+            design_area = _infer_design_area(capability)
+
+            # Primary: ALZ design-area-scoped grounding
+            if design_area:
+                try:
+                    refs = ground_by_design_area(design_area, top=2)
+                    eu["learn_references"] = refs
+                    eu["alz_design_area"] = design_area
+                except Exception:
+                    eu["learn_references"] = []
+            else:
+                # Fallback: generic query
+                query = f"Azure landing zone {capability}"
+                try:
+                    refs = search_docs(query, top=2)
+                    eu["learn_references"] = refs
+                except Exception:
+                    eu["learn_references"] = []
 
             # Add code samples for infra-related capabilities
             cap_lower = capability.lower()
             if any(kw in cap_lower for kw in (
                 "network", "firewall", "hub", "spoke", "vnet",
                 "policy", "defender", "diagnostic", "log analytics",
+                "management group", "subscription vend", "bicep",
             )):
                 try:
                     samples = search_code_samples(
@@ -274,6 +516,15 @@ def ground_target_architecture(target_arch: dict) -> dict:
                     eu["code_samples"] = samples
                 except Exception:
                     eu["code_samples"] = []
+
+    # Also ground the target_state design areas if present
+    target_state = target_arch.get("target_state", {})
+    if target_state and not target_state.get("_learn_grounded"):
+        canonical_urls = get_design_area_learn_urls()
+        target_state["alz_design_area_references"] = {
+            area: url for area, url in canonical_urls.items()
+        }
+        target_state["_learn_grounded"] = True
 
     return target_arch
 

@@ -1,4 +1,14 @@
-Determine whether this Azure tenant can support enterprise-scale operations (50+ subscriptions).
+Determine whether this Azure tenant can support enterprise-scale operations (50+ subscriptions), evaluated against the 8 official Azure Landing Zone design areas.
+
+Official ALZ Design Areas:
+  1. Azure Billing and Microsoft Entra ID Tenants
+  2. Identity and Access Management
+  3. Network Topology and Connectivity
+  4. Security
+  5. Management
+  6. Resource Organization
+  7. Platform Automation and DevOps
+  8. Governance
 
 Return ONLY valid JSON matching this schema:
 

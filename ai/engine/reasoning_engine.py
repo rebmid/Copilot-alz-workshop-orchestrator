@@ -12,6 +12,13 @@ from ai.mcp_retriever import (
     ground_gaps,
     ground_target_architecture,
     build_grounding_context,
+    ground_all_design_areas,
+    build_alz_grounding_block,
+)
+from alz.loader import (
+    ALZ_DESIGN_AREAS,
+    build_prompt_checklist_context,
+    get_design_area_learn_urls,
 )
 
 
@@ -83,6 +90,19 @@ class ReasoningEngine:
         """
         system = self.prompts.system
 
+        # ── 0. ALZ checklist grounding context ────────────────────
+        # Inject official ALZ design area references + checklist items
+        # into the system prompt so every LLM call is anchored to
+        # the authoritative Azure/review-checklists repo.
+        print("  [0/7] Loading ALZ checklist grounding context …")
+        try:
+            alz_block = build_alz_grounding_block()
+            alz_checklist_ctx = build_prompt_checklist_context(max_items=40)
+            system = f"{system}\n\n{alz_block}\n\n{alz_checklist_ctx}"
+            print(f"        → ALZ context injected ({len(ALZ_DESIGN_AREAS)} design areas)")
+        except Exception as e:
+            print(f"  ⚠ ALZ checklist grounding skipped: {e}")
+
         # ── 1. Roadmap + Initiatives ──────────────────────────────
         print("  [1/6] Generating roadmap & initiatives …")
         roadmap_raw = self._safe_run(
@@ -101,6 +121,7 @@ class ReasoningEngine:
             system,
             self.prompts.exec(assessment),
             label="Executive",
+            max_tokens=8000,
         )
 
         # ── 3. Enterprise-scale readiness ─────────────────────────
@@ -111,6 +132,7 @@ class ReasoningEngine:
             system,
             self.prompts.readiness(readiness_input),
             label="Readiness",
+            max_tokens=8000,
         )
 
         # ── 4. Smart questions ────────────────────────────────────
@@ -119,6 +141,7 @@ class ReasoningEngine:
             system,
             self.prompts.smart_questions(assessment),
             label="Smart Questions",
+            max_tokens=8000,
         )
         smart_questions = sq_raw.get("smart_questions", [])
         print(f"        → {len(smart_questions)} question(s)")
@@ -137,13 +160,21 @@ class ReasoningEngine:
         else:
             print("  [5/6] Implementation backlog skipped.")
 
-        # ── 6. Learn reference grounding ──────────────────────────
-        print("  [6/7] Grounding initiatives with Microsoft Learn …")
+        # ── 6. Learn reference grounding (ALZ-design-area-aware) ──
+        print("  [6/7] Grounding initiatives with Microsoft Learn (ALZ-aware) …")
         enriched_initiatives = ground_initiatives(initiatives)
 
-        # Also ground the top gaps used in executive
+        # Also ground the top gaps used in executive — scoped to ALZ areas
         top_gaps = assessment.get("most_impactful_gaps", [])[:10]
         grounded_refs = ground_gaps(top_gaps)
+
+        # Pre-ground all 8 ALZ design areas for comprehensive coverage
+        try:
+            design_area_refs = ground_all_design_areas(top_per_area=2)
+            print(f"        → {sum(len(v) for v in design_area_refs.values())} ALZ design area refs")
+        except Exception as e:
+            print(f"  ⚠ ALZ design area grounding skipped: {e}")
+            design_area_refs = {}
 
         # ── 7. Target architecture ─────────────────────────────────
         print("  [7/7] Generating target architecture …")
@@ -198,6 +229,8 @@ class ReasoningEngine:
             "smart_questions": smart_questions,
             "target_architecture": target_arch,
             "grounding": enriched_grounding,
+            "alz_design_area_references": design_area_refs,
+            "alz_design_area_urls": get_design_area_learn_urls(),
             "progress_analysis": progress,
             # Keep raw blocks for backwards compatibility
             "_raw": {

@@ -1,0 +1,63 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "security",
+  "domain": "Security",
+  "description": "Resolves manual controls for secure score, incident response, zero-trust, key vault, and SOC topology.",
+  "questions": [
+    {
+      "id": "sec-secure-score-target",
+      "text": "Has a Defender for Cloud Secure Score target threshold been defined and communicated?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["09945bda-4333-44f2-9911-634182ba5275"],
+        "partial": [],
+        "no": ["09945bda-4333-44f2-9911-634182ba5275"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "sec-incident-response",
+      "text": "Is there a documented incident response plan for Azure services (tested at least annually)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["b86ad884-08e3-4727-94b8-75ba18f20459"],
+        "partial": [],
+        "no": ["b86ad884-08e3-4727-94b8-75ba18f20459"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "sec-zero-trust",
+      "text": "Is a zero-trust approach applied for access to the Azure management plane (identity verification, device compliance, least privilege)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["01365d38-e43f-49cc-ad86-8266abca264f"],
+        "partial": [],
+        "no": ["01365d38-e43f-49cc-ad86-8266abca264f"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "sec-keyvault",
+      "text": "Is Azure Key Vault used to store all secrets and credentials (no secrets in code, config, or ARM templates)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["5017f154-e3ab-4369-9829-e7e316183687"],
+        "partial": [],
+        "no": ["5017f154-e3ab-4369-9829-e7e316183687"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "sec-soc-maturity",
+      "text": "What is the maturity of your Security Operations Center (SOC) integration with Azure?\n  1 = No SOC or SIEM integration\n  2 = Microsoft Sentinel deployed with basic analytics rules\n  3 = Sentinel with custom detections, automated response playbooks, and regular threat hunting",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["09945bda-4333-44f2-9911-634182ba5275", "a56888b2-7e83-4404-bd31-b886528502d1"],
+        "2": ["09945bda-4333-44f2-9911-634182ba5275", "a56888b2-7e83-4404-bd31-b886528502d1"],
+        "3": ["09945bda-4333-44f2-9911-634182ba5275", "a56888b2-7e83-4404-bd31-b886528502d1"]
+      },
+      "weight": 1.4
+    }
+  ]
+}

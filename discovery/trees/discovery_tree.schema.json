@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Discovery Decision Tree",
+  "description": "Schema for ALZ discovery workshop decision tree files.",
+  "type": "object",
+  "required": ["id", "domain", "questions"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "type": "string",
+      "description": "Unique tree identifier (matches filename without extension)."
+    },
+    "domain": {
+      "type": "string",
+      "description": "ALZ design area this tree covers."
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of what the tree resolves."
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "text", "type", "resolves"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique question identifier within the tree."
+          },
+          "text": {
+            "type": "string",
+            "description": "The question text shown to the workshop participant."
+          },
+          "type": {
+            "type": "string",
+            "enum": ["yes_no", "maturity_scale"],
+            "description": "Question type: yes_no (Y/P/N) or maturity_scale (1/2/3)."
+          },
+          "resolves": {
+            "type": "object",
+            "description": "Mapping of answer keys to arrays of control IDs resolved by that answer.",
+            "additionalProperties": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "default": 1.0,
+            "description": "Weight for tie-breaking when multiple answers resolve the same control."
+          }
+        }
+      }
+    }
+  }
+}

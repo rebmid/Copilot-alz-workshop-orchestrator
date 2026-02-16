@@ -1,0 +1,85 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "billing",
+  "domain": "Azure Billing and Microsoft Entra ID Tenants",
+  "description": "Resolves manual controls for tenant strategy, billing structure, cost management, and EA/MCA governance.",
+  "questions": [
+    {
+      "id": "bill-single-tenant",
+      "text": "Is a single Entra ID tenant used for managing Azure resources (unless regulatory separation is required)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["70c15989-c726-42c7-b0d3-24b7375b9201"],
+        "partial": [],
+        "no": ["70c15989-c726-42c7-b0d3-24b7375b9201"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "bill-multi-tenant",
+      "text": "If multiple tenants exist, is a multi-tenant automation approach in place?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["6309957b-821a-43d1-b9d9-7fcf1802b747"],
+        "partial": [],
+        "no": ["6309957b-821a-43d1-b9d9-7fcf1802b747"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "bill-lighthouse",
+      "text": "Is Azure Lighthouse used for multi-tenant or partner management scenarios?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["78e11934-499a-45ed-8ef7-aae5578f0ecf", "5d82e6df-6f61-42f2-82e2-3132d293be3d"],
+        "partial": [],
+        "no": ["78e11934-499a-45ed-8ef7-aae5578f0ecf", "5d82e6df-6f61-42f2-82e2-3132d293be3d"]
+      },
+      "weight": 0.6
+    },
+    {
+      "id": "bill-cost-reporting",
+      "text": "Are cost reporting views set up with Azure Cost Management (budgets, department/account breakdown)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["32952499-58c8-4e6f-ada5-972e67893d55", "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"],
+        "partial": [],
+        "no": ["32952499-58c8-4e6f-ada5-972e67893d55", "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "bill-ea-structure",
+      "text": "Are departments and accounts used to map your organization's structure to the enrollment hierarchy?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["12cd499f-96e2-4e41-a243-231fb3245a1c"],
+        "partial": [],
+        "no": ["12cd499f-96e2-4e41-a243-231fb3245a1c"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "bill-notification-contact",
+      "text": "Is a notification contact email configured for the billing account?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["685cb4f2-ac9c-4b19-9167-993ed0b32415", "6ad5c3dd-e5ea-4ff1-81a4-7886ff87845c"],
+        "partial": [],
+        "no": ["685cb4f2-ac9c-4b19-9167-993ed0b32415", "6ad5c3dd-e5ea-4ff1-81a4-7886ff87845c"]
+      },
+      "weight": 0.6
+    },
+    {
+      "id": "bill-devtest-subs",
+      "text": "Are Enterprise Dev/Test subscriptions used to reduce costs for non-production workloads?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["5cf9f485-2784-49b3-9824-75d9b8bdb57b", "e81a73f0-84c4-4641-b406-14db3b4d1f50"],
+        "partial": [],
+        "no": ["5cf9f485-2784-49b3-9824-75d9b8bdb57b", "e81a73f0-84c4-4641-b406-14db3b4d1f50"]
+      },
+      "weight": 0.6
+    }
+  ]
+}

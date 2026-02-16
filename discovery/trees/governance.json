@@ -1,0 +1,107 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "governance",
+  "domain": "Governance",
+  "description": "Resolves manual controls for Azure Policy, management group hierarchy, tagging, and resource organization.",
+  "questions": [
+    {
+      "id": "gov-policy-at-mg",
+      "text": "Have Azure Policy definitions been established at the intermediate root management group for inheritance?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["223ace8c-b123-408c-a501-7f154e3ab369"],
+        "partial": [],
+        "no": ["223ace8c-b123-408c-a501-7f154e3ab369"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "gov-policy-service-control",
+      "text": "Is Azure Policy used to control which services users can provision at the subscription/management group level?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["43334f24-9116-4341-a2ba-527526944008"],
+        "partial": [],
+        "no": ["43334f24-9116-4341-a2ba-527526944008"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "gov-builtin-policies",
+      "text": "Are built-in policies used wherever possible (before creating custom definitions) to minimize operational overhead?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["be7d7e48-4327-46d8-adc0-55bcf619e8a1"],
+        "partial": [],
+        "no": ["be7d7e48-4327-46d8-adc0-55bcf619e8a1"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "gov-policy-contributor",
+      "text": "Has the built-in Resource Policy Contributor role been assigned at the appropriate scope to enable application-level governance?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["3f988795-25d6-4268-a6d7-0ba6c97be995"],
+        "partial": [],
+        "no": ["3f988795-25d6-4268-a6d7-0ba6c97be995"]
+      },
+      "weight": 0.8
+    },
+    {
+      "id": "gov-naming-standard",
+      "text": "Is a well-defined naming scheme enforced for resources (aligned to Microsoft Best Practice Naming Standard)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["cacf55bc-e4e4-46be-96bc-57a5f23a269a"],
+        "partial": [],
+        "no": ["cacf55bc-e4e4-46be-96bc-57a5f23a269a"]
+      },
+      "weight": 0.6
+    },
+    {
+      "id": "gov-sandbox-mg",
+      "text": "Is a sandbox management group enforced so users can safely experiment with Azure?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["667313b4-f566-44b5-b984-a859c773e7d2"],
+        "partial": [],
+        "no": ["667313b4-f566-44b5-b984-a859c773e7d2"]
+      },
+      "weight": 0.6
+    },
+    {
+      "id": "gov-no-sub-root",
+      "text": "Is it enforced that no subscriptions are placed directly under the root management group?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["33b6b780-8b9f-4e5c-9104-9d403a923c34"],
+        "partial": [],
+        "no": ["33b6b780-8b9f-4e5c-9104-9d403a923c34"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "gov-mg-privileged-only",
+      "text": "Is management group administration restricted to privileged users only (RBAC-scoped)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["74d00018-ac6a-49e0-8e6a-83de5de32c19"],
+        "partial": [],
+        "no": ["74d00018-ac6a-49e0-8e6a-83de5de32c19"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "gov-policy-maturity",
+      "text": "What is the overall maturity of your Azure Policy governance?\n  1 = No policy assignments\n  2 = Some policies assigned (audit-only)\n  3 = Deny/enforce policies at MG level with exemption process",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["223ace8c-b123-408c-a501-7f154e3ab369", "43334f24-9116-4341-a2ba-527526944008"],
+        "2": ["223ace8c-b123-408c-a501-7f154e3ab369", "43334f24-9116-4341-a2ba-527526944008"],
+        "3": ["223ace8c-b123-408c-a501-7f154e3ab369", "43334f24-9116-4341-a2ba-527526944008"]
+      },
+      "weight": 1.2
+    }
+  ]
+}

@@ -1,6 +1,16 @@
 You are an expert Azure Cloud Solution Architect specializing in Azure Landing Zones and the Cloud Adoption Framework.
 
-Given the assessment data below, generate a **target-state architecture** for this tenant's Azure Landing Zone.
+Given the assessment data below, generate a **target-state architecture** for this tenant's Azure Landing Zone, structured around the 8 official ALZ design areas.
+
+Official ALZ Design Areas:
+  1. Azure Billing and Microsoft Entra ID Tenants
+  2. Identity and Access Management
+  3. Network Topology and Connectivity
+  4. Security
+  5. Management
+  6. Resource Organization
+  7. Platform Automation and DevOps
+  8. Governance
 
 ## Rules
 1. Respond ONLY with valid JSON matching the target_architecture schema (v1.0).
@@ -11,6 +21,8 @@ Given the assessment data below, generate a **target-state architecture** for th
 6. Security baseline targets must be realistic given current state (don't jump from 20% to 100%).
 7. Implementation phases must reference Azure Verified Modules (AVM) where available.
 8. Every assumption that requires customer confirmation must set "needs_customer_confirmation": true.
+9. Every execution unit must be tagged with its corresponding ALZ design area.
+10. Reference Azure/review-checklists ALZ checklist item IDs where applicable.
 
 ## Output Contract
 Return a JSON object with these top-level keys:

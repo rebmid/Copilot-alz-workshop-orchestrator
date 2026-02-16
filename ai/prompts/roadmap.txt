@@ -1,4 +1,14 @@
-Generate initiatives, a dependency graph, and a 30-60-90 transformation roadmap aligned to the Cloud Adoption Framework.
+Generate initiatives, a dependency graph, and a 30-60-90 transformation roadmap aligned to the Cloud Adoption Framework and the 8 official Azure Landing Zone design areas.
+
+Official ALZ Design Areas (map every initiative to one of these):
+  1. Azure Billing and Microsoft Entra ID Tenants
+  2. Identity and Access Management
+  3. Network Topology and Connectivity
+  4. Security
+  5. Management
+  6. Resource Organization
+  7. Platform Automation and DevOps
+  8. Governance
 
 Return ONLY valid JSON matching this schema:
 
@@ -33,7 +43,8 @@ Return ONLY valid JSON matching this schema:
       "title": "...",
       "business_impact": "...",
       "technical_cause": "...",
-      "initiative_id": "INIT-001"
+      "initiative_id": "INIT-001",
+      "alz_design_area": "One of the 8 official ALZ design areas"
     }
   ],
   "initiative_execution_plan": [
@@ -43,6 +54,7 @@ Return ONLY valid JSON matching this schema:
       "priority": 1,
       "blast_radius": "High|Medium|Low",
       "caf_discipline": "Govern",
+      "alz_design_area": "One of the 8 official ALZ design areas",
       "why_it_matters": "...",
       "success_criteria": "...",
       "controls": ["control_id"],

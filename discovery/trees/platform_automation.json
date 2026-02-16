@@ -1,0 +1,63 @@
+{
+  "$schema": "discovery_tree.schema.json",
+  "id": "platform_automation",
+  "domain": "Platform Automation and DevOps",
+  "description": "Resolves manual controls for platform team structure, IaC pipelines, and landing zone vending.",
+  "questions": [
+    {
+      "id": "devops-platform-team",
+      "text": "Is there a cross-functional DevOps Platform Team responsible for building, managing, and maintaining the landing zone?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["e85f4226-bf06-4e35-8a8b-7aee4d2d633a"],
+        "partial": [],
+        "no": ["e85f4226-bf06-4e35-8a8b-7aee4d2d633a"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "devops-platform-functions",
+      "text": "Are the functions for the Azure Landing Zone Platform team clearly defined and documented?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["634146bf-7085-4419-a7b5-f96d2726f6da"],
+        "partial": [],
+        "no": ["634146bf-7085-4419-a7b5-f96d2726f6da"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "devops-workload-self-service",
+      "text": "Are application workload teams defined and enabled to be self-sufficient (no platform team bottleneck for day-to-day operations)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["a9e65070-c59e-4112-8bf6-c11364d4a2a5"],
+        "partial": [],
+        "no": ["a9e65070-c59e-4112-8bf6-c11364d4a2a5"]
+      },
+      "weight": 1.0
+    },
+    {
+      "id": "devops-iac-pipeline",
+      "text": "Is a CI/CD pipeline used to deploy IaC artifacts with quality gates (linting, plan review, approval)?",
+      "type": "yes_no",
+      "resolves": {
+        "yes": ["165eb5e9-b434-448a-9e24-178632186212"],
+        "partial": [],
+        "no": ["165eb5e9-b434-448a-9e24-178632186212"]
+      },
+      "weight": 1.2
+    },
+    {
+      "id": "devops-iac-maturity",
+      "text": "What is the maturity of your Infrastructure-as-Code practice?\n  1 = No IaC — portal/CLI deployments\n  2 = IaC templates exist but deployed manually\n  3 = Fully automated IaC pipeline with drift detection and state management",
+      "type": "maturity_scale",
+      "resolves": {
+        "1": ["165eb5e9-b434-448a-9e24-178632186212", "e85f4226-bf06-4e35-8a8b-7aee4d2d633a"],
+        "2": ["165eb5e9-b434-448a-9e24-178632186212", "e85f4226-bf06-4e35-8a8b-7aee4d2d633a"],
+        "3": ["165eb5e9-b434-448a-9e24-178632186212", "e85f4226-bf06-4e35-8a8b-7aee4d2d633a"]
+      },
+      "weight": 1.2
+    }
+  ]
+}
