@@ -19,6 +19,7 @@ out/
 *.xlsx
 *.html
 !reporting/report_template.html
+!docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html
 
 # Temp files
 *.tmp

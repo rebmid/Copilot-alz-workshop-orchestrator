@@ -1,0 +1,1130 @@
+<html>
+<head>
+  <title>Azure Landing Zone — Platform Readiness Report</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --card-bg: #fff;
+      --border: #e0e3e8;
+      --accent: #0078d4;
+      --accent-dark: #005a9e;
+      --danger: #d13438;
+      --warn: #f7630c;
+      --success: #107c10;
+      --muted: #6b7280;
+      --text: #1b1b1f;
+      --heading: #1b1b1f;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 28px 64px; }
+
+    /* ── Nav ─────────────────────────────────────────────── */
+    nav.toc { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid var(--border); padding: 10px 28px; margin: 0 -28px 24px; display: flex; flex-wrap: wrap; gap: 6px; }
+    nav.toc a { font-size: 13px; color: var(--accent); text-decoration: none; padding: 4px 10px; border-radius: 6px; white-space: nowrap; }
+    nav.toc a:hover { background: #e8f0fe; }
+
+    /* ── Typography ──────────────────────────────────────── */
+    h1 { font-size: 26px; color: var(--heading); margin-bottom: 4px; }
+    h1 small { font-size: 14px; color: var(--muted); font-weight: 400; }
+    h2 { font-size: 18px; color: var(--heading); margin-bottom: 14px; padding-bottom: 6px; border-bottom: 2px solid var(--accent); display: inline-block; }
+    h3 { font-size: 15px; color: var(--heading); margin-bottom: 8px; }
+
+    /* ── Cards ────────────────────────────────────────────── */
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px; }
+    .card + .card { margin-top: 0; }
+
+    /* ── Grid helpers ─────────────────────────────────────── */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 800px) { .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+    /* ── KPI Tiles ────────────────────────────────────────── */
+    .kpi { text-align: center; padding: 18px 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--card-bg); }
+    .kpi .value { font-size: 36px; font-weight: 700; }
+    .kpi .label { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    .kpi.danger .value { color: var(--danger); }
+    .kpi.warn .value { color: var(--warn); }
+    .kpi.ok .value { color: var(--success); }
+
+    /* ── Tables ───────────────────────────────────────────── */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; font-weight: 600; padding: 10px 12px; border-bottom: 2px solid var(--border); color: var(--heading); font-size: 13px; text-transform: uppercase; letter-spacing: .3px; }
+    td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+
+    /* ── Tags / badges ────────────────────────────────────── */
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .tag-critical { background: #fde7e9; color: var(--danger); }
+    .tag-high { background: #fff4ce; color: #7a6400; }
+    .tag-medium { background: #e8f0fe; color: var(--accent); }
+    .tag-low { background: #e6f4ea; color: var(--success); }
+    .tag-phase { background: #f3f2f1; color: #323130; }
+
+    /* ── Trajectory bar ───────────────────────────────────── */
+    .trajectory { display: flex; align-items: center; gap: 0; margin: 16px 0; }
+    .trajectory .step { flex: 1; text-align: center; padding: 14px 8px; border: 1px solid var(--border); position: relative; background: var(--card-bg); }
+    .trajectory .step:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+    .trajectory .step:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+    .trajectory .step .pct { font-size: 28px; font-weight: 700; }
+    .trajectory .step .lbl { font-size: 12px; color: var(--muted); }
+    .trajectory .arrow { font-size: 22px; color: var(--accent); padding: 0 2px; flex-shrink: 0; }
+
+    /* ── Toggle modes ─────────────────────────────────────── */
+    .mode-bar { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+    .mode-btn { padding: 6px 16px; border: 1px solid var(--border); border-radius: 6px; background: var(--card-bg); cursor: pointer; font-size: 13px; font-weight: 500; color: var(--text); transition: all .15s; }
+    .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; }
+
+    /* ── Evidence vs assumption ────────────────────────────── */
+    .conf-evidence { color: var(--success); font-weight: 600; }
+    .conf-assumption { color: var(--warn); font-weight: 600; }
+
+    /* ── Question cards ───────────────────────────────────── */
+    .q-domain { margin-bottom: 16px; }
+    .q-domain h3 { margin-bottom: 6px; }
+    .q-item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    .q-item:last-child { border-bottom: none; }
+    .q-text { font-weight: 500; margin-bottom: 4px; }
+    .q-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .q-maturity { display: flex; flex-direction: column; gap: 3px; margin: 6px 0 4px 12px; font-size: 13px; }
+    .q-maturity .maturity-level { padding: 2px 0; color: var(--text); }
+    .q-maturity .maturity-level strong { display: inline-block; width: 18px; text-align: center; border-radius: 3px; font-size: 12px; }
+    .q-maturity .maturity-level:nth-child(1) strong { background: #fde7e9; color: var(--danger); }
+    .q-maturity .maturity-level:nth-child(2) strong { background: #fff4ce; color: #7a6400; }
+    .q-maturity .maturity-level:nth-child(3) strong { background: #e6f4ea; color: var(--success); }
+
+    /* ── Maturity color utilities ──────────────────────────── */
+    .maturity-danger { color: var(--danger); font-weight: 600; }
+    .maturity-warn   { color: var(--warn);   font-weight: 600; }
+    .maturity-ok     { color: var(--success); font-weight: 600; }
+
+    /* ── Section spacing ──────────────────────────────────── */
+    .section { margin-bottom: 32px; }
+
+    /* ── Print ────────────────────────────────────────────── */
+    @media print {
+      nav.toc { display: none; }
+      .mode-bar { display: none; }
+      .mode-panel { display: block !important; }
+      body { background: #fff; }
+      .container { max-width: 100%; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<!-- ════════════════════════════════════════════════════════════════
+     NAVIGATION
+     ════════════════════════════════════════════════════════════════ -->
+<nav class="toc">
+  <a href="#snapshot">Platform Readiness</a>
+  <a href="#blockers">Adoption Blockers</a>
+  <a href="#sequence">Remediation Sequence</a>
+  <a href="#trajectory">Maturity Trajectory</a>
+  <a href="#capabilities">Capability Unlock</a>
+  <a href="#deepdive">Domain Deep Dive</a>
+  <a href="#confidence">Scope &amp; Confidence</a>
+  <a href="#validation">Customer Validation</a>
+  <a href="#alz-references">ALZ References</a>
+</nav>
+
+<h1>Azure Landing Zone — Platform Readiness Report
+  <br><small>2026-02-16 · Run run-20260216-0105</small>
+</h1>
+
+<!-- ════════════════════════════════════════════════════════════════
+     1. PLATFORM READINESS SNAPSHOT
+     ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="snapshot">
+  <h2>1 &middot; Platform Readiness Snapshot</h2>
+
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="kpi danger">
+      <div class="value">19.5%</div>
+      <div class="label">Overall Maturity</div>
+    </div>
+    <div class="kpi">
+      <div class="value">46/271</div>
+      <div class="label">Automated Controls</div>
+    </div>
+    <div class="kpi danger">
+      <div class="value">19</div>
+      <div class="label">Enterprise Readiness Score</div>
+    </div>
+    <div class="kpi">
+      <div class="value">No</div>
+      <div class="label">Enterprise-Scale Ready</div>
+    </div>
+  </div>
+
+  
+  <div class="card">
+    <h3>Platform Scale Implication</h3>
+    <p>The current Azure platform maturity is critically low, with an overall score of 19.5% and multiple high-severity risks across security, data protection, identity, and network architecture. The environment exhibits systemic gaps in foundational controls, including inadequate storage and backup protection, fragmented security visibility, insufficient network defenses, and weak privileged access management. These weaknesses expose the organization to significant risks of data loss, operational outages, and regulatory non-compliance, directly impacting business continuity and reputation.
+
+Key business risks include the absence of centralized security monitoring, lack of resilient network architecture (such as DDoS protection and Azure Firewall), and ineffective identity governance. Without immediate remediation, the organization faces elevated likelihood of security breaches, data exfiltration, and service disruptions, which could result in financial loss, regulatory penalties, and erosion of stakeholder trust. Strategic investment is required to rapidly uplift core controls, establish centralized visibility, and enforce least-privilege access, thereby enabling secure and scalable cloud operations.</p>
+    
+    <p style="margin-top:8px;color:var(--muted);font-size:13px;">Estimated max supported subscriptions in current state: <strong>1</strong></p>
+    
+  </div>
+  
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     2. LANDING ZONE ADOPTION BLOCKERS
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="blockers">
+  <h2>2 &middot; Landing Zone Adoption Blockers</h2>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Capability Missing</th>
+        <th>Why This Blocks ALZ Adoption</th>
+        <th>Severity</th>
+        <th>Primary Remediation Initiative</th>
+      </tr>
+      
+      <tr>
+        <td><strong>Networking</strong></td>
+        <td>No evidence of hub-spoke or Virtual WAN topology, no Azure Firewall, and DDoS Protection not enabled. This prevents secure, scalable network segmentation and centralized egress required for enterprise-scale. (Controls: e6c4cfd3-e504-4547-a244-7ec66138a720, e8bbac75-7155-49ab-a153-e8908ae28c84, 088137f5-e6c4-4cfd-9e50-4547c2447ec6)</td>
+        <td><span class="tag tag-critical">Critical</span></td>
+        <td>Centralize monitoring and logging for all resources</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Management</strong></td>
+        <td>Centralized Log Analytics workspace not present, Sentinel not enabled, and retention below 90 days. This blocks centralized monitoring, SOC operations, and incident response at scale. (Control: monitor-workspace-topology-001)</td>
+        <td><span class="tag tag-critical">Critical</span></td>
+        <td>Implement cost governance and reporting</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Security</strong></td>
+        <td>Defender for Cloud not enabled across all plans, Secure Score below 60, and diagnostics coverage is only 2.1%. This results in insufficient security visibility and posture management. (Control: a56888b2-7e83-4404-bd31-b886528502d1)</td>
+        <td><span class="tag tag-critical">Critical</span></td>
+        <td>Enforce least-privilege access and privileged identity management</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Identity</strong></td>
+        <td>Privileged Identity Management (PIM) not effective (0% eligible ratio), RBAC hygiene issues (27 Owner assignments, 0% group-based), and break-glass accounts not validated. This exposes the tenant to excessive privilege and risk of lockout. (Controls: pim-maturity-001, rbac-hygiene-001, breakglass-validation-001)</td>
+        <td><span class="tag tag-critical">Critical</span></td>
+        <td>Establish network segmentation and centralized egress controls</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Governance</strong></td>
+        <td>No evidence of management group hierarchy, policy initiatives, or cost governance (budgets, notifications, anomaly detection). This blocks scaling and operational consistency. (Controls: resource-lock-001, cost-forecast-001, multiple manual controls)</td>
+        <td><span class="tag tag-critical">Critical</span></td>
+        <td>Increase diagnostics and backup coverage for critical resources</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Platform Automation and DevOps</strong></td>
+        <td>No evidence of automated subscription vending, IaC usage below 50%, or active policy remediation. This prevents consistent, rapid scaling and compliance. (Manual controls only, no automation signals detected.)</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td>Achieve secure data posture for storage and PaaS services</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Data Protection</strong></td>
+        <td>Storage account and private endpoint posture is 0% compliant; backup coverage is 0%. This exposes critical data to loss or exfiltration. (Controls: storage-posture-001, private-endpoint-001, backup-coverage-001)</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td>Advance platform automation and resource organization</td>
+      </tr>
+      
+    </table>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     3. HIGHEST-IMPACT REMEDIATION SEQUENCE
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="sequence">
+  <h2>3 &middot; Highest-Impact Remediation Sequence</h2>
+  <div class="card">
+    <table>
+      <tr>
+        <th>#</th>
+        <th>Initiative</th>
+        <th>Controls</th>
+        <th>Depends On</th>
+        <th>Phase</th>
+        <th>Capability Unlocked</th>
+      </tr>
+      
+      <tr>
+        <td>1</td>
+        <td><strong>Centralize monitoring and logging for all resources</strong></td>
+        <td style="text-align:center;">2</td>
+        <td>
+          
+            <span style="color:var(--muted);">—</span>
+          
+        </td>
+        <td></td>
+        <td style="font-size:13px;">Platform capability improvement</td>
+      </tr>
+      
+      <tr>
+        <td>1</td>
+        <td><strong>Implement cost governance and reporting</strong></td>
+        <td style="text-align:center;">1</td>
+        <td>
+          
+            <span style="color:var(--muted);">—</span>
+          
+        </td>
+        <td></td>
+        <td style="font-size:13px;">Cost governance controls → enables FinOps visibility across landing zones</td>
+      </tr>
+      
+      <tr>
+        <td>2</td>
+        <td><strong>Enforce least-privilege access and privileged identity management</strong></td>
+        <td style="text-align:center;">3</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Achieve centralized security monitoring and log retention fo</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">60 days</span></td>
+        <td style="font-size:13px;">Identity &amp; Entra ID integration → enables PIM and break-glass governance</td>
+      </tr>
+      
+      <tr>
+        <td>2</td>
+        <td><strong>Establish network segmentation and centralized egress controls</strong></td>
+        <td style="text-align:center;">3</td>
+        <td>
+          
+            <span style="color:var(--muted);">—</span>
+          
+        </td>
+        <td></td>
+        <td style="font-size:13px;">Hub connectivity &amp; centralized egress → enables landing zone networking model</td>
+      </tr>
+      
+      <tr>
+        <td>2</td>
+        <td><strong>Increase diagnostics and backup coverage for critical resources</strong></td>
+        <td style="text-align:center;">1</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Achieve centralized security monitoring and log retention fo</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">60 days</span></td>
+        <td style="font-size:13px;">Centralized diagnostics &amp; monitoring → enables operational visibility</td>
+      </tr>
+      
+      <tr>
+        <td>3</td>
+        <td><strong>Achieve secure data posture for storage and PaaS services</strong></td>
+        <td style="text-align:center;">2</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Increase diagnostics and backup coverage for all critical re</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">90 days</span></td>
+        <td style="font-size:13px;">Platform capability improvement</td>
+      </tr>
+      
+      <tr>
+        <td>3</td>
+        <td><strong>Advance platform automation and resource organization</strong></td>
+        <td style="text-align:center;">0</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Enforce least-privilege access and privileged identity manag,</span>
+            
+              <span style="font-size:13px;">Achieve network segmentation and centralized egress control </span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">90 days</span></td>
+        <td style="font-size:13px;">Platform automation &amp; IaC → enables GitOps-driven landing zone lifecycle</td>
+      </tr>
+      
+    </table>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     4. MATURITY AFTER ROADMAP EXECUTION
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="trajectory">
+  <h2>4 &middot; Maturity After Roadmap Execution</h2>
+
+  <div class="trajectory">
+    <div class="step">
+      <div class="pct" style="color:var(--danger);">19.5%</div>
+      <div class="lbl">Current</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="pct" style="color:var(--warn);">35%</div>
+      <div class="lbl">After Phase 1 (30 d)</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="pct" style="color:var(--accent);">55%</div>
+      <div class="lbl">After Phase 2 (60 d)</div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="pct" style="color:var(--success);">75%</div>
+      <div class="lbl">After Phase 3 (90 d)</div>
+    </div>
+  </div>
+
+  
+  <div class="card" style="margin-top:8px;">
+    <h3>Assumptions</h3>
+    <ul style="padding-left:18px;font-size:13px;color:var(--muted);">
+      
+      <li>All initiatives are executed as sequenced and resourced appropriately.</li>
+      
+      <li>No major changes to subscription or management group visibility.</li>
+      
+      <li>Manual controls are addressed in parallel where possible.</li>
+      
+      <li>Dependencies on platform engineering and security teams are met.</li>
+      
+    </ul>
+  </div>
+  
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     5. CAPABILITY UNLOCK VIEW
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="capabilities">
+  <h2>5 &middot; Capability Unlock View</h2>
+  <div class="card">
+    <table>
+      <tr>
+        <th>Initiative</th>
+        <th>Platform Capability Enabled</th>
+        <th>ALZ Design Area</th>
+      </tr>
+      
+      <tr>
+        <td><strong>Centralize monitoring and logging for all resources</strong></td>
+        <td>Platform capability improvement</td>
+        <td><span class="tag tag-medium">Management</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Implement cost governance and reporting</strong></td>
+        <td>Cost governance controls → enables FinOps visibility across landing zones</td>
+        <td><span class="tag tag-medium">Azure Billing and Microsoft Entra ID Tenants</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Enforce least-privilege access and privileged identity management</strong></td>
+        <td>Identity &amp; Entra ID integration → enables PIM and break-glass governance</td>
+        <td><span class="tag tag-medium">Identity and Access Management</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Establish network segmentation and centralized egress controls</strong></td>
+        <td>Hub connectivity &amp; centralized egress → enables landing zone networking model</td>
+        <td><span class="tag tag-medium">Network Topology and Connectivity</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Increase diagnostics and backup coverage for critical resources</strong></td>
+        <td>Centralized diagnostics &amp; monitoring → enables operational visibility</td>
+        <td><span class="tag tag-medium">Management</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Achieve secure data posture for storage and PaaS services</strong></td>
+        <td>Platform capability improvement</td>
+        <td><span class="tag tag-medium">Security</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Advance platform automation and resource organization</strong></td>
+        <td>Platform automation &amp; IaC → enables GitOps-driven landing zone lifecycle</td>
+        <td><span class="tag tag-medium">Platform Automation and DevOps</span></td>
+      </tr>
+      
+    </table>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     6. DOMAIN DEEP DIVE (ASSESSMENT MODE TOGGLE)
+     ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="deepdive">
+  <h2>6 &middot; Domain Deep Dive</h2>
+
+  <div class="mode-bar">
+    <button class="mode-btn active" onclick="switchMode(this, 'overview')">Overview</button>
+    <button class="mode-btn" onclick="switchMode(this, 'scale')">Scale</button>
+    <button class="mode-btn" onclick="switchMode(this, 'security')">Security</button>
+    <button class="mode-btn" onclick="switchMode(this, 'operations')">Operations</button>
+    <button class="mode-btn" onclick="switchMode(this, 'cost')">Cost</button>
+    <button class="mode-btn" onclick="switchMode(this, 'dataconf')">Data Confidence</button>
+  </div>
+
+  <!-- Overview -->
+  <div class="mode-panel active" id="mode-overview">
+    <div class="card">
+      <table>
+        <tr>
+          <th>Design Area</th>
+          <th>Maturity</th>
+          <th>Pass</th>
+          <th>Partial</th>
+          <th>Fail</th>
+          <th>Manual</th>
+          <th>Total</th>
+        </tr>
+        
+        <tr>
+          <td><strong>Data Protection</strong></td>
+          <td>
+            
+              <span class="maturity-danger">0.0%</span>
+            
+          </td>
+          <td>0</td>
+          <td>1</td>
+          <td>3</td>
+          <td>1</td>
+          <td>6</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Resilience</strong></td>
+          <td>
+            
+              <span class="maturity-danger">0.0%</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>1</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Management</strong></td>
+          <td>
+            
+              <span class="maturity-danger">0.0%</span>
+            
+          </td>
+          <td>0</td>
+          <td>2</td>
+          <td>4</td>
+          <td>25</td>
+          <td>32</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Cost</strong></td>
+          <td>
+            
+              <span class="maturity-danger">0.0%</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+          <td>2</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Networking</strong></td>
+          <td>
+            
+              <span class="maturity-danger">16.7%</span>
+            
+          </td>
+          <td>1</td>
+          <td>1</td>
+          <td>4</td>
+          <td>0</td>
+          <td>7</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Identity</strong></td>
+          <td>
+            
+              <span class="maturity-danger">18.8%</span>
+            
+          </td>
+          <td>1</td>
+          <td>2</td>
+          <td>3</td>
+          <td>0</td>
+          <td>7</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Security</strong></td>
+          <td>
+            
+              <span class="maturity-danger">33.3%</span>
+            
+          </td>
+          <td>2</td>
+          <td>1</td>
+          <td>3</td>
+          <td>27</td>
+          <td>33</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Governance</strong></td>
+          <td>
+            
+              <span class="maturity-danger">34.1%</span>
+            
+          </td>
+          <td>3</td>
+          <td>1</td>
+          <td>5</td>
+          <td>10</td>
+          <td>19</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Azure Billing and Microsoft Entra ID Tenants</strong></td>
+          <td>
+            
+              <span style="color:var(--muted);">Customer operating model validation required</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>15</td>
+          <td>15</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Identity and Access Management</strong></td>
+          <td>
+            
+              <span style="color:var(--muted);">Customer operating model validation required</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>22</td>
+          <td>22</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Resource Organization</strong></td>
+          <td>
+            
+              <span style="color:var(--muted);">Customer operating model validation required</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>14</td>
+          <td>14</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Network Topology and Connectivity</strong></td>
+          <td>
+            
+              <span style="color:var(--muted);">Customer operating model validation required</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>98</td>
+          <td>98</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Platform Automation and DevOps</strong></td>
+          <td>
+            
+              <span style="color:var(--muted);">Customer operating model validation required</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>13</td>
+          <td>13</td>
+        </tr>
+        
+      </table>
+    </div>
+  </div>
+
+  <!-- Scale -->
+  <div class="mode-panel" id="mode-scale">
+    <div class="card">
+      <h3>Scale — Management Groups, RBAC, Policy Scope</h3>
+      
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        
+        <tr>
+          <td>Resource Organization</td>
+          <td><span style="color:var(--muted);">Customer operating model validation required</span></td>
+          <td>0</td> <td>0</td> <td>14</td>
+        </tr>
+        
+        <tr>
+          <td>Azure Billing and Microsoft Entra ID Tenants</td>
+          <td><span style="color:var(--muted);">Customer operating model validation required</span></td>
+          <td>0</td> <td>0</td> <td>15</td>
+        </tr>
+        
+        <tr>
+          <td>Identity and Access Management</td>
+          <td><span style="color:var(--muted);">Customer operating model validation required</span></td>
+          <td>0</td> <td>0</td> <td>22</td>
+        </tr>
+        
+        <tr>
+          <td>Governance</td>
+          <td>34.1%</td>
+          <td>3</td> <td>5</td> <td>10</td>
+        </tr>
+        
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- Security -->
+  <div class="mode-panel" id="mode-security">
+    <div class="card">
+      <h3>Security — PIM, Private Endpoints, SOC Topology</h3>
+      
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        
+        <tr>
+          <td>Security</td>
+          <td>33.3%</td>
+          <td>2</td> <td>3</td> <td>27</td>
+        </tr>
+        
+        <tr>
+          <td>Identity and Access Management</td>
+          <td><span style="color:var(--muted);">Customer operating model validation required</span></td>
+          <td>0</td> <td>0</td> <td>22</td>
+        </tr>
+        
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- Operations -->
+  <div class="mode-panel" id="mode-operations">
+    <div class="card">
+      <h3>Operations — Diagnostics, Alert→Action Mapping, Change Tracking</h3>
+      
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        
+        <tr>
+          <td>Management</td>
+          <td>0.0%</td>
+          <td>0</td> <td>4</td> <td>25</td>
+        </tr>
+        
+        <tr>
+          <td>Platform Automation and DevOps</td>
+          <td><span style="color:var(--muted);">Customer operating model validation required</span></td>
+          <td>0</td> <td>0</td> <td>13</td>
+        </tr>
+        
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- Cost -->
+  <div class="mode-panel" id="mode-cost">
+    <div class="card">
+      <h3>Cost — Budgets, Forecast Delta, Idle Resources</h3>
+      
+      <table>
+        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        
+        <tr>
+          <td>Governance</td>
+          <td>34.1%</td>
+          <td>3</td> <td>5</td> <td>10</td>
+        </tr>
+        
+        <tr>
+          <td>Azure Billing and Microsoft Entra ID Tenants</td>
+          <td><span style="color:var(--muted);">Customer operating model validation required</span></td>
+          <td>0</td> <td>0</td> <td>15</td>
+        </tr>
+        
+      </table>
+      
+    </div>
+  </div>
+
+  <!-- Data Confidence -->
+  <div class="mode-panel" id="mode-dataconf">
+    <div class="card">
+      <h3>Data Confidence — Scope &amp; Signal Availability</h3>
+      <div class="grid-3" style="margin-bottom:12px;">
+        <div class="kpi">
+          <div class="value">46</div>
+          <div class="label"><span class="conf-evidence">Evidence-based</span> controls</div>
+        </div>
+        <div class="kpi">
+          <div class="value">225</div>
+          <div class="label"><span class="conf-assumption">Assumption-based</span> controls</div>
+        </div>
+        <div class="kpi">
+          <div class="value">17.0%</div>
+          <div class="label">Automation Coverage</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);">
+        <strong>46</strong> controls scored from live platform signals (evidence).
+        <strong>225</strong> controls require customer input (assumption).
+        
+      </p>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     7. ASSESSMENT SCOPE & CONFIDENCE
+     ════════════════════════════════════════════════════════════════ -->
+<div class="section" id="confidence">
+  <h2>7 &middot; Assessment Scope &amp; Confidence</h2>
+  <div class="card">
+    <div class="grid-4" style="margin-bottom:14px;">
+      <div class="kpi">
+        <div class="value">1</div>
+        <div class="label">Subscriptions Assessed</div>
+      </div>
+      <div class="kpi">
+        <div class="value">Yes</div>
+        <div class="label">MG Hierarchy Visible</div>
+      </div>
+      <div class="kpi">
+        <div class="value">Yes</div>
+        <div class="label">Graph API Access</div>
+      </div>
+      <div class="kpi">
+        <div class="value" style="font-size:16px;line-height:1.3;">Delegated User via Azure CLI</div>
+        <div class="label">Assessment Execution Context</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px;">Delegated User · Owner · Subscription Scope</div>
+      </div>
+    </div>
+    <table>
+      <tr><th>Dimension</th><th>Source</th><th>Confidence</th></tr>
+      <tr>
+        <td>Control scores (46 controls)</td>
+        <td>Live platform signals</td>
+        <td><span class="conf-evidence">Evidence</span></td>
+      </tr>
+      <tr>
+        <td>Manual controls (225 controls)</td>
+        <td>Customer questionnaire required</td>
+        <td><span class="conf-assumption">Assumption</span></td>
+      </tr>
+      <tr>
+        <td>Management Group hierarchy</td>
+        <td>ARM Management Groups API</td>
+        <td><span class="conf-evidence">Evidence</span></td>
+      </tr>
+      <tr>
+        <td>Identity &amp; PIM signals</td>
+        <td>Microsoft Graph API</td>
+        <td><span class="conf-evidence">Evidence</span></td>
+      </tr>
+      
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════
+     8. CUSTOMER VALIDATION REQUIRED
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="validation">
+  <h2>8 &middot; Customer Validation Required</h2>
+  <p style="font-size:14px;color:var(--muted);margin-bottom:14px;">These questions must be validated with the customer during the discovery workshop. Grouped by domain.</p>
+
+  
+    
+  
+    
+    <div class="card q-domain">
+      <h3>Network Topology and Connectivity</h3>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent is the Azure network topology—including hub-spoke design, firewalling, DDoS protection, private endpoints, and hybrid connectivity—standardized, documented, and aligned with ALZ best practices?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Network topology is ad hoc or undocumented; hub-spoke, firewalling, DDoS, and hybrid connectivity are not consistently implemented.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Partial implementation of hub-spoke, firewall, DDoS, or hybrid connectivity; some documentation exists but not standardized.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive, standardized, and documented network topology with hub-spoke, Azure Firewall, DDoS, private endpoints, and hybrid connectivity fully aligned to ALZ best practices.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Network Topology and Connectivity · 
+          Ref: C01.01, C01.02, C01.03, C01.04, C01.05, C01.06, C01.07, C01.08, C01.09, C01.10, C01.11, C01.12, C01.13, C01.14, C01.15, C01.16, C01.17, C01.18, C01.19, C01.20, C01.21, C01.22, C01.23, C01.24, C01.25, C01.26, C01.27, C01.28, C01.29, C01.30, C01.31, C01.32, C01.33, C01.34, C01.35, C01.36, C01.37, C01.38, C01.39, C01.40, C01.41, C01.42, C01.43, C01.44, C01.45, C01.46, C01.47, C01.48, C01.49, C01.50, C01.51, C01.52, C01.53, C01.54, C01.55, C01.56, C01.57, C01.58, C01.59, C01.60, C01.61, C01.62, C01.63, C01.64, C01.65, C01.66, C01.67, C01.68, C01.69, C01.70, C01.71, C01.72, C01.73, C01.74, C01.75, C01.76, C01.77, C01.78, C01.79, C01.80, C01.81, C01.82, C01.83, C01.84, C01.85, C01.86, C01.87, C01.88, C01.89, C01.90, C01.91, C01.92, C01.93, C01.94, C01.95, C01.96, C01.97, C01.98, C01.99, C01.100, C01.101, C01.102, C01.103 · 
+          Resolves 107 control(s)
+        </div>
+      </div>
+      
+    </div>
+    
+  
+    
+    <div class="card q-domain">
+      <h3>Governance</h3>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent are governance controls—including policy enforcement, blueprinting, cost forecasting, and resource locks—standardized and reviewed for all Azure resources?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Governance controls are ad hoc or inconsistently applied; policy enforcement, blueprinting, cost forecasting, and resource locks are not standardized.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some governance controls are implemented and partially enforced; periodic reviews are informal.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Governance controls are fully standardized and enforced; policy enforcement, blueprinting, cost forecasting, and resource locks are reviewed regularly and align with ALZ best practices.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Governance · 
+          Ref: G01.01, G01.02, G01.03, G01.04, G01.05, G01.06, G01.07, G01.08, G01.09, G01.10, G01.11, G01.12, G01.13 · 
+          Resolves 19 control(s)
+        </div>
+      </div>
+      
+    </div>
+    
+  
+    
+    <div class="card q-domain">
+      <h3>Security</h3>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent are security controls—including centralized security visibility, diagnostics, alerting, and incident response—standardized and enforced across all Azure resources?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Security controls are inconsistently applied; diagnostics, alerting, and incident response are ad hoc or undocumented.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some security controls are implemented and partially standardized; visibility and alerting are present for critical resources only.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Security controls are fully standardized and enforced; diagnostics, alerting, and incident response are automated and provide centralized visibility across all resources.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Security · 
+          Ref: D01.01, D01.02, D01.03, D01.04, D01.05, D01.06, D01.07, D01.08, D01.09, D01.10, D01.11, D01.12, D01.13, D01.14, D01.15, D01.16, D01.17, D01.18, D01.19, D01.20, D01.21, D01.22, D01.23, D01.24, D01.25, D01.26, D01.27, D01.28, D01.29, D01.30, D01.31 · 
+          Resolves 34 control(s)
+        </div>
+      </div>
+      
+    </div>
+    
+  
+    
+    <div class="card q-domain">
+      <h3>Management and Operations</h3>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent are management and monitoring practices—including workspace topology, update management, change tracking, and alert action mapping—standardized and automated across all Azure resources?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Management and monitoring practices are ad hoc or inconsistently applied; workspace topology and update management are not standardized.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some management and monitoring practices are implemented and partially automated; workspace topology and update management are partially standardized.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Management and monitoring practices are fully standardized and automated; workspace topology, update management, change tracking, and alert action mapping are enforced across all resources.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Management · 
+          Ref: E01.01, E01.02, E01.03, E01.04, E01.05, E01.06, E01.07, E01.08, E01.09, E01.10, E01.11, E01.12, E01.13, E01.14, E01.15, E01.16, E01.17, E01.18, E01.19, E01.20, E01.21, E01.22, E01.23, E01.24, E01.25, E01.26 · 
+          Resolves 30 control(s)
+        </div>
+      </div>
+      
+    </div>
+    
+  
+
+  
+  
+    
+    <div class="card q-domain">
+      <h3>General</h3>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent are Azure billing accounts, cost management, and notification processes standardized and aligned with organizational structure and ALZ best practices?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Billing, cost management, and notification processes are ad hoc or undocumented; no alignment with organizational structure.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some cost management and notification processes are defined and partially mapped to organizational structure; limited automation.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Billing, cost management, and notification processes are fully standardized, automated, and mapped to the organization&#39;s structure with documented roles, escalation, and periodic review.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Azure Billing and Microsoft Entra ID Tenants · 
+          Ref: A01.01, A01.02, A01.03, A02.01, A02.02, A02.03, A03.01, A03.02, A03.03, A03.04, A03.05, A04.01, A04.02, A04.03, A04.04 · 
+          Resolves 15 control(s)
+        </div>
+      </div>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent are identity and access management controls—including RBAC, PIM, group-based assignment, break-glass accounts, and conditional access—implemented and periodically reviewed across all Azure resources?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Identity controls are inconsistently applied; RBAC, PIM, and group-based assignments are not enforced; break-glass and conditional access are absent or undocumented.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some identity controls are implemented (e.g., partial RBAC or PIM usage); group-based assignments and periodic reviews are ad hoc; break-glass and conditional access are partially defined.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive identity controls are enforced for all privileged roles; RBAC, PIM, group-based assignment, break-glass, and conditional access policies are standardized, automated, and periodically reviewed.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Identity and Access Management · 
+          Ref: B03.01, B03.02, B03.03, B03.04, B03.05, B03.06, B03.07, B03.08, B03.09, B03.10, B03.11, B03.12, B03.13, B03.14, B03.15, B03.16, B03.17, B03.18, B04.01, B04.02, B04.03, B04.04 · 
+          Resolves 22 control(s)
+        </div>
+      </div>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent is resource organization—including management group hierarchy, subscription design, naming, and tagging—standardized and enforced according to ALZ best practices?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Resource organization is ad hoc or undocumented; management group hierarchy, subscription design, naming, and tagging are not standardized.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some resource organization practices are defined and partially enforced; naming and tagging are inconsistently applied.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Resource organization is fully standardized and enforced; management group hierarchy, subscription design, naming, and tagging align with ALZ best practices.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Resource Organization · 
+          Ref: C01.01, C02.01, C02.02, C02.03, C02.04, C02.05, C02.06, C02.07, C02.08, C02.09, C02.10, C02.11, C02.12, C02.13, C02.14, C02.15, C02.16, C02.17, C02.18, C02.19 · 
+          Resolves 20 control(s)
+        </div>
+      </div>
+      
+      <div class="q-item">
+        <div class="q-text">To what extent are platform automation and DevOps practices—including infrastructure as code, CI/CD, and environment consistency—standardized and enforced across all Azure resources?</div>
+        
+        <div class="q-maturity">
+          <span class="maturity-level"><strong>1</strong> &mdash; Platform automation and DevOps practices are ad hoc or absent; infrastructure is deployed manually.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some automation and DevOps practices are implemented; infrastructure as code and CI/CD are used for select workloads.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Platform automation and DevOps practices are fully standardized and enforced; infrastructure as code, CI/CD, and environment consistency are applied to all workloads.</span>
+        </div>
+        
+        <div class="q-meta">
+          ALZ Area: Platform Automation and DevOps · 
+          Ref: F01.01, F01.02, F01.03, F01.04, F01.05, F01.06, F01.07, F01.08, F01.09, F01.10, F01.11, F01.12, F01.13 · 
+          Resolves 13 control(s)
+        </div>
+      </div>
+      
+    </div>
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     TOP PLATFORM RISKS (from AI executive)
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="risks">
+  <h2>Top Platform Adoption Risks</h2>
+  
+  <div class="card">
+    <h3>Critical Data Loss and Regulatory Exposure</h3>
+    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Security</p>
+    <p><strong>Platform impact:</strong> Potential for irreversible data loss and failure to meet compliance obligations, leading to financial penalties and reputational damage.</p>
+    <p style="margin-top:6px;"><strong>Technical cause:</strong> Storage accounts and PaaS resources lack required security controls (private endpoints, encryption, backup).</p>
+  </div>
+  
+  <div class="card">
+    <h3>Operational Disruption from Inadequate Network Security</h3>
+    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Network Topology and Connectivity</p>
+    <p><strong>Platform impact:</strong> Increased risk of service outages and business interruption due to unmitigated DDoS attacks or lateral movement by threat actors.</p>
+    <p style="margin-top:6px;"><strong>Technical cause:</strong> No Azure Firewall or hub-spoke topology; DDoS protection not enabled for VNets.</p>
+  </div>
+  
+  <div class="card">
+    <h3>Security Breach from Privileged Access Mismanagement</h3>
+    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Identity and Access Management</p>
+    <p><strong>Platform impact:</strong> Elevated likelihood of unauthorized access, data breaches, and audit failure due to excessive owner roles and lack of privileged identity management.</p>
+    <p style="margin-top:6px;"><strong>Technical cause:</strong> Privileged roles not governed by PIM; excessive direct Owner assignments; group-based RBAC not implemented.</p>
+  </div>
+  
+  <div class="card">
+    <h3>Inability to Detect and Respond to Threats</h3>
+    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Management</p>
+    <p><strong>Platform impact:</strong> Delayed or missed detection of security incidents, increasing the risk of material impact from cyber attacks.</p>
+    <p style="margin-top:6px;"><strong>Technical cause:</strong> Centralized security monitoring not in place; low diagnostics coverage; fragmented workspace topology.</p>
+  </div>
+  
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     ALZ DESIGN AREA REFERENCES (from MCP grounding)
+     ════════════════════════════════════════════════════════════════ -->
+
+
+</div><!-- /.container -->
+
+<script>
+function switchMode(btn, mode) {
+  document.querySelectorAll('.mode-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.remove('active'); });
+  var panel = document.getElementById('mode-' + mode);
+  if (panel) panel.classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>
