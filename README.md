@@ -1,6 +1,10 @@
 # Azure Landing Zone Assessor (`lz-assessor`)
 
-A comprehensive, automated Azure Landing Zone assessment tool designed for **Cloud Solution Architects (CSAs)** conducting landing zone assessments. It evaluates all subscriptions visible to the authenticated identity (tenant-wide with appropriate RBAC) against Microsoft's [Azure Landing Zone (ALZ) checklist](https://github.com/Azure/review-checklists), scores controls deterministically, then enriches the results with AI-generated advisory output — producing a ready-to-deliver **CSA workbook**, **executive HTML report**, and **target architecture** in a single command.
+> **Sample report generated from a non-production lab subscription.**
+> No customer data is included.
+> All findings are based on synthetic test workloads for demonstration purposes.
+
+A comprehensive, automated Azure Landing Zone assessment tool designed for **Cloud Solution Architects (CSAs)** conducting landing zone assessments. It evaluates all subscriptions visible to the authenticated identity (tenant-wide with appropriate RBAC) against Microsoft's [Azure Landing Zone (ALZ) checklist](https://github.com/Azure/review-checklists), scores controls deterministically, then enriches the results with AI-generated advisory output — producing a ready-to-deliver **CSA workbook**, **executive ALZ Readiness HTML report**, and **target architecture** in a single command.
 
 Designed to support CSA discovery workshops and partner landing zone engagements.
 
@@ -13,29 +17,62 @@ This agent:
 - Uses **read-only access (safe for customer environments)**
 - Evaluates **real platform signals — not questionnaires**
 - Selects controls dynamically based on **intent**
-- Produces a **defensible, risk-aligned roadmap**
+- Produces a **defensible, capability-aligned roadmap**
 
-**Run one command → get a scored assessment, executive briefing, and a traceable 30-60-90 plan.**
+**Run one command → get a scored assessment, platform readiness briefing, and a traceable 30-60-90 plan.**
 
 ---
 
-## Demo Screenshots
+# 🚀 End-to-End Azure Landing Zone Assessment
 
-| 7-Pass Reasoning Pipeline | Automated Control Evaluation |
-|---|---|
-| ![7-Pass Reasoning Pipeline](docs/demo/01_reasoning-engine.png) | ![Automated Control Evaluation](docs/demo/02_automated-control-evaluation-with-evidence.png) |
+> One command → scored assessment, platform readiness briefing, and a traceable 30-60-90 transformation plan.
 
-| Roadmap Traceability | Executive Briefing |
-|---|---|
-| ![Roadmap Traceability](docs/demo/03_roadmap-traceability.png) | ![Executive Briefing](docs/demo/04_executive-briefing.png) |
+🔎 **Open the interactive demo report:**  
+[View HTML report](docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)
 
-| Causal Risk Analysis | Top Risk Area Analysis |
-|---|---|
-| ![Causal Risk Analysis](docs/demo/05_causal-risk-analysis-networking.png) | ![Top Risk Area Analysis](docs/demo/06_Top_Risk_Area_Analysis.png) |
+Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
-| Landing Zone Assessment Report |
-|---|
-| ![Landing Zone Assessment Report](docs/demo/07_Landing%20Zone%20Assessment%20Report.png) |
+![Platform Maturity & Top Risks](docs/demo/report-hero.png)
+
+---
+
+### 📊 Platform maturity scored against the ALZ checklist
+
+Every control is evaluated against the official Azure Landing Zone review checklist — evidence-based, not questionnaire-based.
+
+![Automated Control Evaluation](docs/demo/02_automated-control-evaluation-with-evidence.png)
+
+---
+
+### 🔍 Evidence-based assessment scope
+
+Live platform signals with confidence labelling for every dimension.
+
+![Assessment Scope & Confidence](docs/demo/04_data-confidence.png)
+
+---
+
+### 🗺 30-60-90 transformation roadmap
+
+Dependency-ordered initiatives with maturity trajectory projections.
+
+![Roadmap Traceability](docs/demo/03_roadmap-traceability.png)
+
+---
+
+### 🧠 Causal risk analysis
+
+Root cause → cascade impact → initiative that resolves it.
+
+![Causal Risk Analysis](docs/demo/05_causal-risk-analysis-networking.png)
+
+---
+
+### 🔐 Read-only execution context discovery
+
+The assessment auto-discovers tenant scope, RBAC role, and signal availability before evaluation.
+
+![Execution Context](docs/demo/00_execution-context.png)
 
 ## Features
 
@@ -47,7 +84,7 @@ This agent:
 | **7-Pass AI Advisory Pipeline** | Generates enterprise readiness, top risks, 30-60-90 roadmap, initiatives, backlog, and target architecture |
 | **Microsoft Learn MCP Grounding** | Official MCP SDK retrieves real guidance, code samples, and full documentation |
 | **CSA Workbook (Excel)** | Executive Summary, traceable 30-60-90 roadmap, Control Details, and Risk Analysis sheets |
-| **Executive HTML Report** | Visual maturity score, risk heatmap, and gap analysis |
+| **ALZ Readiness HTML Report** | Platform readiness report with maturity scores, adoption blockers, and domain deep dive |
 | **Delta Tracking** | Shows control-level progress between runs |
 | **8 Preflight Probes** | Validates RBAC, Resource Graph, Policy, Defender, Log Analytics, Entra ID, Cost Management, and Microsoft Graph API access before a full scan |
 | **Identity & PIM Deep Signals** | When Microsoft Graph Directory.Read.All is available, the assessor scores PIM maturity, break-glass validation, service principal owner risk, and admin Conditional Access coverage |
@@ -57,7 +94,6 @@ This agent:
 | **Resilient JSON Parsing** | Model output sanitizer fixes trailing commas, JS comments, and single-quoted strings before parsing — with truncation repair and retry |
 | **Pluggable AI Provider** | Swap AOAI for another model in one line |
 
-
 ---
 
 ## End-to-End Reasoning Architecture
@@ -65,7 +101,7 @@ This agent:
 ### 1. Input
 
 - Live Azure tenant via `az login` or sanitized demo fixture
-- CLI modes: `--demo`, `--preflight`, `--on-demand`, `--why DOMAIN`
+- CLI modes: `--demo` 
 
 ### 2. Data Collection
 
@@ -87,7 +123,7 @@ Builds advisor payload from scored controls, then runs a **7-pass reasoning pipe
 | Pass | Name | Output |
 |------|------|--------|
 | 1 | **Roadmap & Initiatives** | 30-60-90 plan + initiative dependency graph |
-| 2 | **Executive Briefing** | Top risks + maturity narrative |
+| 2 | **Executive Briefing** | Top platform risks + maturity narrative |
 | 3 | **Enterprise-Scale Readiness** | Enterprise-scale readiness assessed against ALZ design capabilities |
 | 4 | **Smart Questions** | Targeted discovery questions for the customer |
 | 5 | **Implementation Backlog** | Per-initiative execution plans |
@@ -106,7 +142,7 @@ Builds advisor payload from scored controls, then runs a **7-pass reasoning pipe
 | Output | Description |
 |--------|-------------|
 | 📊 CSA Workbook (Excel) | 4-sheet deliverable: Executive Summary, 30-60-90 Roadmap, Control Details, Risk Analysis |
-| 🌐 Executive HTML Report | Browser-based assessment report |
+| 🌐 ALZ Readiness HTML Report | Browser-based assessment report |
 | 🧾 Run JSON | Full traceable assessment data |
 | 🏗 Target Architecture JSON | AI-generated target architecture |
 | ❓ Why-Analysis JSON | Causal reasoning output per risk domain |
@@ -132,7 +168,7 @@ WHY Reasoning Layer
 (Knowledge Graph + Dependency Impact)
         │
         ▼
-Traceable Business Risk Explanation
+Traceable Platform Gap Analysis
 ```
 
 ---
@@ -421,50 +457,14 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 
 ---
 
-## CLI Reference
-
-```
-python scan.py [OPTIONS]
-```
-
-| Flag | Description |
-|---|---|
-| *(no flags)* | Full assessment: evaluate all controls + AI advisory + all reports |
-| `--tenant-wide` | Scan all visible subscriptions across the tenant (default: Resource Graph subscriptions only) |
-| `--pretty` | Pretty-print the final JSON to stdout after the run |
-| `--preflight` | Run preflight access probes and exit — validates permissions without a full assessment |
-| `--why DOMAIN` | Explain **why** a domain is the top risk — runs causal reasoning over an existing assessment |
-| `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
-| `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
-
 ### Examples
+# No Azure required
+python scan.py --demo
 
-```bash
-# Full assessment with AI
+# Assess your landing zone
+az login
 python scan.py
-
-# Scan entire tenant
-python scan.py --tenant-wide
-
-# Check permissions first
-python scan.py --preflight
-
-# Full run, print JSON to console
-python scan.py --pretty
-
-# Demo mode — full pipeline against bundled sample data, no Azure needed
-python scan.py --demo --no-ai
-
-# Explain why Networking is the top risk (uses latest run)
-python scan.py --why Networking
-
-# Same, but using the bundled demo data (no Azure needed)
-python scan.py --why Networking --demo
-
-# Demo mode without AI — returns raw evidence payload
-python scan.py --why Networking --demo --no-ai
 ```
-
 ---
 
 ## Output Artifacts
@@ -474,7 +474,7 @@ All outputs are written to the `out/` directory:
 | File | Description |
 |---|---|
 | `run-YYYYMMDD-HHMM.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
-| `report.html` | Interactive executive HTML report with score breakdowns and gap analysis |
+| `ALZ-Platform-Readiness-Report.html` | Interactive platform readiness report with adoption blockers and domain deep dive |
 | `CSA_Workbook_v1.xlsx` | 4-sheet CSA deliverable workbook (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
 | `target_architecture.json` | AI-generated target architecture with component recommendations and Learn references |
 | `preflight.json` | *(preflight mode only)* Access probe results |
@@ -517,7 +517,7 @@ When AI is enabled, a **7-pass pipeline** runs against Azure OpenAI:
 | Pass | Prompt | Output | max_tokens |
 |---|---|---|---|
 | 1 | `roadmap.txt` | 30-60-90 transformation roadmap + named initiatives | 8000 |
-| 2 | `exec.txt` | Executive briefing with business risk narrative | 4000 |
+| 2 | `exec.txt` | Platform readiness briefing with adoption blockers | 4000 |
 | 3 | `readiness.txt` | Enterprise-scale readiness assessment | 4000 |
 | 4 | `smart_questions.txt` | Customer discovery questions per domain | 4000 |
 | 5 | `implementation.txt` × N | Implementation backlog (one item per initiative) | 4000 |
@@ -550,10 +550,10 @@ Grounding runs for:
 ### 5. Report Generation
 
 **HTML Report** (`report.html`):
-- Executive summary with overall health score
+- Platform readiness snapshot with overall maturity score
 - Domain score breakdown with visual indicators
-- Risk heatmap
-- Gap analysis table
+- Landing zone adoption blockers
+- Remediation initiative sequence
 - Delta changes from previous runs
 
 **CSA Workbook** (`CSA_Workbook_v1.xlsx`):
@@ -571,7 +571,7 @@ The workbook is the primary **customer-facing deliverable** — a 4-sheet Excel 
 |---|---|
 | **CSA Engagement Framing** | Engagement Objective, Key Message, Customer Outcome — ready-made talking points |
 | **Assessment Metrics** | Total controls, automated %, pass/fail/partial counts, risk score |
-| **Top Business Risks** | AI-identified risks with severity, affected domain, and recommended mitigation |
+| **Top Platform Adoption Blockers** | AI-identified blockers with severity, affected ALZ design area, and resolving initiative |
 
 ### Sheet 1: `1_30-60-90_Roadmap`
 
@@ -650,8 +650,8 @@ This runs a **6-step causal reasoning pipeline** over the existing assessment da
 | 6. **AI causal explanation** | Sends the assembled evidence to the reasoning model for root-cause analysis |
 
 The AI output includes:
-- **Root cause** — why the domain is the top risk (current-state framing)
-- **Business impact** — specific consequences tied to the evidence
+- **Root cause** — why the domain is the top platform gap (current-state framing)
+- **Platform impact** — specific consequences tied to the evidence
 - **Fix sequence** — ordered remediation steps with dependency rationale and Learn URLs
 - **Cascade effect** — which downstream controls will automatically improve
 
@@ -688,12 +688,12 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 
 | Domain | Weight | Rationale |
 |---|---|---|
-| Security | 1.5× | Highest impact on breach risk |
-| Networking | 1.4× | Network segmentation is foundational |
-| Identity | 1.4× | Identity is the new perimeter |
-| Governance | 1.3× | Policy enforcement and compliance |
+| Security | 1.5× | Security baseline is prerequisite for landing zone delegation |
+| Networking | 1.4× | Connectivity topology enables landing zone isolation |
+| Identity | 1.4× | Identity baseline governs privileged access and delegation |
+| Governance | 1.3× | Policy inheritance and subscription lifecycle guardrails |
 | Platform | 1.2× | Landing zone structural integrity |
-| Management | 1.1× | Operational visibility |
+| Management | 1.1× | Operations baseline for centralized monitoring |
 
 ### Severity Weights
 
