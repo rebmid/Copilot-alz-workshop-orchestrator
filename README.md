@@ -733,8 +733,7 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 
 ## Built with AI Assistance
 
-This project was developed using GitHub Copilot as an AI pair programmer for code generation, refactoring, and test scaffolding.  
-All architecture, control logic, Azure integration, and reasoning workflows were designed and implemented by the author.
+Built with AI assistance: GitHub Copilot was used for code generation, refactoring, and test scaffolding. All architecture, control logic, Azure integration, and reasoning workflows were designed and implemented by the author.
 
 ## License
 
