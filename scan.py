@@ -17,7 +17,7 @@ from engine.run_store import save_run, get_last_run
 from engine.delta import compute_delta
 from engine.rollup import rollup_by_section
 from reporting.render import generate_report
-from reporting.csa_workbook import build_csa_workbook
+from reporting.csa_workbook import build_csa_workbook, validate_signal_integrity, SignalIntegrityError
 from ai.engine.reasoning_provider import AOAIReasoningProvider
 from ai.engine.reasoning_engine import ReasoningEngine
 from ai.prompts import PromptPack
@@ -458,6 +458,20 @@ def main():
     with open("assessment.json", "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     save_run(OUT_DIR, tenant_id, output, tenant_name=tenant_name)
+
+    # ── Signal integrity gate ─────────────────────────────────────
+    try:
+        provenance = validate_signal_integrity(output, allow_demo=False)
+        print("\n┌─ Signal Integrity ────────────────────┐")
+        print(f"│  API calls:         {provenance['api_calls_total']}")
+        print(f"│  Signals fetched:   {provenance['signals_fetched']}")
+        print(f"│  Data-driven ctrls: {provenance['data_driven_controls']}")
+        print(f"│  Scan duration:     {provenance['scan_duration_sec']}s")
+        print("└───────────────────────────────────────┘")
+    except SignalIntegrityError as e:
+        print(f"\n  ✗ {e}")
+        print("  Report generation aborted — no live telemetry collected.")
+        return
 
     # ── Reports ───────────────────────────────────────────────────
     if not args.no_html:

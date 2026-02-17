@@ -535,4 +535,4 @@ Built with AI assistance: GitHub Copilot was used for code generation, refactori
 
 ## License
 
-Copyright (c) 2026 Rebekah Midkiff
+MIT License © 2026 Rebekah Midkiff

@@ -636,6 +636,54 @@
 </div>
 {% endif %}
 
+<!-- ════════════════════════════════════════════════════════════════
+     PROVENANCE — DATA COLLECTION ATTESTATION
+     ════════════════════════════════════════════════════════════════ -->
+{% if provenance %}
+<div class="section" id="provenance">
+  <h2>Data Collection Provenance</h2>
+  <div class="card" style="border-left:4px solid var(--accent);">
+    <p style="font-size:15px;font-weight:600;margin-bottom:12px;color:var(--fg);">
+      {{ provenance.statement }}
+    </p>
+    <div class="grid-4" style="margin-bottom:14px;">
+      <div class="kpi">
+        <div class="value">{{ provenance.scan_duration_sec }}s</div>
+        <div class="label">Scan Duration</div>
+      </div>
+      <div class="kpi">
+        <div class="value">{{ provenance.api_calls_total }}</div>
+        <div class="label">API Calls ({{ provenance.rg_queries }} RG + {{ provenance.arm_calls }} ARM)</div>
+      </div>
+      <div class="kpi">
+        <div class="value">{{ provenance.signals_fetched }}</div>
+        <div class="label">Signals Fetched ({{ provenance.signals_cached }} cached)</div>
+      </div>
+      <div class="kpi">
+        <div class="value">{{ provenance.data_driven_controls }} / {{ provenance.total_controls }}</div>
+        <div class="label">Data-Driven Controls</div>
+      </div>
+    </div>
+    {% if provenance.signal_inventory %}
+    <table>
+      <tr><th>Signal Category</th><th>Providers Available</th></tr>
+      {% for cat, count in provenance.signal_inventory.items() %}
+      <tr><td>{{ cat }}</td><td>{{ count }}</td></tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);">
+      Phase timing: context={{ provenance.phase_context_sec }}s
+      &middot; signals={{ provenance.phase_signals_sec }}s
+      &middot; evaluators={{ provenance.phase_evaluators_sec }}s
+      &middot; ai={{ provenance.phase_ai_sec }}s
+      &middot; reporting={{ provenance.phase_reporting_sec }}s
+      {% if provenance.signal_errors %}&middot; <span style="color:#e74c3c;">{{ provenance.signal_errors }} signal error(s)</span>{% endif %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
 </div><!-- /.container -->
 
 <script>
