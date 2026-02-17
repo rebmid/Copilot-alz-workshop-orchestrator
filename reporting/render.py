@@ -236,6 +236,8 @@ def _build_report_context(output: dict) -> dict:
         "exec_context_label": exec_context_label,
         "exec_context_detail": exec_context_detail,
         "tenant_id": exec_ctx.get("tenant_id", ""),
+        "tenant_display_name": exec_ctx.get("tenant_display_name", ""),
+        "tenant_default_domain": exec_ctx.get("tenant_default_domain", ""),
         "total_controls": auto_cov.get("total_controls", 0),
         "automated_controls": auto_cov.get("automated_controls", auto_cov.get("data_driven", 0)),
         "manual_controls": auto_cov.get("manual_controls", auto_cov.get("requires_customer_input", 0)),

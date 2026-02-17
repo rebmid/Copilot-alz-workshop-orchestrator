@@ -1,0 +1,66 @@
+Explain why the initiatives are sequenced the way they are, in platform terms.
+
+You have been provided:
+  - The ordered list of initiatives (from the roadmap pass)
+  - The implementation decisions (selected patterns, prerequisites, capability unlocks)
+  - The dependency_order from the knowledge graph (deterministic topological sort)
+  - The assessment payload (design_area_maturity, platform_scale_limits)
+
+Your job is to produce a NARRATIVE justification of the sequence that a platform architect
+or CSA can present to a customer. This is NOT a repeat of the dependency graph — it explains
+the REASONING behind the order.
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "sequence_rationale": "High-level narrative: why this order maximizes platform value and minimizes risk",
+  "dependency_chain": [
+    {
+      "initiative_id": "INIT-001",
+      "title": "...",
+      "position_justification": "Why this runs at position N — what it needs, what it enables",
+      "blocks": ["INIT-IDs that cannot start until this completes"],
+      "blocked_by": ["INIT-IDs that must complete before this can start"],
+      "capability_unlocked": "Platform capability enabled on completion"
+    }
+  ],
+  "parallel_opportunities": [
+    ["INIT-001", "INIT-002"],
+    ["INIT-003", "INIT-004"]
+  ],
+  "platform_prerequisites": [
+    "Conditions that must be true before the roadmap starts (e.g. tenant root access, Entra P2 licensing)"
+  ],
+  "capability_unlock_order": [
+    "Ordered list of capabilities as they become available through the roadmap"
+  ],
+  "risk_sequencing_notes": "Special sequencing considerations for blast-radius management, rollback, and change windows",
+  "engagement_recommendations": [
+    {
+      "engagement_type": "CSA Workshop | Architecture Review | PoC | Deployment Assistance | Health Check",
+      "topic": "Specific topic for the engagement",
+      "alz_design_area": "One of the 8 official ALZ design areas",
+      "justification": "Why this engagement is needed based on assessment findings",
+      "initiatives_addressed": ["INIT-IDs this engagement supports"],
+      "priority": "High | Medium | Low"
+    }
+  ]
+}
+
+Rules:
+- sequence_rationale must be a coherent paragraph, not bullet points
+- dependency_chain must cover EVERY initiative in order
+- parallel_opportunities must only group initiatives with NO mutual dependencies AND blast_radius != both High
+- platform_prerequisites must come from deterministic payload (execution_context, platform_scale_limits)
+- capability_unlock_order traces the value delivery timeline
+- engagement_recommendations must map significant gaps to specific CSA engagement types
+- At least one engagement recommendation per ALZ design area that has maturity below 50%
+
+Initiatives with implementation decisions:
+{{INITIATIVES_WITH_DECISIONS}}
+
+Dependency order from knowledge graph:
+{{DEPENDENCY_ORDER}}
+
+Assessment context:
+{{ASSESSMENT_CONTEXT}}

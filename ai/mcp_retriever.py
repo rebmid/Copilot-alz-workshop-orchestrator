@@ -584,3 +584,198 @@ def build_grounding_context(
                     })
 
     return context
+
+
+# ──────────────────────────────────────────────────────────────────
+# ALZ Implementation Pattern Retrieval (architectural decision support)
+# ──────────────────────────────────────────────────────────────────
+
+# Curated queries per ALZ module area — returns authoritative patterns
+_ALZ_IMPLEMENTATION_QUERIES: dict[str, list[str]] = {
+    "Identity and Access Management": [
+        "Azure landing zone identity implementation Bicep module PIM RBAC",
+        "ALZ Bicep identity subscription vending Entra ID conditional access",
+    ],
+    "Network Topology and Connectivity": [
+        "Azure landing zone hub spoke implementation Bicep ALZ module",
+        "ALZ Bicep network connectivity Virtual WAN Azure Firewall DNS",
+    ],
+    "Security": [
+        "Azure landing zone security implementation Defender for Cloud Sentinel Bicep",
+        "ALZ Bicep security baseline CSPM Defender plans policy assignment",
+    ],
+    "Management": [
+        "Azure landing zone management implementation Log Analytics diagnostics Bicep",
+        "ALZ Bicep management monitoring Azure Monitor Update Manager",
+    ],
+    "Governance": [
+        "Azure landing zone governance implementation policy Bicep compliance",
+        "ALZ Bicep governance policy initiative management group assignment",
+    ],
+    "Resource Organization": [
+        "Azure landing zone management group hierarchy Bicep implementation",
+        "ALZ Bicep resource organization subscription placement naming",
+    ],
+    "Platform Automation and DevOps": [
+        "Azure landing zone platform automation Bicep subscription vending IaC",
+        "ALZ Bicep DevOps pipeline GitHub Actions Azure Verified Modules",
+    ],
+    "Azure Billing and Microsoft Entra ID Tenants": [
+        "Azure landing zone billing tenant organization Bicep",
+        "ALZ Bicep billing EA MCA subscription creation",
+    ],
+}
+
+# Known ALZ Bicep module patterns for structured fallback
+_ALZ_MODULE_PATTERNS: dict[str, list[dict]] = {
+    "Identity and Access Management": [
+        {
+            "pattern_name": "Centralized PIM + Conditional Access",
+            "alz_module": "ALZ-Bicep/modules/identity",
+            "description": "Deploy PIM roles, break-glass accounts, and conditional access policies via ALZ identity module.",
+            "prerequisites": ["Management group hierarchy", "Entra ID P2 licensing"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+        },
+    ],
+    "Network Topology and Connectivity": [
+        {
+            "pattern_name": "Hub-Spoke with Azure Firewall",
+            "alz_module": "ALZ-Bicep/modules/hubNetworking",
+            "description": "Deploy hub VNet with Azure Firewall, Bastion, and VPN/ExpressRoute gateway. Spoke VNets peer to hub.",
+            "prerequisites": ["Connectivity subscription", "IP address plan"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/hub-spoke-network-topology",
+        },
+        {
+            "pattern_name": "Virtual WAN",
+            "alz_module": "ALZ-Bicep/modules/vwanConnectivity",
+            "description": "Deploy Azure Virtual WAN with secured hubs, SD-WAN integration, and multi-region connectivity.",
+            "prerequisites": ["Connectivity subscription", "Branch office requirements"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/virtual-wan-network-topology",
+        },
+    ],
+    "Security": [
+        {
+            "pattern_name": "Defender for Cloud + Sentinel Baseline",
+            "alz_module": "ALZ-Bicep/modules/policy/assignments/alzDefaults",
+            "description": "Enable all Defender plans via policy, deploy Sentinel workspace with data connectors.",
+            "prerequisites": ["Log Analytics workspace", "Security subscription"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security",
+        },
+    ],
+    "Management": [
+        {
+            "pattern_name": "Centralized Logging + Diagnostics",
+            "alz_module": "ALZ-Bicep/modules/logging",
+            "description": "Deploy central Log Analytics workspace, automation account, and diagnostic policy assignments.",
+            "prerequisites": ["Management subscription"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+        },
+    ],
+    "Governance": [
+        {
+            "pattern_name": "Policy-Driven Governance",
+            "alz_module": "ALZ-Bicep/modules/policy/assignments/alzDefaults",
+            "description": "Assign ALZ default policy initiatives at management group scope for compliance baseline.",
+            "prerequisites": ["Management group hierarchy"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+        },
+    ],
+    "Resource Organization": [
+        {
+            "pattern_name": "ALZ Management Group Hierarchy",
+            "alz_module": "ALZ-Bicep/modules/managementGroups",
+            "description": "Deploy the canonical ALZ management group structure with platform/landing zone/sandbox hierarchy.",
+            "prerequisites": ["Tenant root access"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-organization",
+        },
+    ],
+    "Platform Automation and DevOps": [
+        {
+            "pattern_name": "Subscription Vending + IaC Pipeline",
+            "alz_module": "ALZ-Bicep/modules/subscriptionPlacement",
+            "description": "Automated subscription vending via Bicep with GitHub Actions / Azure DevOps pipeline.",
+            "prerequisites": ["Management group hierarchy", "Service principal with subscription contributor"],
+            "learn_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops",
+        },
+    ],
+}
+
+
+def get_alz_implementation_options(
+    initiative: dict,
+    context: dict | None = None,
+) -> list[dict]:
+    """Retrieve ALZ implementation patterns for an initiative.
+
+    Combines:
+      1. Curated local patterns from _ALZ_MODULE_PATTERNS (always available)
+      2. MCP Learn search for additional patterns & code samples
+
+    Parameters
+    ----------
+    initiative : dict
+        An initiative from the roadmap pass (has title, alz_design_area, controls).
+    context : dict | None
+        Optional assessment context (execution_context, platform_scale_limits)
+        for filtering patterns by feasibility.
+
+    Returns
+    -------
+    list[dict]
+        Each dict has: pattern_name, alz_module, description, prerequisites, learn_url
+    """
+    title = initiative.get("title", "")
+    design_area = initiative.get("alz_design_area") or _infer_design_area(title)
+
+    options: list[dict] = []
+    seen: set[str] = set()
+
+    # 1. Local curated patterns (deterministic, always available)
+    if design_area and design_area in _ALZ_MODULE_PATTERNS:
+        for pattern in _ALZ_MODULE_PATTERNS[design_area]:
+            options.append(pattern)
+            seen.add(pattern["pattern_name"])
+
+    # 2. MCP search for additional patterns
+    queries = []
+    if design_area and design_area in _ALZ_IMPLEMENTATION_QUERIES:
+        queries = _ALZ_IMPLEMENTATION_QUERIES[design_area]
+    else:
+        queries = [f"Azure landing zone {title} Bicep ALZ module implementation"]
+
+    for query in queries[:2]:
+        try:
+            results = search_docs(query, top=3)
+            for r in results:
+                name = r.get("title", "")[:80]
+                if name and name not in seen:
+                    seen.add(name)
+                    options.append({
+                        "pattern_name": name,
+                        "alz_module": "",
+                        "description": r.get("excerpt", r.get("description", ""))[:200],
+                        "prerequisites": [],
+                        "learn_url": r.get("url", ""),
+                    })
+        except Exception:
+            pass
+
+    # 3. Code samples for Bicep implementation
+    try:
+        bicep_query = f"Azure {design_area or title} Bicep ALZ module"
+        samples = search_code_samples(bicep_query, language="bicep", top=2)
+        for s in samples:
+            name = f"Bicep: {s.get('title', '')[:60]}"
+            if name not in seen:
+                seen.add(name)
+                options.append({
+                    "pattern_name": name,
+                    "alz_module": "",
+                    "description": s.get("code", "")[:200],
+                    "prerequisites": [],
+                    "learn_url": s.get("url", ""),
+                })
+    except Exception:
+        pass
+
+    return options[:8]  # cap at 8 options to stay token-safe

@@ -2,10 +2,11 @@ from azure.identity import AzureCliCredential
 from azure.mgmt.resourcegraph import ResourceGraphClient
 from azure.mgmt.resourcegraph.models import QueryRequest, QueryRequestOptions
 import requests
+from collectors.azure_client import get_shared_credential
 
 
 def get_subscriptions():
-    credential = AzureCliCredential(process_timeout=30)
+    credential = get_shared_credential()
     token = credential.get_token("https://management.azure.com/.default").token
     resp = requests.get(
         "https://management.azure.com/subscriptions?api-version=2022-01-01",
@@ -21,7 +22,7 @@ def get_subscriptions():
 
 
 def query_resource_graph(query: str, subscriptions: list):
-    credential = AzureCliCredential(process_timeout=30)
+    credential = get_shared_credential()
     client = ResourceGraphClient(credential)
 
     request = QueryRequest(

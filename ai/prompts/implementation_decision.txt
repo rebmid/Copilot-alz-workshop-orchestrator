@@ -1,0 +1,43 @@
+For each initiative in the roadmap, select the correct ALZ implementation pattern and justify the choice.
+
+You have been provided:
+  - The initiative (title, controls, alz_design_area, capability_unlocked)
+  - Available ALZ implementation options retrieved from Microsoft Learn (via MCP)
+  - The assessment payload (design_area_maturity, platform_scale_limits, signal_confidence)
+
+Your job is to SELECT one pattern per initiative and JUSTIFY the selection against the evidence.
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "implementation_decisions": [
+    {
+      "initiative_id": "INIT-001",
+      "initiative_title": "...",
+      "recommended_pattern": "The pattern_name from the options list",
+      "alz_module": "The ALZ Bicep module path (e.g. ALZ-Bicep/modules/hubNetworking)",
+      "why_this_pattern": "Evidence-based justification: why this pattern over alternatives, referencing assessment data",
+      "prerequisites_met": ["List of prerequisites that the assessment confirms are already in place"],
+      "prerequisites_missing": ["List of prerequisites that must be addressed first"],
+      "sequence_justification": "Why this initiative should run at its proposed position in the roadmap",
+      "operating_model_impact": "Who runs this, what operational changes are required, steady-state ownership",
+      "capability_unlocked": "What becomes possible when this completes — the platform capability enabled",
+      "next_engagement_alignment": "CSA engagement type this maps to (Workshop, Architecture Review, PoC, Deployment Assistance)"
+    }
+  ]
+}
+
+Rules:
+- Select EXACTLY ONE pattern per initiative from the provided options
+- If no provided option fits, describe a custom pattern but still reference ALZ modules
+- Justify every selection with SPECIFIC assessment evidence (section scores, gap IDs, maturity data)
+- Prerequisites must reference real initiative IDs or platform conditions
+- capability_unlocked must describe a CONCRETE platform outcome, not a generic benefit
+- operating_model_impact must name specific roles (Platform Engineering, Security, Identity, Network)
+- next_engagement_alignment must be one of: CSA Workshop, Architecture Review, PoC, Deployment Assistance, Health Check
+
+Initiatives and their available ALZ implementation options:
+{{INITIATIVES_WITH_OPTIONS}}
+
+Assessment context:
+{{ASSESSMENT_CONTEXT}}

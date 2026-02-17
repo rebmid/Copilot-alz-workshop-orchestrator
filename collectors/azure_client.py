@@ -1,6 +1,7 @@
 # collectors/azure_client.py
 from __future__ import annotations
 import os
+import threading
 import time
 import requests
 from dataclasses import dataclass
@@ -8,6 +9,31 @@ from typing import Any, Dict, Optional
 from azure.identity import AzureCliCredential
 
 ARM = "https://management.azure.com"
+
+# ── Shared credential singleton ──────────────────────────────────
+_credential_lock = threading.Lock()
+_shared_credential: Optional[AzureCliCredential] = None
+
+
+def get_shared_credential() -> AzureCliCredential:
+    """Return a process-wide AzureCliCredential singleton.
+
+    All collectors re-use this instead of spawning a fresh subprocess
+    per call.  Thread-safe.
+    """
+    global _shared_credential
+    if _shared_credential is None:
+        with _credential_lock:
+            if _shared_credential is None:
+                _shared_credential = AzureCliCredential(process_timeout=30)
+    return _shared_credential
+
+
+def set_shared_credential(cred: AzureCliCredential) -> None:
+    """Allow callers (e.g. scan.py) to inject the credential created at startup."""
+    global _shared_credential
+    with _credential_lock:
+        _shared_credential = cred
 
 @dataclass
 class AzureClient:
@@ -64,8 +90,8 @@ class AzureClient:
         r.raise_for_status()
         return r.json()
 
-def build_client(subscription_id: Optional[str] = None) -> AzureClient:
-    cred = AzureCliCredential(process_timeout=30)
+def build_client(subscription_id: Optional[str] = None, credential: Optional[AzureCliCredential] = None) -> AzureClient:
+    cred = credential or get_shared_credential()
     return AzureClient(credential=cred, subscription_id=subscription_id)
 
 
@@ -125,6 +151,6 @@ class GraphClient:
         return items
 
 
-def build_graph_client() -> GraphClient:
-    cred = AzureCliCredential(process_timeout=30)
+def build_graph_client(credential: Optional[AzureCliCredential] = None) -> GraphClient:
+    cred = credential or get_shared_credential()
     return GraphClient(credential=cred)

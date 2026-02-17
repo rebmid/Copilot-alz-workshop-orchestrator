@@ -1,22 +1,34 @@
-"""CSA Workbook builder — produces a 6-sheet Excel deliverable from assessment output.
+"""CSA Workbook builder — template-based approach.
 
-Usage:
+Copies a pre-built ``.xlsm`` template that already contains the
+Dashboard, charts, formulas, slicers, and pivot tables.  Python only
+writes data rows into the **Checklist** sheet  (row 10+, 21 columns).
+
+The Dashboard refreshes automatically because its SUMPRODUCT / FILTER
+formulas reference the Checklist data range.
+
+Additional analysis sheets (Executive Summary, 30-60-90 Roadmap,
+Risk Analysis) are appended as new tabs in the same workbook.
+
+Usage::
+
     from reporting.csa_workbook import build_csa_workbook
     build_csa_workbook(
         run_path="out/run.json",
         target_path="out/target_architecture.json",
-        output_path="out/CSA_Workbook_v1.xlsx",
+        output_path="out/CSA_Workbook_v1.xlsm",
     )
 """
 from __future__ import annotations
 
 import json
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from openpyxl import Workbook
-from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -81,6 +93,146 @@ def _auto_width(ws, min_width: int = 12, max_width: int = 55):
         lengths = [len(str(cell.value or "")) for cell in col]
         width = min(max(max(lengths, default=min_width), min_width), max_width)
         ws.column_dimensions[col_letter].width = width + 2
+
+
+# ══════════════════════════════════════════════════════════════════
+# Template path + checklist column contract
+# ══════════════════════════════════════════════════════════════════
+
+# Resolve template relative to this file's directory
+_TEMPLATE_DIR = Path(__file__).resolve().parent
+_TEMPLATE_NAME = "Landing_Zone_Assessment.xlsm"
+_TEMPLATE_PATH = _TEMPLATE_DIR / _TEMPLATE_NAME
+
+# Checklist sheet schema — row 9 is the header, data starts at row 10.
+# These columns are the exact contract that the Dashboard formulas expect.
+_CHECKLIST_SHEET = "Checklist"
+_CHECKLIST_HEADER_ROW = 9
+_CHECKLIST_DATA_START = 10
+_CHECKLIST_COLUMNS = [
+    # (col_index, header, description)
+    (1,  "ID"),              # A  e.g. "A01.01"
+    (2,  "Design Area"),     # B  e.g. "Azure Billing and Microsoft Entra ID Tenants"
+    (3,  "Sub Area"),        # C  e.g. "Microsoft Entra ID Tenants"
+    (4,  "WAF Pillar"),      # D  e.g. "Operations", "Security"
+    (5,  "Service"),         # E  e.g. "Entra"
+    (6,  "Checklist item"),  # F  full control text
+    (7,  "Description"),     # G  optional description
+    (8,  "Severity"),        # H  "High" | "Medium" | "Low"
+    (9,  "Status"),          # I  "Not verified"|"Open"|"Fulfilled"|"Not required"|"N/A"
+    (10, "Comment"),         # J  notes / evidence summary
+    (11, "AMMP"),            # K  (reserved)
+    (12, "More info"),       # L  Learn link
+    (13, "Training"),        # M  Training link
+    (14, "Graph Query"),     # N  ARG query name
+    (15, "GUID"),            # O  control GUID
+    (16, "Secure"),          # P  WAF score (numeric)
+    (17, "Cost"),            # Q  WAF score (numeric)
+    (18, "Scale"),           # R  WAF score (numeric)
+    (19, "Simple"),          # S  WAF score (numeric)
+    (20, "HA"),              # T  WAF score (numeric)
+    (21, "Source File"),     # U  (reserved)
+]
+
+# Map our assessment status → template status vocabulary
+_STATUS_MAP: dict[str, str] = {
+    "Pass":    "Fulfilled",
+    "Fail":    "Open",
+    "Manual":  "Not verified",
+    "Partial": "Open",
+    # Pass through any template-native values unchanged
+    "Fulfilled":    "Fulfilled",
+    "Open":         "Open",
+    "Not verified": "Not verified",
+    "Not required": "Not required",
+    "N/A":          "N/A",
+}
+
+
+def _map_status(raw: str) -> str:
+    """Convert assessment status to template vocabulary."""
+    return _STATUS_MAP.get(raw, "Not verified")
+
+
+# ══════════════════════════════════════════════════════════════════
+# Write rows into the Checklist sheet
+# ══════════════════════════════════════════════════════════════════
+
+def _write_checklist_rows(
+    ws,
+    results: list[dict],
+    checklist_lookup: dict[str, dict],
+) -> int:
+    """Populate the Checklist sheet starting at row 10.
+
+    Returns the number of rows written.
+    """
+    row = _CHECKLIST_DATA_START
+
+    for ctrl in results:
+        cid = ctrl.get("control_id", "")
+        cl = checklist_lookup.get(cid, {})
+
+        # A: ID (e.g. A01.01)
+        ws.cell(row=row, column=1, value=cl.get("id", ""))
+        # B: Design Area
+        ws.cell(row=row, column=2, value=cl.get(
+            "category", ctrl.get("category", ctrl.get("section", ""))))
+        # C: Sub Area
+        ws.cell(row=row, column=3, value=cl.get("subcategory", ""))
+        # D: WAF Pillar
+        ws.cell(row=row, column=4, value=cl.get("waf", ""))
+        # E: Service
+        ws.cell(row=row, column=5, value=cl.get("service", ""))
+        # F: Checklist item
+        ws.cell(row=row, column=6, value=cl.get(
+            "text", ctrl.get("text", ctrl.get("question", ""))))
+        # G: Description (optional — use notes or leave blank)
+        ws.cell(row=row, column=7, value="")
+        # H: Severity
+        ws.cell(row=row, column=8, value=ctrl.get(
+            "severity", cl.get("severity", "")))
+        # I: Status — mapped to template vocabulary
+        ws.cell(row=row, column=9, value=_map_status(
+            ctrl.get("status", "Manual")))
+        # J: Comment
+        evidence = ctrl.get("evidence", [])
+        comment_parts = []
+        notes = ctrl.get("notes", "")
+        if notes:
+            comment_parts.append(notes)
+        for ev in evidence[:2]:
+            if isinstance(ev, dict):
+                s = ev.get("summary", ev.get("resource_id", ""))
+                if s:
+                    comment_parts.append(str(s)[:120])
+        ws.cell(row=row, column=10, value="\n".join(comment_parts))
+        # K: AMMP (reserved)
+        ws.cell(row=row, column=11, value="")
+        # L: More info (Learn link)
+        ws.cell(row=row, column=12, value=cl.get("link", ""))
+        # M: Training
+        ws.cell(row=row, column=13, value=cl.get("training", ""))
+        # N: Graph Query
+        ws.cell(row=row, column=14, value=ctrl.get("signal_used", ""))
+        # O: GUID
+        ws.cell(row=row, column=15, value=cid)
+        # P-T: WAF scores (leave as-is from template or blank)
+        for col_idx in range(16, 21):
+            ws.cell(row=row, column=col_idx, value="")
+        # U: Source File
+        ws.cell(row=row, column=21, value="lz-assessor")
+
+        row += 1
+
+    return row - _CHECKLIST_DATA_START
+
+
+def _clear_checklist_data(ws, start_row: int = _CHECKLIST_DATA_START):
+    """Clear existing data rows (start_row → max_row) without touching headers."""
+    for row in range(start_row, ws.max_row + 1):
+        for col in range(1, 22):  # columns A-U
+            ws.cell(row=row, column=col).value = None
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -308,24 +460,49 @@ def _build_risk_analysis_sheet(wb: Workbook, payloads: list[dict]):
 def build_csa_workbook(
     run_path: str = "out/run.json",
     target_path: str = "out/target_architecture.json",
-    output_path: str = "out/CSA_Workbook_v1.xlsx",
+    output_path: str = "out/CSA_Workbook_v1.xlsm",
     why_payloads: list[dict] | None = None,
+    template_path: str | None = None,
 ) -> str:
-    """Build the CSA workbook and return the output path.
+    """Build the CSA workbook from the pre-built template.
+
+    1. Copies the ``.xlsm`` template (Dashboard + charts + formulas intact).
+    2. Writes assessment data into the **Checklist** sheet (row 10+).
+    3. Appends analysis sheets (Exec Summary, Roadmap, Risk Analysis).
+    4. Saves as ``.xlsm`` — Dashboard refreshes automatically.
 
     Parameters
     ----------
+    template_path : str, optional
+        Override the default template location.
     why_payloads : list[dict], optional
-        One or more why-analysis payloads (from ``build_why_payload``).
-        Each payload adds a risk-analysis section to the new
-        ``3_Risk_Analysis`` sheet in the workbook.
+        Why-analysis payloads for the Risk Analysis sheet.
     """
-
     run = _load_json(run_path)
     target = _load_json(target_path)
 
-    wb = Workbook()
-    wb.remove(wb.active)  # type: ignore[arg-type]
+    # ── Resolve template ──────────────────────────────────────────
+    tpl = Path(template_path) if template_path else _TEMPLATE_PATH
+    if not tpl.exists():
+        raise FileNotFoundError(
+            f"Template not found: {tpl}\n"
+            f"Place {_TEMPLATE_NAME} in {_TEMPLATE_DIR}/"
+        )
+
+    # ── Copy template → output (preserve VBA) ────────────────────
+    out = Path(output_path)
+    # Force .xlsm extension to preserve macros
+    if out.suffix.lower() != ".xlsm":
+        out = out.with_suffix(".xlsm")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(str(tpl), str(out))
+
+    # ── Open the copy ─────────────────────────────────────────────
+    wb = load_workbook(str(out), keep_vba=True)
+
+    # ── Drop the legacy ARG sheet (not used) ──────────────────────
+    if "ARG" in wb.sheetnames:
+        del wb["ARG"]
 
     # ── Load ALZ checklist for rich per-control fields ────────────
     checklist_lookup: dict[str, dict] = {}
@@ -339,21 +516,27 @@ def build_csa_workbook(
     except Exception:
         pass  # workbook still works without checklist enrichment
 
-    # ── Build control_id → grounded Learn refs map ────────────────
-    grounded_map: dict[str, list[dict]] = {}
-    grounded_refs = (
-        run.get("ai", {}).get("_raw", {}).get("grounded_refs", [])
-    )
-    for g in grounded_refs:
-        cid = g.get("control_id", "")
-        if cid and g.get("references"):
-            grounded_map[cid] = g["references"]
+    results = run.get("results", [])
 
-    wb = Workbook()
-    wb.remove(wb.active)  # type: ignore[arg-type]
+    # ══════════════════════════════════════════════════════════════
+    # Write data into the Checklist sheet
+    # ══════════════════════════════════════════════════════════════
+    if _CHECKLIST_SHEET in wb.sheetnames:
+        ws_cl = wb[_CHECKLIST_SHEET]
+        _clear_checklist_data(ws_cl)
+        n_written = _write_checklist_rows(ws_cl, results, checklist_lookup)
+        print(f"  ✓ Checklist: {n_written} rows written (row {_CHECKLIST_DATA_START}–{_CHECKLIST_DATA_START + n_written - 1})")
+    else:
+        print(f"  ⚠ Sheet '{_CHECKLIST_SHEET}' not found in template — skipping data write")
+        n_written = 0
+
+    # ══════════════════════════════════════════════════════════════
+    # Append analysis sheets (these don't exist in the template)
+    # ══════════════════════════════════════════════════════════════
 
     # ── Derived values (safe against missing keys) ────────────────
     tenant_id = _safe_get(run, "execution_context.tenant_id", "Unknown") or "Unknown"
+    tenant_name = _safe_get(run, "execution_context.tenant_display_name", "") or ""
     timestamp = _safe_get(run, "meta.timestamp", datetime.now(timezone.utc).isoformat())
     scoring = run.get("scoring", {})
     coverage = scoring.get("automation_coverage", {})
@@ -369,19 +552,15 @@ def build_csa_workbook(
     readiness_score = es_readiness.get("readiness_score", "")
 
     top_risks = run.get("executive_summary", {}).get("top_business_risks", [])
-    results = run.get("results", [])
 
     # =============================================================
-    # 0  Executive Summary  (with CSA talking points)
+    # Executive Summary  (appended as new sheet)
     # =============================================================
-    ws = wb.create_sheet("0_Executive_Summary")
+    ws = wb.create_sheet("Executive_Summary")
     ws.column_dimensions["A"].width = 30
     ws.column_dimensions["B"].width = 70
 
-    # ── CSA Talking Points ────────────────────────────────────────
     exec_summary = run.get("executive_summary", {})
-    exec_narrative = exec_summary.get("executive_narrative", "")
-    # Derive engagement framing from executive summary
     risk_areas = ", ".join(
         r.get("title", "")[:60] for r in top_risks[:3]
     ) or "landing zone maturity gaps"
@@ -415,12 +594,12 @@ def build_csa_workbook(
             val_cell.alignment = _WRAP
         row_num += 1
 
-    # ── Assessment Metrics ────────────────────────────────────────
     ws.cell(row=row_num, column=1, value="ASSESSMENT METRICS").font = _SECTION_FONT
     row_num += 1
 
+    tenant_label = f"{tenant_name} ({tenant_id})" if tenant_name else str(tenant_id)
     rows: list[tuple[str, str]] = [
-        ("Tenant ID", str(tenant_id)),
+        ("Tenant", tenant_label),
         ("Assessment Date", str(timestamp)),
         ("Enterprise-Scale Ready", f"{readiness_label}  (score: {readiness_score})"),
         ("Overall Maturity", f"{maturity}%"),
@@ -445,34 +624,31 @@ def build_csa_workbook(
         row_num += 1
 
     # =============================================================
-    # 1  30-60-90 Roadmap  (defensible: each item → controls + risks)
+    # 30-60-90 Roadmap  (appended as new sheet)
     # =============================================================
-    ws = wb.create_sheet("1_30-60-90_Roadmap")
+    ws = wb.create_sheet("Roadmap_30_60_90")
     headers = ["Phase", "Action", "Initiative ID", "CAF Discipline",
                "Owner", "Success Criteria", "Dependencies",
                "Related Controls", "Related Risks"]
     _write_header_row(ws, headers)
 
-    # Build join tables: initiative_id → initiative, and control_guid → risk titles
     initiative_lookup: dict[str, dict] = {}
     for init in run.get("transformation_plan", {}).get("initiatives", []):
         iid = init.get("initiative_id", "")
         if iid:
             initiative_lookup[iid] = init
 
-    # Reverse map: control GUID → set of risk titles
     control_to_risks: dict[str, set[str]] = {}
     for risk in top_risks:
         risk_title = risk.get("title", "")
         for cid in risk.get("affected_controls", []):
             control_to_risks.setdefault(cid, set()).add(risk_title)
 
-    # Control GUID → checklist ID label (e.g. A01.01) for readability
     def _control_labels(guids: list[str]) -> str:
         labels = []
         for g in guids[:8]:
-            cl = checklist_lookup.get(g, {})
-            labels.append(cl.get("id", g[:8]))
+            cl_item = checklist_lookup.get(g, {})
+            labels.append(cl_item.get("id", g[:8]))
         if len(guids) > 8:
             labels.append(f"+{len(guids) - 8} more")
         return ", ".join(labels)
@@ -483,8 +659,6 @@ def build_csa_workbook(
             risk_titles |= control_to_risks.get(g, set())
         return "; ".join(sorted(risk_titles))
 
-    # Prefer transformation_roadmap.roadmap_30_60_90 (has initiative_id),
-    # fall back to target_architecture phases if unavailable.
     roadmap_3060 = _safe_get(run, "transformation_roadmap.roadmap_30_60_90", {})
     if roadmap_3060 and isinstance(roadmap_3060, dict):
         row = 2
@@ -510,7 +684,6 @@ def build_csa_workbook(
                 ws.cell(row=row, column=9, value=_risks_for_controls(control_guids)).alignment = _WRAP
                 row += 1
     else:
-        # Fallback: target_architecture execution units (no control mapping available)
         row = 2
         for phase in _safe_get(target, "implementation_plan.phases", []):
             phase_name = phase.get("name", phase.get("phase", ""))
@@ -528,145 +701,34 @@ def build_csa_workbook(
     _auto_width(ws)
 
     # =============================================================
-    # 2  Control Details  (enriched from checklist + grounded refs)
-    # =============================================================
-    ws = wb.create_sheet("2_Control_Details")
-    headers = [
-        "Checklist ID",    # A — e.g. A01.01
-        "Control ID",      # B — guid
-        "Category",        # C
-        "Subcategory",     # D
-        "Description",     # E — full text from checklist
-        "WAF Pillar",      # F
-        "Service",         # G
-        "Status",          # H
-        "Severity",        # I
-        "Automated",       # J
-        "Confidence",      # K
-        "Signal Used",     # L
-        "Evidence Count",  # M
-        "Evidence Summary", # N — first evidence resource IDs
-        "Notes",           # O
-        "Discussion Points",    # P — from customer_questions + MCP docs
-        "Learn Link",      # Q — from checklist
-        "Training Link",   # R — from checklist
-        "Grounded References",  # S — from AI grounding
-    ]
-
-    # Build control GUID → customer questions lookup
-    question_lookup: dict[str, list[str]] = {}
-    for cq in run.get("customer_questions", []):
-        for cid in cq.get("related_controls", []):
-            question_lookup.setdefault(cid, []).append(cq.get("question", ""))
-    _write_header_row(ws, headers)
-
-    row = 2
-    for c in results:
-        cid = c.get("control_id", "")
-        cl_item = checklist_lookup.get(cid, {})
-        status_val = c.get("status", "")
-
-        # A: Checklist ID (e.g. A01.01)
-        ws.cell(row=row, column=1, value=cl_item.get("id", ""))
-        # B: GUID
-        ws.cell(row=row, column=2, value=cid)
-        # C: Category
-        ws.cell(row=row, column=3, value=cl_item.get("category", c.get("category", c.get("section", ""))))
-        # D: Subcategory
-        ws.cell(row=row, column=4, value=cl_item.get("subcategory", ""))
-        # E: Full description text
-        desc = cl_item.get("text", c.get("text", c.get("question", "")))
-        ws.cell(row=row, column=5, value=desc).alignment = _WRAP
-        # F: WAF Pillar
-        ws.cell(row=row, column=6, value=cl_item.get("waf", ""))
-        # G: Service
-        ws.cell(row=row, column=7, value=cl_item.get("service", ""))
-
-        # H: Status (with conditional fill)
-        status_cell = ws.cell(row=row, column=8, value=status_val)
-        fill = _status_fill(status_val)
-        if fill:
-            status_cell.fill = fill
-
-        # I: Severity
-        ws.cell(row=row, column=9, value=c.get("severity", cl_item.get("severity", "")))
-        # J: Automated
-        automated = "Yes" if status_val in ("Pass", "Fail", "Partial") else "No"
-        ws.cell(row=row, column=10, value=automated)
-        # K: Confidence
-        ws.cell(row=row, column=11, value=c.get("confidence", ""))
-        # L: Signal Used
-        ws.cell(row=row, column=12, value=c.get("signal_used", ""))
-        # M: Evidence Count
-        ws.cell(row=row, column=13, value=c.get("evidence_count", 0))
-
-        # N: Evidence Summary — first 3 resource summaries
-        evidence = c.get("evidence", [])
-        evidence_lines = []
-        for ev in evidence[:3]:
-            if isinstance(ev, dict):
-                summary = ev.get("summary", ev.get("resource_id", ""))
-                evidence_lines.append(str(summary)[:120])
-        if len(evidence) > 3:
-            evidence_lines.append(f"… +{len(evidence) - 3} more")
-        ws.cell(row=row, column=14, value="\n".join(evidence_lines)).alignment = _WRAP
-
-        # O: Notes
-        ws.cell(row=row, column=15, value=c.get("notes", "")).alignment = _WRAP
-
-        # P: Discussion Points (from customer_questions mapped to this control)
-        qs = question_lookup.get(cid, [])
-        if qs:
-            ws.cell(row=row, column=16, value="\n\n".join(
-                f"• {q}" for q in qs[:5]
-            )).alignment = _WRAP
-
-        # Q: Learn Link (from checklist)
-        learn_link = cl_item.get("link", "")
-        ws.cell(row=row, column=17, value=learn_link)
-
-        # R: Training Link (from checklist)
-        training_link = cl_item.get("training", "")
-        ws.cell(row=row, column=18, value=training_link)
-
-        # S: Grounded References (from AI MCP grounding)
-        grounded = grounded_map.get(cid, [])
-        if grounded:
-            ref_lines = []
-            for ref in grounded[:3]:
-                title = ref.get("title", "")
-                url = ref.get("url", "")
-                ref_lines.append(f"{title}\n{url}" if url else title)
-            ws.cell(row=row, column=19, value="\n\n".join(ref_lines)).alignment = _WRAP
-
-        row += 1
-
-    # Auto-size key columns, cap wide ones
-    for col_letter, width in [
-        ("A", 12), ("B", 14), ("C", 22), ("D", 22), ("E", 50),
-        ("F", 14), ("G", 14), ("H", 10), ("I", 10), ("J", 10),
-        ("K", 12), ("L", 28), ("M", 8), ("N", 40), ("O", 40),
-        ("P", 55), ("Q", 45), ("R", 45), ("S", 50),
-    ]:
-        ws.column_dimensions[col_letter].width = width
-
-    # =============================================================
-    # 3  Risk Analysis  (from why-reasoning payloads)
+    # Risk Analysis  (from why-reasoning payloads)
     # =============================================================
     if why_payloads:
         _build_risk_analysis_sheet(wb, why_payloads)
 
-    # ── Save (with fallback if file is locked) ─────────────────────
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    # ══════════════════════════════════════════════════════════════
+    # Ensure Dashboard is the first visible sheet
+    # ══════════════════════════════════════════════════════════════
+    if "Dashboard" in wb.sheetnames:
+        dash_idx = wb.sheetnames.index("Dashboard")
+        if dash_idx != 0:
+            wb.move_sheet("Dashboard", offset=-dash_idx)
+        wb.active = 0
+
+    # ── Save (with fallback if file is locked) ────────────────────
     try:
-        wb.save(output_path)
+        wb.save(str(out))
     except PermissionError:
-        stem = Path(output_path).stem
+        stem = out.stem
         ts = datetime.now().strftime("%H%M%S")
-        fallback = Path(output_path).with_name(f"{stem}_{ts}.xlsx")
+        fallback = out.with_name(f"{stem}_{ts}.xlsm")
         wb.save(str(fallback))
-        print(f"  ⚠ {Path(output_path).name} is locked (open in Excel?). Saved as {fallback.name}")
-        output_path = str(fallback)
-    print(f"  ✓ CSA workbook → {output_path}  ({len(results)} controls, "
-          f"{len(target.get('assumptions', []))} assumptions)")
-    return output_path
+        print(f"  ⚠ {out.name} is locked (open in Excel?). Saved as {fallback.name}")
+        out = fallback
+    print(f"  ✓ CSA workbook → {out}  ({n_written} controls written to Checklist)")
+
+    # ── Post-processing enrichment (adds metadata columns) ───────
+    from reporting.enrich import enrich_control_details_sheet
+    enrich_control_details_sheet(str(out))
+
+    return str(out)

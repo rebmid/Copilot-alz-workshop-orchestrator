@@ -2,11 +2,13 @@
 import argparse
 import json
 import os
+import time
 from datetime import datetime, timezone
 
 from azure.identity import AzureCliCredential
 
 from alz.loader import load_alz_checklist
+from collectors.azure_client import set_shared_credential
 from collectors.resource_graph import get_subscriptions
 from engine.context import discover_execution_context
 from engine.adapter import run_evaluators_for_scoring
@@ -23,6 +25,7 @@ from ai.build_advisor_payload import build_advisor_payload
 from preflight.analyzer import run_preflight, build_azure_context, print_preflight_report
 from signals.types import EvalScope
 from signals.registry import SignalBus
+from signals.telemetry import RunTelemetry
 from control_packs.loader import load_pack
 from engine.assessment_runtime import AssessmentRuntime
 from agent.intent_orchestrator import IntentOrchestrator
@@ -96,6 +99,8 @@ def parse_args():
                    help="Run in demo mode using sample data (no Azure connection required)")
     p.add_argument("--workshop", action="store_true",
                    help="Run interactive discovery workshop to resolve Manual controls")
+    p.add_argument("--mg-scope", metavar="MG_ID",
+                   help="Scope assessment to subscriptions under a specific management group")
     return p.parse_args()
 
 
@@ -148,7 +153,7 @@ def main():
             if os.path.exists("assessment.json"):
                 run_source = "assessment.json"
         ta_path = os.path.join(OUT_DIR, "target_architecture.json")
-        csa_path = os.path.join(OUT_DIR, "CSA_Workbook_v1.xlsx")
+        csa_path = os.path.join(OUT_DIR, "CSA_Workbook_v1.xlsm")
         if run_source:
             build_csa_workbook(
                 run_path=run_source,
@@ -190,6 +195,8 @@ def main():
         return
 
     # ── Timing + paths ────────────────────────────────────────────
+    scan_start = time.perf_counter()
+    telemetry = RunTelemetry()
     now = datetime.now(timezone.utc)
     run_id = now.strftime("run-%Y%m%d-%H%M")
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -198,16 +205,31 @@ def main():
     report_path   = os.path.join(OUT_DIR, "Contoso-ALZ-Platform-Readiness-Report-Sample.html")
 
     # ── Execution context ─────────────────────────────────────────
+    telemetry.start_phase("context")
     credential = AzureCliCredential(process_timeout=30)
+    set_shared_credential(credential)           # all collectors reuse this
+
     execution_context = discover_execution_context(credential)
     tenant_id = execution_context.get("tenant_id")
 
-    print(f"  Tenant:          {tenant_id or '(unknown)'}")
-    print(f"  Subscriptions:   {execution_context.get('subscription_count_visible', '?')}")
+    telemetry.subscriptions_visible = execution_context.get("subscription_count_visible", 0)
+    telemetry.subscriptions_total = execution_context.get("subscription_count_total", 0)
+    telemetry.coverage_percent = execution_context.get("coverage_percent", 0.0)
+
+    tenant_name = execution_context.get("tenant_display_name") or ""
+    tenant_domain = execution_context.get("tenant_default_domain") or ""
+    tenant_label = f"{tenant_name} ({tenant_id})" if tenant_name else (tenant_id or "(unknown)")
+    if tenant_domain:
+        tenant_label += f"  [{tenant_domain}]"
+    print(f"  Tenant:          {tenant_label}")
+    print(f"  Subscriptions:   {execution_context.get('subscription_count_visible', '?')}"
+          f" visible / {execution_context.get('subscription_count_total', '?')} total"
+          f"  ({execution_context.get('coverage_percent', '?')}% coverage)")
     print(f"  MG access:       {execution_context.get('management_group_access')}")
     print(f"  Credential:      {execution_context.get('credential_method', '?')}")
     print(f"  RBAC role:       {execution_context.get('rbac_highest_role', '?')}")
     print(f"  RBAC scope:      {execution_context.get('rbac_scope', '?')}")
+    telemetry.end_phase("context")
 
     # ── Preflight-only mode ───────────────────────────────────────
     if args.preflight:
@@ -224,7 +246,33 @@ def main():
         return
 
     # ── Subscription list ─────────────────────────────────────────
-    if args.tenant_wide:
+    if args.mg_scope:
+        # Narrow to subscriptions under the specified management group
+        import requests as _req
+        _token = credential.get_token("https://management.azure.com/.default").token
+        try:
+            _mg_resp = _req.get(
+                f"https://management.azure.com/providers/Microsoft.Management"
+                f"/managementGroups/{args.mg_scope}/descendants"
+                f"?api-version=2021-04-01",
+                headers={"Authorization": f"Bearer {_token}"},
+                timeout=20,
+            )
+            _mg_resp.raise_for_status()
+            _mg_subs = {
+                d["name"]
+                for d in _mg_resp.json().get("value", [])
+                if (d.get("type") or "").endswith("/subscriptions")
+            }
+            # Intersect with visible subscriptions
+            all_visible = set(execution_context.get("subscription_ids_visible", []))
+            subscription_ids = sorted(all_visible & _mg_subs)
+            print(f"\n  --mg-scope {args.mg_scope}: {len(subscription_ids)} subscription(s)"
+                  f" (of {len(_mg_subs)} under MG, {len(all_visible)} visible)")
+        except Exception as e:
+            print(f"  ⚠ --mg-scope lookup failed: {e} — falling back to all visible")
+            subscription_ids = execution_context.get("subscription_ids_visible", [])
+    elif args.tenant_wide:
         subscription_ids = execution_context.get("subscription_ids_visible", [])
         print(f"\n  Tenant-wide mode: {len(subscription_ids)} subscription(s)")
     else:
@@ -263,9 +311,10 @@ def main():
         return
 
     # ── Checklist (full ALZ list — Manual items backfill scoring) ──
-    checklist = load_alz_checklist()
+    checklist = load_alz_checklist(force_refresh=True)
 
     # ── Signal Bus + evaluators ───────────────────────────────────
+    telemetry.start_phase("signals")
     print("\nRunning evaluators via SignalBus …")
     scope = EvalScope(
         tenant_id=tenant_id,
@@ -277,15 +326,21 @@ def main():
     from signals.availability import probe_signal_availability, print_signal_matrix
     sig_matrix = probe_signal_availability(bus, scope)
     print_signal_matrix(sig_matrix)
+    telemetry.end_phase("signals")
 
+    telemetry.start_phase("evaluators")
     results = run_evaluators_for_scoring(
         scope, bus, run_id=run_id, checklist=checklist,
     )
     scoring = compute_scoring(results)
 
+    # Harvest signal bus telemetry
+    telemetry.record_signal_events(bus.reset_events())
+
     auto_count = sum(1 for r in results if r["status"] != "Manual")
     print(f"  Evaluated {auto_count} automated + "
           f"{len(results) - auto_count} manual controls")
+    telemetry.end_phase("evaluators")
 
     # ── Limitations ───────────────────────────────────────────────
     limitations: list[str] = []
@@ -322,11 +377,13 @@ def main():
     advisor_payload = build_advisor_payload(
         scoring, results, execution_context,
         delta=output.get("delta"),
+        signal_availability=sig_matrix,
     )
     print(f"  Payload: {len(advisor_payload.get('failed_controls', []))} fails, "
           f"{len(advisor_payload.get('sampled_manual_controls', []))} sampled manual")
 
     # ── AI: Reasoning Engine (optional) ────────────────────────────
+    telemetry.start_phase("ai")
     if enable_ai:
         try:
             print("\n╔══════════════════════════════════════╗")
@@ -380,6 +437,7 @@ def main():
     else:
         print("AI disabled (--no-ai).")
         narrative = None
+    telemetry.end_phase("ai")
 
     # ── Delta from previous run ───────────────────────────────────
     last_run_path = get_last_run(OUT_DIR, tenant_id)
@@ -392,6 +450,9 @@ def main():
         output["delta"] = {"has_previous": False, "count": 0, "changed_controls": []}
 
     # ── Persist ───────────────────────────────────────────────────
+    telemetry.start_phase("reporting")
+    output["telemetry"] = telemetry.to_dict()
+
     with open(run_json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     with open("assessment.json", "w", encoding="utf-8") as f:
@@ -428,7 +489,7 @@ def main():
                 print(f"  ⚠ Why-analysis skipped for {domain}: {e}")
         print(f"  Risk analyses built: {len(why_payloads)}")
 
-    csa_path = os.path.join(OUT_DIR, "CSA_Workbook_v1.xlsx")
+    csa_path = os.path.join(OUT_DIR, "CSA_Workbook_v1.xlsm")
     ta_path = os.path.join(OUT_DIR, "target_architecture.json")
     build_csa_workbook(
         run_path=run_json_path,
@@ -436,6 +497,21 @@ def main():
         output_path=csa_path,
         why_payloads=why_payloads or None,
     )
+    telemetry.end_phase("reporting")
+
+    # ── Final telemetry ───────────────────────────────────────────
+    telemetry.assessment_duration_sec = round(time.perf_counter() - scan_start, 2)
+    # Update telemetry in persisted JSON
+    output["telemetry"] = telemetry.to_dict()
+    with open(run_json_path, "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2)
+    with open("assessment.json", "w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2)
+
+    print("\n┌─ Runtime Telemetry ──────────────────┐")
+    for line in telemetry.summary_lines():
+        print(f"│ {line}")
+    print("└──────────────────────────────────────┘")
 
     print(f"\n✓ Done.  {run_json_path}  |  {report_path}  |  {csa_path}")
 

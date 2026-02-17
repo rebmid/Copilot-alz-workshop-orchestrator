@@ -12,13 +12,13 @@ def _query_rg(query: str, subscriptions: list[str], *, top: int = 1000) -> Signa
 
     Paginates automatically if the result set exceeds *top* rows.
     """
-    from azure.identity import AzureCliCredential
     from azure.mgmt.resourcegraph import ResourceGraphClient
     from azure.mgmt.resourcegraph.models import QueryRequest, QueryRequestOptions
+    from collectors.azure_client import get_shared_credential
 
     start = time.perf_counter_ns()
     try:
-        credential = AzureCliCredential(process_timeout=30)
+        credential = get_shared_credential()
         client = ResourceGraphClient(credential)
         all_items: list = []
         skip_token: str | None = None

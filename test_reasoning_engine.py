@@ -23,6 +23,7 @@ payload = build_advisor_payload(
     execution_context=run["execution_context"],
     delta=run.get("delta"),
     mg_hierarchy=run.get("management_groups", {}).get("compact_hierarchy"),
+    signal_availability=run.get("signal_availability"),
 )
 print(f"Payload: {len(payload['failed_controls'])} fails, "
       f"{len(payload['sampled_manual_controls'])} sampled manual\n")

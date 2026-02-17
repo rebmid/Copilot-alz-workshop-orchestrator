@@ -76,9 +76,9 @@ The assessment auto-discovers tenant scope, RBAC role, and signal availability b
 | **Live ALZ Checklist** | Always fetches the latest checklist from the `Azure/review-checklists` GitHub repo — never stale |
 | **40 Automated Evaluators** | 39 signal providers across Resource Graph, Defender, Policy, Management Groups, Microsoft Graph, Cost Management, Update Manager, and Monitor — scoring controls as Pass / Fail / Partial. Automation coverage depends on signal availability and RBAC scope. |
 | **Weighted Scoring** | Domain-weighted maturity model with severity multipliers across 8 design areas |
-| **7-Pass AI Advisory Pipeline** | Generates enterprise readiness, top risks, 30-60-90 roadmap, initiatives, backlog, and target architecture |
+| **9-Pass AI Advisory Pipeline** | Roadmap, executive briefing, ALZ pattern selection, sequence justification, readiness, smart questions, implementation backlog, Learn grounding, and target architecture |
 | **Microsoft Learn MCP Grounding** | Official MCP SDK retrieves real guidance, code samples, and full documentation |
-| **CSA Workbook (Excel)** | Executive Summary, traceable 30-60-90 roadmap, Control Details, and Risk Analysis sheets |
+| **CSA Workbook (Excel)** | Template-based `.xlsm` with Dashboard, Checklist, Executive Summary, Roadmap, and Risk Analysis — formulas and charts intact |
 | **ALZ Readiness HTML Report** | Platform readiness report with maturity scores, adoption blockers, and domain deep dive |
 | **Delta Tracking** | Shows control-level progress between runs |
 | **8 Preflight Probes** | Validates RBAC, Resource Graph, Policy, Defender, Log Analytics, Entra ID, Cost Management, and Microsoft Graph API access before a full scan |
@@ -86,6 +86,8 @@ The assessment auto-discovers tenant scope, RBAC role, and signal availability b
 | **Operations Maturity Signals** | Alert→Action Group mapping, action group coverage, availability monitoring coverage and SLO signal readiness, patch posture, change tracking |
 | **Cost Governance Signals** | Forecast vs actual delta, idle resource heuristics based on low utilization signals |
 | **Intent-Based Assessment** | Evaluates only relevant controls based on user intent |
+| **Enterprise-Scale Multi-Sub** | Tenant-wide assessment across 100+ subscriptions with parallel collectors, query caching, and `--mg-scope` filtering |
+| **Control Enrichment** | Post-processing adds Control Source, Derived Control ID, Control Type, and Related ALZ Control IDs to every row |
 | **Resilient JSON Parsing** | Model output sanitizer fixes trailing commas, JS comments, and single-quoted strings before parsing — with truncation repair and retry |
 | **Pluggable AI Provider** | Swap AOAI for another model in one line |
 
@@ -107,7 +109,7 @@ lz-assessor/
 ├── control_packs/           # Versioned ALZ control pack definitions
 ├── engine/                  # Scoring engine, assessment runtime, delta tracking
 ├── graph/                   # Knowledge graph (control → CAF → dependency mappings)
-├── ai/                      # 7-pass AI reasoning pipeline + MCP grounding
+├── ai/                      # 9-pass AI reasoning pipeline + MCP grounding
 ├── agent/                   # Intent orchestrator, why-risk reasoning, workshop mode
 ├── discovery/               # Discovery tree definitions for customer workshops
 ├── preflight/               # Preflight access validation (8 probes)
@@ -211,7 +213,7 @@ AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
 AZURE_OPENAI_KEY=<your-api-key>
 ```
 
-> **Note:** If you skip this step the tool still runs — you just won't get the 7-pass AI advisory output (executive summary, roadmap, etc.). You can add AI later by creating the `.env` file and re-running.
+> **Note:** If you skip this step the tool still runs — you just won't get the 9-pass AI advisory output (executive summary, roadmap, etc.). You can add AI later by creating the `.env` file and re-running.
 
 ### 6. Authenticate with Azure
 
@@ -237,7 +239,7 @@ That's it. The tool will:
 2. Fetch the latest ALZ checklist from GitHub
 3. Run all evaluators against your environment
 4. Score every control with weighted domain scoring
-5. Generate a 7-pass AI advisory pipeline (if OpenAI is configured)
+5. Generate a 9-pass AI advisory pipeline (if OpenAI is configured)
 6. Ground recommendations in Microsoft Learn documentation
 7. Output all artifacts to the `out/` directory
 
@@ -262,14 +264,50 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 
 ---
 
+### CLI Flags
+
+```
+python scan.py [OPTIONS]
+```
+
+| Flag | Description |
+|---|---|
+| `--demo` | Run against bundled sample data — no Azure required |
+| `--no-ai` | Skip the AI advisory pipeline (deterministic only) |
+| `--preflight` | Validate Azure permissions and exit |
+| `--why DOMAIN` | Explain why a domain is the top risk (e.g. `--why Networking`) |
+| `--mg-scope MG_ID` | Scope assessment to a specific management group |
+
+<details>
+<summary>Additional flags</summary>
+
+| Flag | Description |
+|---|---|
+| `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph subs only) |
+| `--on-demand INTENT` | Targeted evaluation via IntentOrchestrator |
+| `--workshop` | Interactive discovery workshop to resolve Manual controls |
+| `--no-html` | Skip HTML report generation |
+| `--pretty` | Pretty-print final JSON to stdout |
+
+</details>
+
 ### Examples
+
+```bash
 # No Azure required
 python scan.py --demo
 
-# Assess your landing zone
+# Full assessment
 az login
 python scan.py
+
+# Scope to a management group
+python scan.py --mg-scope "Contoso-LandingZones"
+
+# Deterministic only (no AI cost)
+python scan.py --no-ai
 ```
+
 ---
 
 ## Output Artifacts
@@ -280,7 +318,7 @@ All outputs are written to the `out/` directory:
 |---|---|
 | `run-YYYYMMDD-HHMM.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
 | `ALZ-Platform-Readiness-Report.html` | Interactive platform readiness report with adoption blockers and domain deep dive |
-| `CSA_Workbook_v1.xlsx` | 4-sheet CSA deliverable workbook (see [CSA Workbook](#csa-workbook)) |
+| `CSA_Workbook_v1.xlsm` | Template-based CSA deliverable workbook (see [CSA Workbook](#csa-workbook)) |
 | `target_architecture.json` | AI-generated target architecture with component recommendations and Learn references |
 | `preflight.json` | *(preflight mode only)* Access probe results |
 
@@ -317,17 +355,19 @@ The **Signal Bus** architecture routes collected data through registered evaluat
 
 ### 3. AI Reasoning Engine
 
-When AI is enabled, a **7-pass pipeline** runs against Azure OpenAI:
+When AI is enabled, a **9-pass pipeline** runs against Azure OpenAI:
 
 | Pass | Prompt | Output | max_tokens |
 |---|---|---|---|
 | 1 | `roadmap.txt` | 30-60-90 transformation roadmap + named initiatives | 8000 |
-| 2 | `exec.txt` | Platform readiness briefing with adoption blockers | 4000 |
-| 3 | `readiness.txt` | Enterprise-scale readiness assessment | 4000 |
-| 4 | `smart_questions.txt` | Customer discovery questions per domain | 4000 |
-| 5 | `implementation.txt` × N | Implementation backlog (one item per initiative) | 4000 |
-| 6 | *(MCP grounding)* | Learn doc refs, code samples, full-page enrichment | — |
-| 7 | `target_architecture.txt` | Target architecture + `grounding.txt` enrichment | 8000 |
+| 2 | `exec.txt` | Platform readiness briefing with adoption blockers | 8000 |
+| 3 | `implementation_decision` | ALZ pattern selection per initiative (MCP-enriched) | 8000 |
+| 4 | `sequence_justification` | Why initiatives are ordered this way in platform terms | 8000 |
+| 5 | `readiness.txt` | Enterprise-scale readiness assessment | 8000 |
+| 6 | `smart_questions.txt` | Customer discovery questions per domain | 8000 |
+| 7 | `implementation.txt` × N | Implementation backlog (one item per initiative) | 4000 |
+| 8 | *(MCP grounding)* | Learn doc refs, code samples, ALZ design area enrichment | — |
+| 9 | `target_architecture.txt` | Target architecture + `grounding.txt` enrichment | 8000 |
 
 The `AOAIClient` includes built-in resilience:
 - **JSON sanitiser** — fixes trailing commas, JS comments, and single-quoted strings in model output before parsing
@@ -361,21 +401,25 @@ Grounding runs for:
 - Remediation initiative sequence
 - Delta changes from previous runs
 
-**CSA Workbook** (`CSA_Workbook_v1.xlsx`):
+**CSA Workbook** (`CSA_Workbook_v1.xlsm`):
 - See [CSA Workbook](#csa-workbook) below
 
 ---
 
 ## CSA Workbook
 
-The workbook is the primary **customer-facing deliverable** — a 4-sheet Excel file ready for CSA engagements:
+The workbook is the primary **customer-facing deliverable** — a template-based `.xlsm` with formulas and charts pre-built. Python writes **data only** into the existing structure.
 
 | Sheet | Content |
 |---|---|
-| **0 — Executive Summary** | Engagement framing, assessment metrics, top platform adoption blockers |
-| **1 — 30-60-90 Roadmap** | Phased transformation plan with initiative IDs, CAF alignment, dependencies, related controls & risks |
-| **2 — Control Details** | All ~243 controls with status, evidence, Learn URLs, AI-grounded summaries, code samples, and discussion points |
-| **3 — Risk Analysis** | Causal risk breakdown by domain |
+| **Dashboard** | Pre-built charts and KPIs driven by Checklist formulas (template-native, not generated by Python) |
+| **Checklist** | All ~243 controls with status, evidence, severity, Learn URLs, and discussion points. Enriched with Control Source, Derived Control ID, Control Type, and Related ALZ Control IDs. |
+| **Values / ChecklistIndex** | Lookup tables used by Dashboard formulas |
+| **Executive_Summary** | Engagement framing, assessment metrics, top platform adoption blockers |
+| **Roadmap_30_60_90** | Phased transformation plan with initiative IDs, CAF alignment, dependencies, related controls & risks |
+| **3_Risk_Analysis** | Causal risk breakdown by domain (added when `--why` payloads are present) |
+
+The source of truth for checklist data is always the **GitHub ALZ JSON** fetched at runtime — the Excel workbook is a write-only output sink.
 
 ---
 

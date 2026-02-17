@@ -14,6 +14,7 @@ from ai.mcp_retriever import (
     build_grounding_context,
     ground_all_design_areas,
     build_alz_grounding_block,
+    get_alz_implementation_options,
 )
 from alz.loader import (
     ALZ_DESIGN_AREAS,
@@ -25,13 +26,16 @@ from alz.loader import (
 class ReasoningEngine:
     """
     Orchestrates the full AI advisory pipeline:
-      1. Roadmap + Initiatives  (roadmap prompt)
-      2. Executive briefing     (exec prompt)
-      3. Enterprise readiness   (readiness prompt)
-      4. Smart questions        (smart_questions prompt)
-      5. Implementation backlog (implementation prompt × N)
-      6. Learn reference grounding (MCP retriever)
-      7. Progress analysis      (derived from delta)
+      0. ALZ checklist grounding (deterministic)
+      1. Roadmap + Initiatives         (roadmap prompt)
+      2. Executive briefing             (exec prompt)
+      3. Implementation Decision        (MCP + implementation_decision prompt) ← NEW
+      4. Sequence Justification         (sequence_justification prompt)        ← NEW
+      5. Enterprise readiness           (readiness prompt)
+      6. Smart questions                (smart_questions prompt)
+      7. Implementation backlog         (implementation prompt × N)
+      8. Learn reference grounding      (MCP retriever)
+      9. Target architecture            (target_architecture prompt)
 
     The provider is model-agnostic — swap AOAIReasoningProvider for
     PhiReasoningProvider or MockReasoningProvider in one line.
@@ -89,12 +93,13 @@ class ReasoningEngine:
             Skip the per-initiative implementation pass (saves tokens).
         """
         system = self.prompts.system
+        total_passes = 9
 
         # ── 0. ALZ checklist grounding context ────────────────────
         # Inject official ALZ design area references + checklist items
         # into the system prompt so every LLM call is anchored to
         # the authoritative Azure/review-checklists repo.
-        print("  [0/7] Loading ALZ checklist grounding context …")
+        print(f"  [0/{total_passes}] Loading ALZ checklist grounding context …")
         try:
             alz_block = build_alz_grounding_block()
             alz_checklist_ctx = build_prompt_checklist_context(max_items=40)
@@ -104,7 +109,7 @@ class ReasoningEngine:
             print(f"  ⚠ ALZ checklist grounding skipped: {e}")
 
         # ── 1. Roadmap + Initiatives ──────────────────────────────
-        print("  [1/6] Generating roadmap & initiatives …")
+        print(f"  [1/{total_passes}] Generating roadmap & initiatives …")
         roadmap_raw = self._safe_run(
             system,
             self.prompts.roadmap(assessment),
@@ -116,7 +121,7 @@ class ReasoningEngine:
         print(f"        → {len(initiatives)} initiative(s)")
 
         # ── 2. Executive briefing ─────────────────────────────────
-        print("  [2/6] Generating executive briefing …")
+        print(f"  [2/{total_passes}] Generating executive briefing …")
         executive = self._safe_run(
             system,
             self.prompts.exec(assessment),
@@ -124,8 +129,88 @@ class ReasoningEngine:
             max_tokens=8000,
         )
 
-        # ── 3. Enterprise-scale readiness ─────────────────────────
-        print("  [3/6] Evaluating enterprise-scale readiness …")
+        # ── 3. Implementation Decision (NEW) ─────────────────────
+        # For each initiative, retrieve ALZ implementation options via MCP
+        # then ask the LLM to select and justify the right pattern.
+        implementation_decisions: list[dict] = []
+        if initiatives:
+            print(f"  [3/{total_passes}] Selecting ALZ implementation patterns ({len(initiatives)} initiatives) …")
+            initiatives_with_options = []
+            for init in initiatives:
+                try:
+                    options = get_alz_implementation_options(init, assessment)
+                except Exception as e:
+                    print(f"        ⚠ MCP pattern retrieval failed for '{init.get('title', '?')[:40]}': {e}")
+                    options = []
+                initiatives_with_options.append({
+                    **init,
+                    "available_patterns": options,
+                })
+
+            # Build assessment context subset for the decision prompt
+            decision_context = {
+                "design_area_maturity": assessment.get("design_area_maturity", []),
+                "platform_scale_limits": assessment.get("platform_scale_limits", {}),
+                "signal_confidence": assessment.get("signal_confidence", {}),
+                "execution_context": assessment.get("execution_context", {}),
+                "dependency_order": assessment.get("dependency_order", []),
+            }
+
+            decision_raw = self._safe_run(
+                system,
+                self.prompts.implementation_decision(
+                    initiatives_with_options, decision_context
+                ),
+                label="Implementation Decision",
+                max_tokens=8000,
+            )
+            implementation_decisions = decision_raw.get("implementation_decisions", [])
+            print(f"        → {len(implementation_decisions)} pattern decision(s)")
+
+            # Merge decisions back into initiatives for downstream passes
+            decision_map = {
+                d["initiative_id"]: d for d in implementation_decisions
+                if "initiative_id" in d
+            }
+            for init in initiatives:
+                iid = init.get("initiative_id", "")
+                if iid in decision_map:
+                    init["selected_pattern"] = decision_map[iid].get("recommended_pattern", "")
+                    init["alz_module"] = decision_map[iid].get("alz_module", "")
+                    init["capability_unlocked"] = decision_map[iid].get("capability_unlocked", "")
+                    init["prerequisites_missing"] = decision_map[iid].get("prerequisites_missing", [])
+        else:
+            print(f"  [3/{total_passes}] Implementation Decision skipped (no initiatives).")
+
+        # ── 4. Sequence Justification (NEW) ───────────────────────
+        # Explain WHY initiatives are ordered this way in platform terms.
+        sequence_justification: dict = {}
+        engagement_recommendations: list[dict] = []
+        if initiatives and implementation_decisions:
+            print(f"  [4/{total_passes}] Generating sequence justification …")
+            seq_context = {
+                "design_area_maturity": assessment.get("design_area_maturity", []),
+                "platform_scale_limits": assessment.get("platform_scale_limits", {}),
+                "execution_context": assessment.get("execution_context", {}),
+            }
+            seq_raw = self._safe_run(
+                system,
+                self.prompts.sequence_justification(
+                    implementation_decisions,
+                    assessment.get("dependency_order", []),
+                    seq_context,
+                ),
+                label="Sequence Justification",
+                max_tokens=8000,
+            )
+            sequence_justification = seq_raw
+            engagement_recommendations = seq_raw.get("engagement_recommendations", [])
+            print(f"        → {len(engagement_recommendations)} engagement recommendation(s)")
+        else:
+            print(f"  [4/{total_passes}] Sequence Justification skipped.")
+
+        # ── 5. Enterprise-scale readiness ─────────────────────────
+        print(f"  [5/{total_passes}] Evaluating enterprise-scale readiness …")
         # Enrich assessment with initiative IDs so readiness can reference them
         readiness_input = {**assessment, "initiative_ids": [i["initiative_id"] for i in initiatives]}
         readiness = self._safe_run(
@@ -135,8 +220,8 @@ class ReasoningEngine:
             max_tokens=8000,
         )
 
-        # ── 4. Smart questions ────────────────────────────────────
-        print("  [4/6] Generating smart questions …")
+        # ── 6. Smart questions ────────────────────────────────────
+        print(f"  [6/{total_passes}] Generating smart questions …")
         sq_raw = self._safe_run(
             system,
             self.prompts.smart_questions(assessment),
@@ -146,10 +231,10 @@ class ReasoningEngine:
         smart_questions = sq_raw.get("smart_questions", [])
         print(f"        → {len(smart_questions)} question(s)")
 
-        # ── 5. Implementation backlog ─────────────────────────────
+        # ── 7. Implementation backlog ─────────────────────────────
         implementation_backlog: list[dict] = []
         if not skip_implementation and initiatives:
-            print(f"  [5/6] Generating implementation for {len(initiatives)} initiative(s) …")
+            print(f"  [7/{total_passes}] Generating implementation for {len(initiatives)} initiative(s) …")
             for init in initiatives:
                 impl = self._safe_run(
                     system,
@@ -158,10 +243,10 @@ class ReasoningEngine:
                 )
                 implementation_backlog.append(impl)
         else:
-            print("  [5/6] Implementation backlog skipped.")
+            print(f"  [7/{total_passes}] Implementation backlog skipped.")
 
-        # ── 6. Learn reference grounding (ALZ-design-area-aware) ──
-        print("  [6/7] Grounding initiatives with Microsoft Learn (ALZ-aware) …")
+        # ── 8. Learn reference grounding (ALZ-design-area-aware) ──
+        print(f"  [8/{total_passes}] Grounding initiatives with Microsoft Learn (ALZ-aware) …")
         enriched_initiatives = ground_initiatives(initiatives)
 
         # Also ground the top gaps used in executive — scoped to ALZ areas
@@ -176,11 +261,16 @@ class ReasoningEngine:
             print(f"  ⚠ ALZ design area grounding skipped: {e}")
             design_area_refs = {}
 
-        # ── 7. Target architecture ─────────────────────────────────
-        print("  [7/7] Generating target architecture …")
+        # ── 9. Target architecture ─────────────────────────────────
+        print(f"  [9/{total_passes}] Generating target architecture …")
+        # Enrich assessment with selected patterns so target arch derives from decisions
+        arch_input = {
+            **assessment,
+            "implementation_decisions": implementation_decisions,
+        }
         target_arch = self._safe_run(
             system,
-            self.prompts.target_architecture(assessment),
+            self.prompts.target_architecture(arch_input),
             label="Target Architecture",
             max_tokens=8000,
         )
@@ -214,6 +304,7 @@ class ReasoningEngine:
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "assessment_run_id": run_id,
                 "tenant_id": tenant_id,
+                "pipeline_version": "2.0-architectural-decision-support",
             },
             "executive": executive,
             "enterprise_scale_readiness": readiness,
@@ -225,6 +316,9 @@ class ReasoningEngine:
                 "maturity_trajectory": roadmap_raw.get("maturity_trajectory", {}),
             },
             "initiatives": enriched_initiatives,
+            "implementation_decisions": implementation_decisions,
+            "sequence_justification": sequence_justification,
+            "engagement_recommendations": engagement_recommendations,
             "implementation_backlog": implementation_backlog,
             "smart_questions": smart_questions,
             "target_architecture": target_arch,
@@ -241,6 +335,8 @@ class ReasoningEngine:
         }
 
         print(f"\n  ✓ Reasoning engine complete — {len(enriched_initiatives)} initiatives, "
+              f"{len(implementation_decisions)} pattern decisions, "
+              f"{len(engagement_recommendations)} engagement recs, "
               f"{len(smart_questions)} questions, "
               f"{len(implementation_backlog)} implementation plans, "
               f"target architecture {'generated' if target_arch else 'skipped'}")

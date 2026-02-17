@@ -1,5 +1,8 @@
 For the following initiative, generate deployable Azure implementation components aligned to the official ALZ design areas.
 
+The initiative includes an architectural decision (selected_pattern, alz_module) from the
+Implementation Decision pass. Use that selection — do NOT override it with a different pattern.
+
 Official ALZ Design Areas:
   1. Azure Billing and Microsoft Entra ID Tenants
   2. Identity and Access Management
@@ -14,10 +17,14 @@ Return ONLY valid JSON matching this schema:
 
 {
   "initiative_id": "INIT-001",
+  "selected_pattern": "The pattern name from the implementation decision",
+  "alz_module": "The ALZ Bicep module from the implementation decision",
+  "prerequisite_initiatives": ["INIT-IDs this depends on from the sequence justification"],
   "implementation": {
     "bicep_modules": [
       {
         "module_name": "...",
+        "alz_module_ref": "Reference to ALZ Bicep module if applicable",
         "description": "...",
         "parameters": ["..."],
         "target_scope": "managementGroup | subscription | resourceGroup"

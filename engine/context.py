@@ -9,8 +9,12 @@ from azure.identity import AzureCliCredential
 @dataclass
 class ExecutionContext:
     tenant_id: str | None
+    tenant_display_name: str | None  # e.g. "Contoso"
+    tenant_default_domain: str | None  # e.g. "contoso.onmicrosoft.com"
     subscription_ids_visible: list[str]
     subscription_count_visible: int
+    subscription_count_total: int     # licence-level total (from Graph or MG)
+    coverage_percent: float           # visible / total * 100
     management_group_access: bool
     identity_type: str
     credential_method: str       # e.g. "Azure CLI", "Service Principal", "Managed Identity"
@@ -18,17 +22,23 @@ class ExecutionContext:
     rbac_scope: str              # e.g. "Subscription", "Management Group", "Resource Group"
 
 
-def _get_tenant_from_az_cli() -> str | None:
-    """Resolve tenant ID from the active Azure CLI session."""
+def _get_tenant_from_az_cli() -> dict:
+    """Resolve tenant ID, display name, and domain from the active Azure CLI session."""
     try:
+        # shell=True needed on Windows where az is a .cmd batch script
         output = subprocess.check_output(
-            ["az", "account", "show", "--output", "json"],
-            stderr=subprocess.DEVNULL
+            "az account show --output json",
+            shell=True,
+            stderr=subprocess.DEVNULL,
         )
         account = json.loads(output)
-        return account.get("tenantId")
+        return {
+            "tenant_id": account.get("tenantId"),
+            "tenant_display_name": account.get("tenantDisplayName"),
+            "tenant_default_domain": account.get("tenantDefaultDomain"),
+        }
     except Exception:
-        return None
+        return {"tenant_id": None, "tenant_display_name": None, "tenant_default_domain": None}
 
 
 def discover_execution_context(credential: AzureCliCredential) -> dict:
@@ -47,9 +57,10 @@ def discover_execution_context(credential: AzureCliCredential) -> dict:
     ]
 
     # Tenant: resolve from active Azure CLI session
-    tenant_id = _get_tenant_from_az_cli()
-    if not tenant_id:
-        tenant_id = os.getenv("AZURE_TENANT_ID")
+    cli_tenant = _get_tenant_from_az_cli()
+    tenant_id = cli_tenant.get("tenant_id") or os.getenv("AZURE_TENANT_ID")
+    tenant_display_name = cli_tenant.get("tenant_display_name")
+    tenant_default_domain = cli_tenant.get("tenant_default_domain")
 
     identity_type = "service_principal" if os.getenv("AZURE_CLIENT_ID") else "user"
 
@@ -60,6 +71,14 @@ def discover_execution_context(credential: AzureCliCredential) -> dict:
         credential_method = "Managed Identity"
     else:
         credential_method = "Azure CLI"
+
+    # ── Management-group access (probe first so RBAC scope can reference it) ─
+    mg_access = True
+    try:
+        from azure.mgmt.managementgroups import ManagementGroupsAPI
+        list(ManagementGroupsAPI(credential).management_groups.list())
+    except Exception:
+        mg_access = False
 
     # ── RBAC highest role & scope ─────────────────────────────────
     rbac_highest_role = "Unknown"
@@ -101,17 +120,37 @@ def discover_execution_context(credential: AzureCliCredential) -> dict:
     except Exception:
         pass  # best-effort — don't crash on RBAC introspection
 
-    mg_access = True
+    # ── Total subscription count (best-effort via MG root descendants) ─
+    total_subs = len(subs)
     try:
-        from azure.mgmt.managementgroups import ManagementGroupsAPI
-        list(ManagementGroupsAPI(credential).management_groups.list())
+        if mg_access:
+            mg_resp = requests.get(
+                f"https://management.azure.com/providers/Microsoft.Management"
+                f"/managementGroups/{tenant_id}/descendants"
+                f"?api-version=2021-04-01",
+                headers={"Authorization": f"Bearer {token}"},
+                timeout=20,
+            )
+            if mg_resp.ok:
+                descendants = mg_resp.json().get("value", [])
+                total_subs = sum(
+                    1 for d in descendants
+                    if (d.get("type") or "").endswith("/subscriptions")
+                )
+                total_subs = max(total_subs, len(subs))
     except Exception:
-        mg_access = False
+        pass
+
+    coverage = round(len(subs) / max(total_subs, 1) * 100, 1)
 
     ctx = ExecutionContext(
         tenant_id=tenant_id,
+        tenant_display_name=tenant_display_name,
+        tenant_default_domain=tenant_default_domain,
         subscription_ids_visible=subs,
         subscription_count_visible=len(subs),
+        subscription_count_total=total_subs,
+        coverage_percent=coverage,
         management_group_access=mg_access,
         identity_type=identity_type,
         credential_method=credential_method,

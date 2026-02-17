@@ -377,14 +377,14 @@
       "evidence": [
         {
           "type": "resource",
-          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/publicIPAddresses/defenderforIot-ip",
+          "resource_id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/publicIPAddresses/defenderforIot-ip",
           "summary": "defenderforIot-ip",
           "properties": {
             "resourceGroup": "myiothubrg",
             "location": "eastus2",
             "sku": "Standard",
             "allocationMethod": "Static",
-            "associatedTo": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/networkInterfaces/defenderforiot694/ipConfigurations/ipconfig1"
+            "associatedTo": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/networkInterfaces/defenderforiot694/ipConfigurations/ipconfig1"
           }
         }
       ],
@@ -404,14 +404,14 @@
       "evidence": [
         {
           "type": "resource",
-          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/publicIPAddresses/defenderforIot-ip",
+          "resource_id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/publicIPAddresses/defenderforIot-ip",
           "summary": "defenderforIot-ip",
           "properties": {
             "resourceGroup": "myiothubrg",
             "location": "eastus2",
             "sku": "Standard",
             "allocationMethod": "Static",
-            "associatedTo": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/networkInterfaces/defenderforiot694/ipConfigurations/ipconfig1"
+            "associatedTo": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/MyIoTHubRG/providers/Microsoft.Network/networkInterfaces/defenderforiot694/ipConfigurations/ipconfig1"
           }
         }
       ],
@@ -431,7 +431,7 @@
       "evidence": [
         {
           "type": "resource",
-          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/myiothubrg/providers/Microsoft.Network/virtualNetworks/defenderforIot-vnet",
+          "resource_id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myiothubrg/providers/Microsoft.Network/virtualNetworks/defenderforIot-vnet",
           "summary": "defenderforIot-vnet",
           "properties": {
             "resourceGroup": "myiothubrg",
@@ -446,7 +446,7 @@
         },
         {
           "type": "resource",
-          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/myresourcegroup/providers/Microsoft.Network/virtualNetworks/myVNet",
+          "resource_id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myresourcegroup/providers/Microsoft.Network/virtualNetworks/myVNet",
           "summary": "myVNet",
           "properties": {
             "resourceGroup": "myresourcegroup",
@@ -7244,7 +7244,7 @@
         "tenant_context": {
           "tenant_id": null,
           "subscription_ids_visible": [
-            "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+            "00000000-0000-0000-0000-000000000000"
           ],
           "subscription_count_visible": 1,
           "management_group_access": true,
@@ -7325,7 +7325,7 @@
         "subscription_model": {
           "subscriptions": [
             {
-              "id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70",
+              "id": "00000000-0000-0000-0000-000000000000",
               "placement": "Landing Zones/Corp"
             }
           ],

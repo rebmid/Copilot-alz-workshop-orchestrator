@@ -66,3 +66,33 @@ class PromptPack:
             .replace("{{ execution_units_json }}", json.dumps(
                 grounding_context.get("target_execution_units", []), indent=2))
         )
+
+    # ── New: Architectural Decision Support prompts ───────────────
+
+    def implementation_decision(
+        self,
+        initiatives_with_options: list[dict],
+        assessment_context: dict,
+    ) -> str:
+        import json
+        tpl = _load("implementation_decision.txt")
+        return (
+            tpl
+            .replace("{{INITIATIVES_WITH_OPTIONS}}", json.dumps(initiatives_with_options, indent=2))
+            .replace("{{ASSESSMENT_CONTEXT}}", json.dumps(assessment_context, indent=2))
+        )
+
+    def sequence_justification(
+        self,
+        initiatives_with_decisions: list[dict],
+        dependency_order: list[str],
+        assessment_context: dict,
+    ) -> str:
+        import json
+        tpl = _load("sequence_justification.txt")
+        return (
+            tpl
+            .replace("{{INITIATIVES_WITH_DECISIONS}}", json.dumps(initiatives_with_decisions, indent=2))
+            .replace("{{DEPENDENCY_ORDER}}", json.dumps(dependency_order, indent=2))
+            .replace("{{ASSESSMENT_CONTEXT}}", json.dumps(assessment_context, indent=2))
+        )

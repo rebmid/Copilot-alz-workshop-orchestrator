@@ -65,7 +65,8 @@ Return ONLY valid JSON matching this schema:
         "estimated_duration": "...",
         "team": ["Platform Engineering", "Security"],
         "change_scope": "Tenant | ManagementGroup | Subscription"
-      }
+      },
+      "capability_unlocked": "What platform capability becomes available when this initiative completes (e.g. 'Centralized egress control enables secure spoke deployment')"
     }
   ],
   "backlog": {
@@ -171,3 +172,8 @@ For backlog:
 
 Assessment Data:
 {{PAYLOAD}}
+
+IMPORTANT: This pass identifies WHAT to do and in what ORDER.
+Do NOT select specific ALZ implementation patterns or Bicep modules here —
+that is handled by the separate Implementation Decision pass.
+Focus on initiative clustering, sequencing, capability unlocks, and dependency ordering.
