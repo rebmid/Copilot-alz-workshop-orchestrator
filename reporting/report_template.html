@@ -62,6 +62,12 @@
     .tag-low { background: #e6f4ea; color: var(--success); }
     .tag-phase { background: #f3f2f1; color: #323130; }
 
+    /* ── Tier border classes ──────────────────────────────── */
+    .tier-border-danger { border-left: 3px solid var(--danger); }
+    .tier-border-warn { border-left: 3px solid var(--warn); }
+    .tier-border-accent { border-left: 3px solid var(--accent); }
+    .tier-border-success { border-left: 3px solid var(--success); }
+
     /* ── Trajectory bar ───────────────────────────────────── */
     .trajectory { display: flex; align-items: center; gap: 0; margin: 16px 0; }
     .trajectory .step { flex: 1; text-align: center; padding: 14px 8px; border: 1px solid var(--border); position: relative; background: var(--card-bg); }
@@ -234,8 +240,7 @@
   {% for tier_name, tier_color in [('Critical', 'danger'), ('High', 'warn'), ('Medium', 'accent'), ('Hygiene', 'success')] %}
   {% set controls = risk_overview.tiers[tier_name] %}
   {% if controls %}
-  <div class="card" style="border-left:3px solid var(--{{ tier_color }});">
-    <h3><span class="tag tag-{{ 'critical' if tier_name == 'Critical' else ('high' if tier_name == 'High' else ('medium' if tier_name == 'Medium' else 'low')) }}">{{ tier_name }}</span> Risks ({{ controls | length }})</h3>
+  <div class="card tier-border-{{ tier_color }}">    <h3><span class="tag tag-{{ 'critical' if tier_name == 'Critical' else ('high' if tier_name == 'High' else ('medium' if tier_name == 'Medium' else 'low')) }}">{{ tier_name }}</span> Risks ({{ controls | length }})</h3>
     <table>
       <tr>
         <th style="width:50px;">Score</th>

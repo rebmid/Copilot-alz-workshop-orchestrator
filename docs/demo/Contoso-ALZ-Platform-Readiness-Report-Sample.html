@@ -124,6 +124,7 @@
 <nav class="toc">
   <a href="#snapshot">Platform Readiness</a>
   <a href="#blockers">Adoption Blockers</a>
+  <a href="#risks">Platform Risk</a>
   <a href="#sequence">Remediation Sequence</a>
   <a href="#trajectory">Maturity Trajectory</a>
   <a href="#capabilities">Capability Unlock</a>
@@ -134,7 +135,7 @@
 </nav>
 
 <h1>Azure Landing Zone — Platform Readiness Report
-  <br><small>2026-02-18 · Run run-20260218-0015</small>
+  <br><small>2026-02-18 · Run run-20260218-0154</small>
 </h1>
 
 <!-- ════════════════════════════════════════════════════════════════
@@ -145,7 +146,7 @@
 
   <div class="grid-4" style="margin-bottom:16px;">
     <div class="kpi danger">
-      <div class="value">19.5%</div>
+      <div class="value">20.0%</div>
       <div class="label">Overall Maturity</div>
     </div>
     <div class="kpi">
@@ -153,7 +154,7 @@
       <div class="label">Automated Controls</div>
     </div>
     <div class="kpi danger">
-      <div class="value">12</div>
+      <div class="value">20</div>
       <div class="label">Enterprise Readiness Score</div>
     </div>
     <div class="kpi">
@@ -165,9 +166,9 @@
   
   <div class="card">
     <h3>Platform Scale Implication</h3>
-    <p>Contoso&#39;s current Azure platform maturity is critically low, with an overall posture of 19.5% and no design area exceeding 34% maturity. The assessment reveals systemic gaps in foundational controls across security, data protection, identity management, networking, and governance. These weaknesses expose the business to significant risks, including regulatory non-compliance, operational outages, and potential data breaches. The lack of centralized management, insufficient backup and recovery, and incomplete security visibility further amplify the risk of business disruption and reputational harm.
+    <p>Contoso&#39;s current Azure platform maturity is critically low, with an overall score of 20%. Key foundational controls across security, identity, networking, and management are failing, exposing the organization to significant operational, compliance, and reputational risks. The assessment reveals that all major design areas—especially Governance, Management, Network Topology, Data Protection, and Identity—are underperforming, with high-confidence evidence of platform-wide governance gaps. This posture leaves the environment highly vulnerable to security breaches, data loss, and service outages, and undermines the ability to scale or onboard new workloads safely.
 
-Immediate investment is required to address high-severity risks in network security, privileged access management, and data protection. The single-subscription, single-tenant context means platform-wide changes can be implemented rapidly, but also increases the blast radius of any incident. Without swift remediation, Contoso faces heightened exposure to cyber threats, financial loss from downtime or data loss, and challenges in demonstrating compliance to auditors and customers. Prioritizing foundational controls will not only reduce risk but also enable future growth and operational agility.</p>
+The most acute risks stem from the absence of essential security controls (such as DDoS protection, Azure Firewall, and centralized monitoring), poor data protection practices (with no compliant storage or backup coverage), and weak identity governance (with excessive privileged access and no effective Privileged Identity Management). Without immediate investment in foundational controls and platform governance, Contoso faces a heightened likelihood of regulatory non-compliance, business disruption, and loss of stakeholder trust. The investment thesis is clear: prioritizing remediation of these critical gaps will enable secure, compliant growth and restore confidence in the cloud platform&#39;s ability to support business objectives.</p>
     
     <p style="margin-top:8px;color:var(--muted);font-size:13px;">Estimated max supported subscriptions in current state: <strong>1</strong></p>
     
@@ -192,62 +193,425 @@ Immediate investment is required to address high-severity risks in network secur
       
       <tr>
         <td><strong>Network Topology and Connectivity</strong></td>
-        <td>No hub-spoke or Virtual WAN topology detected; no Azure Firewall or DDoS Protection present. Centralized egress and network segmentation are not implemented, which is mandatory for scaling to 50+ subscriptions.</td>
+        <td>No hub-spoke or centralized network topology detected; no Azure Firewall or DDoS Protection present. This prevents scalable, secure, and manageable network expansion required for enterprise-scale.</td>
         <td><span class="tag tag-critical">Critical</span></td>
-        <td>Governance Baseline and Policy Enforcement</td>
-      </tr>
-      
-      <tr>
-        <td><strong>Identity and Access Management</strong></td>
-        <td>Privileged Identity Management (PIM) is not enabled for privileged roles; RBAC hygiene is poor with excessive Owner assignments and no group-based access; break-glass accounts are not validated. This creates high risk for privilege escalation and operational lockout at scale.</td>
-        <td><span class="tag tag-critical">Critical</span></td>
-        <td>Privileged Access Hygiene and PIM Enforcement</td>
-      </tr>
-      
-      <tr>
-        <td><strong>Management</strong></td>
-        <td>No centralized Log Analytics workspace or Sentinel deployment; workspace topology is fragmented, retention is below 90 days, and diagnostic coverage is extremely low. This blocks centralized monitoring, incident response, and compliance at scale.</td>
-        <td><span class="tag tag-critical">Critical</span></td>
-        <td>Centralized Security Visibility and Alerting</td>
+        <td>Establish tenant-wide governance baseline and policy enforcement</td>
       </tr>
       
       <tr>
         <td><strong>Governance</strong></td>
-        <td>No evidence of management group hierarchy or policy initiative assignments at management group scope. Policy compliance and resource consistency cannot be enforced, limiting the platform to a single subscription.</td>
+        <td>No management group hierarchy or platform-level policy enforcement. Policy compliance and governance controls are missing, blocking scalable delegation and policy-driven management.</td>
         <td><span class="tag tag-critical">Critical</span></td>
-        <td>Cost Governance and Budget Enforcement</td>
+        <td>Centralize monitoring and log analytics workspace topology</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Identity and Access Management</strong></td>
+        <td>Privileged Identity Management (PIM) is not enabled; RBAC hygiene is poor with excessive Owner assignments and no group-based access. No validated break-glass accounts. This creates high risk for privilege escalation and tenant lockout.</td>
+        <td><span class="tag tag-critical">Critical</span></td>
+        <td>Implement secure network topology with hub-spoke, DDoS protection, and centralized egress control</td>
+      </tr>
+      
+      <tr>
+        <td><strong>Management</strong></td>
+        <td>No centralized Log Analytics workspace or Sentinel; workspace topology is fragmented and retention is insufficient (&lt;90d). This blocks centralized monitoring, security operations, and compliance reporting.</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td>Enforce least-privilege access and Privileged Identity Management (PIM)</td>
       </tr>
       
       <tr>
         <td><strong>Security</strong></td>
-        <td>Defender for Cloud is not enabled across all plans; Secure Score is unavailable or below threshold; centralized security visibility is missing. This exposes the tenant to unmanaged risk and prevents scaling securely.</td>
-        <td><span class="tag tag-critical">Critical</span></td>
-        <td>Secure Network Topology and Segmentation</td>
+        <td>Defender for Cloud is not fully enabled; centralized security visibility is lacking and diagnostics coverage is extremely low (&lt;5%). Secure Score and threat detection posture are insufficient for enterprise risk tolerance.</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td>Remediate security visibility gaps and enforce centralized diagnostics</td>
       </tr>
       
       <tr>
         <td><strong>Data Protection</strong></td>
-        <td>Storage account posture and private endpoint coverage are critically non-compliant (0%); VM backup coverage is 0%. Data loss and exposure risks are unacceptable for enterprise workloads.</td>
+        <td>Storage accounts and PaaS services lack private endpoints and backup coverage. Data protection controls are not enforced, creating risk for data exfiltration and loss.</td>
         <td><span class="tag tag-high">High</span></td>
-        <td>Operational Resilience: Backup and Update Management</td>
-      </tr>
-      
-      <tr>
-        <td><strong>Cost Governance</strong></td>
-        <td>Budgets, notification rules, and anomaly detection are not in place. Without cost controls, scaling to multiple subscriptions risks uncontrolled spend.</td>
-        <td><span class="tag tag-high">High</span></td>
-        <td>Centralized Monitoring and Logging Foundation</td>
+        <td>Achieve data protection and resilience for critical workloads</td>
       </tr>
       
       <tr>
         <td><strong>Platform Automation and DevOps</strong></td>
-        <td>No evidence of automated subscription vending, infrastructure as code, or active policy remediation. Manual processes will not scale beyond a handful of subscriptions.</td>
+        <td>No evidence of automated subscription vending, IaC adoption, or policy remediation. Manual processes will not scale beyond a handful of subscriptions.</td>
         <td><span class="tag tag-high">High</span></td>
-        <td>Data Protection and Secure PaaS Posture</td>
+        <td>Advance platform automation and change tracking</td>
       </tr>
       
     </table>
   </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     PLATFORM RISK OVERVIEW (deterministic — no LLM)
+     ════════════════════════════════════════════════════════════════ -->
+
+<div class="section" id="risks">
+  <h2>Platform Risk Overview</h2>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+    Risks derived deterministically from control metadata.
+    <span style="font-style:italic;">risk_score = severity_weight × blast_radius × foundational_weight  (Severity: High=3, Med=2, Low=1 · Scope: Tenant=3, MG=2, Sub=1 · Foundational=×2 if depended-on)</span>
+  </p>
+
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="kpi danger">
+      <div class="value">11</div>
+      <div class="label">Critical</div>
+    </div>
+    <div class="kpi warn">
+      <div class="value">22</div>
+      <div class="label">High</div>
+    </div>
+    <div class="kpi" style="border-left:3px solid var(--accent);">
+      <div class="value">0</div>
+      <div class="label">Medium</div>
+    </div>
+    <div class="kpi ok">
+      <div class="value">0</div>
+      <div class="label">Hygiene</div>
+    </div>
+  </div>
+
+  
+  
+  
+  <div class="card" style="border-left:3px solid var(--danger);">
+    <h3><span class="tag tag-critical">Critical</span> Risks (11)</h3>
+    <table>
+      <tr>
+        <th style="width:50px;">Score</th>
+        <th>Control</th>
+        <th>Section</th>
+        <th>Severity</th>
+        <th>Status</th>
+        <th>Scope</th>
+        <th>Foundation</th>
+        <th>Evidence</th>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">18</td>
+        <td><a href="#ctrl-rbac-hyg" style="color:var(--accent);text-decoration:none;">RBAC Hygiene</a></td>
+        <td>Identity</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">RBAC hygiene issues: 27 Owner role assignments (recommend ≤ 5); Group-based: 0% &hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">18</td>
+        <td><a href="#ctrl-entra-lo" style="color:var(--accent);text-decoration:none;">Entra ID Log Availability</a></td>
+        <td>Identity</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-high">Partial</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">Entra ID log gaps: Sign-in logs not forwarded to Log Analytics; Audit logs not f&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">18</td>
+        <td><a href="#ctrl-monitor-" style="color:var(--accent);text-decoration:none;">SOC Workspace Topology</a></td>
+        <td>Management</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">Workspace topology issues: 5 workspaces — not centralized; Sentinel not enabled;&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">18</td>
+        <td><a href="#ctrl-e6c4cfd3" style="color:var(--accent);text-decoration:none;">Azure Firewall Presence</a></td>
+        <td>Networking</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">No Azure Firewall resources detected in visible subscriptions.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-61623a76" style="color:var(--accent);text-decoration:none;">Platform Management Group</a></td>
+        <td>Governance</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">No Platform management group detected under root.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-d8a2adb1" style="color:var(--accent);text-decoration:none;">Policy Compliance Percentage</a></td>
+        <td>Governance</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">Policy compliance is 0.0% (3 noncompliant of 3). Target ≥ 70%.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-pim-usag" style="color:var(--accent);text-decoration:none;">PIM Usage</a></td>
+        <td>Identity</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-high">Partial</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">No PIM eligibility activations detected in activity log (90d). PIM may not be en&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-alert-ac" style="color:var(--accent);text-decoration:none;">Alert to Action Group Mapping</a></td>
+        <td>Management</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">No metric or scheduled query alert rules found.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-3c5a808d" style="color:var(--accent);text-decoration:none;">Public IP Governance</a></td>
+        <td>Networking</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">1 public IP(s) detected. Review for policy alignment.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-67e7a8ed" style="color:var(--accent);text-decoration:none;">Diagnostics Coverage</a></td>
+        <td>Security</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">Diagnostics coverage is 2.1% (sample=94). Most resources lack diagnostic setting&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">12</td>
+        <td><a href="#ctrl-1cf0b8da" style="color:var(--accent);text-decoration:none;">Diagnostics for Identity (Entra ID)</a></td>
+        <td>Security</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"><strong style="color:var(--success);">Y</strong></td>
+        <td style="font-size:12px;color:var(--muted);">Low diagnostics coverage (2.1%) suggests Entra ID logs may not be centralized.</td>
+      </tr>
+      
+      
+    </table>
+  </div>
+  
+  
+  
+  
+  <div class="card" style="border-left:3px solid var(--warn);">
+    <h3><span class="tag tag-high">High</span> Risks (22)</h3>
+    <table>
+      <tr>
+        <th style="width:50px;">Score</th>
+        <th>Control</th>
+        <th>Section</th>
+        <th>Severity</th>
+        <th>Status</th>
+        <th>Scope</th>
+        <th>Foundation</th>
+        <th>Evidence</th>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-storage-" style="color:var(--accent);text-decoration:none;">Storage Account Posture</a></td>
+        <td>Data Protection</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">Storage accounts: only 0/5 compliant (0%). Majority of resources are non-complia&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-keyvault" style="color:var(--accent);text-decoration:none;">Key Vault Posture</a></td>
+        <td>Data Protection</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-high">Partial</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">Key Vaults: 1/2 compliant (50%). 1 resource(s) need remediation.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-private-" style="color:var(--accent);text-decoration:none;">Private Endpoint Coverage</a></td>
+        <td>Data Protection</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">PaaS private endpoints: only 0/10 compliant (0%). Majority of resources are non-&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-49b82111" style="color:var(--accent);text-decoration:none;">Noncompliant Resource Count</a></td>
+        <td>Governance</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-high">Partial</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">3 noncompliant resource(s) detected.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-pim-matu" style="color:var(--accent);text-decoration:none;">PIM Maturity for Privileged Roles</a></td>
+        <td>Identity</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">PIM not effective: Eligible ratio 0% (recommend ≥ 80%).</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-breakgla" style="color:var(--accent);text-decoration:none;">Break-Glass Account Validation</a></td>
+        <td>Identity</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">No break-glass accounts detected (naming pattern: breakglass*, emergency*, bg-*)&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-e8bbac75" style="color:var(--accent);text-decoration:none;">Hub-Spoke Topology</a></td>
+        <td>Networking</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">No hub VNet or Azure Firewall detected. Hub-spoke topology may not be implemente&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-088137f5" style="color:var(--accent);text-decoration:none;">DDoS Protection</a></td>
+        <td>Networking</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">2 VNet(s) without DDoS Protection.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-nsg-cove" style="color:var(--accent);text-decoration:none;">NSG Subnet Coverage</a></td>
+        <td>Networking</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-high">Partial</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">NSG coverage gaps: 2 empty NSG(s).</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-backup-c" style="color:var(--accent);text-decoration:none;">VM Backup Coverage</a></td>
+        <td>Resilience</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">Backup coverage: only 0/1 VMs protected (0%).</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-77425f48" style="color:var(--accent);text-decoration:none;">Defender CWP Coverage</a></td>
+        <td>Security</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-high">Partial</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">14/18 Defender plans enabled (77.8%). Some plans still disabled.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">9</td>
+        <td><a href="#ctrl-a56888b2" style="color:var(--accent);text-decoration:none;">Centralized Security Visibility</a></td>
+        <td>Security</td>
+        <td><span class="tag tag-high">High</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">Centralized security visibility gaps: Diagnostics coverage 2.1% is low.</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">6</td>
+        <td><a href="#ctrl-appservi" style="color:var(--accent);text-decoration:none;">App Service Posture</a></td>
+        <td>Data Protection</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-medium">SignalError</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">All required signals failed: resource_graph:app_service_posture: (BadRequest) Pl&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">6</td>
+        <td><a href="#ctrl-acr-post" style="color:var(--accent);text-decoration:none;">Container Registry Posture</a></td>
+        <td>Data Protection</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">Container Registries: only 0/1 compliant (0%). Majority of resources are non-com&hellip;</td>
+      </tr>
+      
+      <tr>
+        <td style="text-align:center;font-weight:700;">6</td>
+        <td><a href="#ctrl-92481607" style="color:var(--accent);text-decoration:none;">Landing Zones Management Group</a></td>
+        <td>Governance</td>
+        <td><span class="tag tag-medium">Medium</span></td>
+        <td><span class="tag tag-critical">Fail</span></td>
+        <td>Tenant</td>
+        <td style="text-align:center;"></td>
+        <td style="font-size:12px;color:var(--muted);">No Landing Zones management group detected.</td>
+      </tr>
+      
+      
+      <tr><td colspan="8" style="text-align:center;color:var(--muted);font-size:13px;">… and 7 more</td></tr>
+      
+    </table>
+  </div>
+  
+  
+  
+  
+  
+  
+  
+  
 </div>
 
 
@@ -270,108 +634,105 @@ Immediate investment is required to address high-severity risks in network secur
       
       <tr>
         <td>1</td>
-        <td><strong>Cost Governance and Budget Enforcement</strong></td>
-        <td style="text-align:center;">1</td>
-        <td>
-          
-            <span style="color:var(--muted);">—</span>
-          
-        </td>
-        <td></td>
-        <td style="font-size:13px;">Cost governance controls → enables FinOps visibility across landing zones</td>
-      </tr>
-      
-      <tr>
-        <td>1</td>
-        <td><strong>Centralized Monitoring and Logging Foundation</strong></td>
-        <td style="text-align:center;">1</td>
-        <td>
-          
-            <span style="color:var(--muted);">—</span>
-          
-        </td>
-        <td></td>
-        <td style="font-size:13px;">Platform capability improvement</td>
-      </tr>
-      
-      <tr>
-        <td>1</td>
-        <td><strong>Governance Baseline and Policy Enforcement</strong></td>
+        <td><strong>Establish tenant-wide governance baseline and policy enforcement</strong></td>
         <td style="text-align:center;">5</td>
         <td>
           
             <span style="color:var(--muted);">—</span>
           
         </td>
-        <td></td>
+        <td><span class="tag tag-phase">30 days</span></td>
         <td style="font-size:13px;">Policy-driven guardrails → enables safe self-service for landing zone teams</td>
       </tr>
       
       <tr>
         <td>2</td>
-        <td><strong>Secure Network Topology and Segmentation</strong></td>
-        <td style="text-align:center;">4</td>
+        <td><strong>Centralize monitoring and log analytics workspace topology</strong></td>
+        <td style="text-align:center;">1</td>
         <td>
           
             <span style="color:var(--muted);">—</span>
           
         </td>
-        <td></td>
-        <td style="font-size:13px;">Hub connectivity &amp; centralized egress → enables landing zone networking model</td>
-      </tr>
-      
-      <tr>
-        <td>2</td>
-        <td><strong>Privileged Access Hygiene and PIM Enforcement</strong></td>
-        <td style="text-align:center;">3</td>
-        <td>
-          
-            <span style="color:var(--muted);">—</span>
-          
-        </td>
-        <td></td>
-        <td style="font-size:13px;">Platform capability improvement</td>
-      </tr>
-      
-      <tr>
-        <td>2</td>
-        <td><strong>Centralized Security Visibility and Alerting</strong></td>
-        <td style="text-align:center;">3</td>
-        <td>
-          
-            
-              <span style="font-size:13px;">Centralize monitoring and logging by consolidating Log Analy</span>
-            
-          
-        </td>
-        <td><span class="tag tag-phase">60 days</span></td>
-        <td style="font-size:13px;">Security baseline enforcement → enables SOC integration</td>
-      </tr>
-      
-      <tr>
-        <td>2</td>
-        <td><strong>Operational Resilience: Backup and Update Management</strong></td>
-        <td style="text-align:center;">4</td>
-        <td>
-          
-            <span style="color:var(--muted);">—</span>
-          
-        </td>
-        <td></td>
+        <td><span class="tag tag-phase">30 days</span></td>
         <td style="font-size:13px;">Platform capability improvement</td>
       </tr>
       
       <tr>
         <td>3</td>
-        <td><strong>Data Protection and Secure PaaS Posture</strong></td>
+        <td><strong>Implement secure network topology with hub-spoke, DDoS protection, and centralized egress control</strong></td>
+        <td style="text-align:center;">4</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Establish tenant-wide governance baseline and policy enforce</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">60 days</span></td>
+        <td style="font-size:13px;">Hub connectivity &amp; centralized egress → enables landing zone networking model</td>
+      </tr>
+      
+      <tr>
+        <td>4</td>
+        <td><strong>Enforce least-privilege access and Privileged Identity Management (PIM)</strong></td>
         <td style="text-align:center;">3</td>
         <td>
           
-            <span style="color:var(--muted);">—</span>
+            
+              <span style="font-size:13px;">Establish tenant-wide governance baseline and policy enforce</span>
+            
           
         </td>
-        <td></td>
+        <td><span class="tag tag-phase">60 days</span></td>
+        <td style="font-size:13px;">Identity &amp; Entra ID integration → enables PIM and break-glass governance</td>
+      </tr>
+      
+      <tr>
+        <td>5</td>
+        <td><strong>Remediate security visibility gaps and enforce centralized diagnostics</strong></td>
+        <td style="text-align:center;">3</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Centralize monitoring and log analytics workspace topology f</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">60 days</span></td>
+        <td style="font-size:13px;">Centralized diagnostics &amp; monitoring → enables operational visibility</td>
+      </tr>
+      
+      <tr>
+        <td>6</td>
+        <td><strong>Achieve data protection and resilience for critical workloads</strong></td>
+        <td style="text-align:center;">4</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Implement secure network topology with hub-spoke segmentatio,</span>
+            
+              <span style="font-size:13px;">Remediate security visibility gaps and enforce centralized d</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">90 days</span></td>
         <td style="font-size:13px;">Platform capability improvement</td>
+      </tr>
+      
+      <tr>
+        <td>7</td>
+        <td><strong>Advance platform automation and change tracking</strong></td>
+        <td style="text-align:center;">3</td>
+        <td>
+          
+            
+              <span style="font-size:13px;">Establish tenant-wide governance baseline and policy enforce</span>
+            
+          
+        </td>
+        <td><span class="tag tag-phase">90 days</span></td>
+        <td style="font-size:13px;">Platform automation &amp; IaC → enables GitOps-driven landing zone lifecycle</td>
       </tr>
       
     </table>
@@ -388,7 +749,7 @@ Immediate investment is required to address high-severity risks in network secur
 
   <div class="trajectory">
     <div class="step">
-      <div class="pct" style="color:var(--danger);">19.5%</div>
+      <div class="pct" style="color:var(--danger);">20%</div>
       <div class="lbl">Current</div>
     </div>
     <div class="arrow">→</div>
@@ -413,13 +774,13 @@ Immediate investment is required to address high-severity risks in network secur
     <h3>Assumptions</h3>
     <ul style="padding-left:18px;font-size:13px;color:var(--muted);">
       
-      <li>All initiatives are executed in the recommended sequence.</li>
+      <li>All initiatives are executed as sequenced and resourced appropriately.</li>
       
-      <li>No new subscriptions or major architectural changes are introduced during this period.</li>
+      <li>No new subscriptions or major platform changes are introduced during the 90-day period.</li>
       
-      <li>Platform team has required permissions and resources to implement changes.</li>
+      <li>Tenant-level permissions remain available for governance and security actions.</li>
       
-      <li>Manual controls are validated and remediated as part of each initiative.</li>
+      <li>Dependencies between initiatives are honored and not bypassed.</li>
       
     </ul>
   </div>
@@ -442,51 +803,45 @@ Immediate investment is required to address high-severity risks in network secur
       </tr>
       
       <tr>
-        <td><strong>Cost Governance and Budget Enforcement</strong></td>
-        <td>Cost governance controls → enables FinOps visibility across landing zones</td>
-        <td><span class="tag tag-medium">Governance</span></td>
-      </tr>
-      
-      <tr>
-        <td><strong>Centralized Monitoring and Logging Foundation</strong></td>
-        <td>Platform capability improvement</td>
-        <td><span class="tag tag-medium">Management</span></td>
-      </tr>
-      
-      <tr>
-        <td><strong>Governance Baseline and Policy Enforcement</strong></td>
+        <td><strong>Establish tenant-wide governance baseline and policy enforcement</strong></td>
         <td>Policy-driven guardrails → enables safe self-service for landing zone teams</td>
         <td><span class="tag tag-medium">Governance</span></td>
       </tr>
       
       <tr>
-        <td><strong>Secure Network Topology and Segmentation</strong></td>
-        <td>Hub connectivity &amp; centralized egress → enables landing zone networking model</td>
-        <td><span class="tag tag-medium">Network Topology and Connectivity</span></td>
-      </tr>
-      
-      <tr>
-        <td><strong>Privileged Access Hygiene and PIM Enforcement</strong></td>
-        <td>Platform capability improvement</td>
-        <td><span class="tag tag-medium">Identity and Access Management</span></td>
-      </tr>
-      
-      <tr>
-        <td><strong>Centralized Security Visibility and Alerting</strong></td>
-        <td>Security baseline enforcement → enables SOC integration</td>
-        <td><span class="tag tag-medium">Security</span></td>
-      </tr>
-      
-      <tr>
-        <td><strong>Operational Resilience: Backup and Update Management</strong></td>
+        <td><strong>Centralize monitoring and log analytics workspace topology</strong></td>
         <td>Platform capability improvement</td>
         <td><span class="tag tag-medium">Management</span></td>
       </tr>
       
       <tr>
-        <td><strong>Data Protection and Secure PaaS Posture</strong></td>
+        <td><strong>Implement secure network topology with hub-spoke, DDoS protection, and centralized egress control</strong></td>
+        <td>Hub connectivity &amp; centralized egress → enables landing zone networking model</td>
+        <td><span class="tag tag-medium">Network Topology and Connectivity</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Enforce least-privilege access and Privileged Identity Management (PIM)</strong></td>
+        <td>Identity &amp; Entra ID integration → enables PIM and break-glass governance</td>
+        <td><span class="tag tag-medium">Identity and Access Management</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Remediate security visibility gaps and enforce centralized diagnostics</strong></td>
+        <td>Centralized diagnostics &amp; monitoring → enables operational visibility</td>
+        <td><span class="tag tag-medium">Security</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Achieve data protection and resilience for critical workloads</strong></td>
         <td>Platform capability improvement</td>
         <td><span class="tag tag-medium">Security</span></td>
+      </tr>
+      
+      <tr>
+        <td><strong>Advance platform automation and change tracking</strong></td>
+        <td>Platform automation &amp; IaC → enables GitOps-driven landing zone lifecycle</td>
+        <td><span class="tag tag-medium">Platform Automation and DevOps</span></td>
       </tr>
       
     </table>
@@ -566,20 +921,6 @@ Immediate investment is required to address high-severity risks in network secur
         </tr>
         
         <tr>
-          <td><strong>Cost</strong></td>
-          <td>
-            
-              <span class="maturity-danger">0.0%</span>
-            
-          </td>
-          <td>0</td>
-          <td>0</td>
-          <td>1</td>
-          <td>0</td>
-          <td>2</td>
-        </tr>
-        
-        <tr>
           <td><strong>Networking</strong></td>
           <td>
             
@@ -633,6 +974,20 @@ Immediate investment is required to address high-severity risks in network secur
           <td>5</td>
           <td>10</td>
           <td>19</td>
+        </tr>
+        
+        <tr>
+          <td><strong>Cost</strong></td>
+          <td>
+            
+              <span style="color:var(--muted);">Customer operating model validation required</span>
+            
+          </td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>2</td>
         </tr>
         
         <tr>
@@ -843,9 +1198,9 @@ Immediate investment is required to address high-severity risks in network secur
         <strong>46</strong> controls scored from live platform signals (evidence).
         <strong>224</strong> controls require customer input (assumption).
         
-        <br>Limitations: Control appservi signal failure: All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-02-18T00:16:44.6644404Z, correlationId = 85b90d81-2425-480f-b320-d2330ac8a2a6.
+        <br>Limitations: Control appservi signal failure: All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-02-18T01:55:12.0063238Z, correlationId = 9d7d489c-c05d-42e4-8ad4-276786e89ae2.
 Code: BadRequest
-Message: Please provide below info when asking for support: timestamp = 2026-02-18T00:1
+Message: Please provide below info when asking for support: timestamp = 2026-02-18T01:5
         
       </p>
       
@@ -919,17 +1274,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Identity and Access Management</h3>
       
       <div class="q-item">
-        <div class="q-text">To what degree are privileged access management practices (RBAC hygiene, Privileged Identity Management, break-glass accounts) standardized and enforced for all Azure platform roles?</div>
+        <div class="q-text">To what extent are privileged access management practices (including RBAC hygiene, Privileged Identity Management, and break-glass accounts) implemented and regularly reviewed for all Azure environments?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; Privileged access controls are ad hoc; excessive Owner/Contributor assignments, no PIM, and no validated break-glass accounts.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Some RBAC hygiene and PIM practices are in place for key roles, but not consistently enforced; break-glass accounts exist but are not regularly validated.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; RBAC hygiene, PIM, and break-glass accounts are fully implemented, regularly reviewed, and enforced for all privileged roles in line with ALZ best practices.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; Privileged access is not governed by RBAC best practices; PIM is not enabled; break-glass accounts are not established or reviewed.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some privileged access controls are in place (e.g., limited RBAC hygiene, PIM partially enabled, break-glass accounts exist but are not regularly validated).</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; RBAC hygiene is enforced, PIM is fully implemented for all privileged roles, and break-glass accounts are established, documented, and periodically validated.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Identity and Access Management · 
-          Ref: B03.01, B03.04, B03.05, B03.06, B03.07, B03.15 · 
+          Ref: B03.01, B03.04, B03.05, B03.07, B03.15 · 
           Resolves 3 control(s)
         </div>
       </div>
@@ -942,17 +1297,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Network Topology and Connectivity</h3>
       
       <div class="q-item">
-        <div class="q-text">To what extent is a standardized, well-documented hub-and-spoke network topology with centralized security controls (Azure Firewall, DDoS Protection, NSGs, route management) implemented and enforced across all Azure subscriptions?</div>
+        <div class="q-text">To what extent is a standardized, secure, and resilient network topology (including hub-spoke, Azure Firewall, DDoS Protection, and NSG coverage) implemented and documented for all landing zones?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; No standardized network topology; security controls are inconsistently applied or absent.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Basic hub-and-spoke design exists in some subscriptions; key controls (Firewall, DDoS, NSGs) are partially implemented but not fully enforced.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive, documented hub-and-spoke topology with centralized Azure Firewall, DDoS Protection, NSGs, and route management enforced across all subscriptions.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; No standardized hub-spoke topology, Azure Firewall, or DDoS Protection in place; network security controls are inconsistently applied.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Partial implementation of hub-spoke topology or security controls (e.g., some VNets peered, limited firewall or DDoS coverage); documentation or enforcement is incomplete.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Fully implemented and documented hub-spoke topology with Azure Firewall, DDoS Protection, and NSG coverage enforced across all landing zones.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Network Topology and Connectivity · 
-          Ref: D01.01, D01.02, D01.03, D02.01, D02.02, D03.01, D03.02, D04.01, D04.02 · 
+          Ref: C03.01, C03.02, C03.03, C03.04, C03.05, C03.06, C03.07 · 
           Resolves 4 control(s)
         </div>
       </div>
@@ -965,17 +1320,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Governance</h3>
       
       <div class="q-item">
-        <div class="q-text">How mature are your governance practices for resource locks, policy assignment, and compliance management across the Azure platform?</div>
+        <div class="q-text">To what extent are governance controls (including policy assignment, resource locks, and compliance processes) defined, implemented, and regularly reviewed at the platform level?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; Resource locks, policy assignments, and compliance management are not implemented or are inconsistently applied.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Some resource locks and policies are in place, but coverage is incomplete or not regularly reviewed.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; Resource locks, policy assignments, and compliance management are fully implemented and regularly reviewed across the platform.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; No formal governance controls or policy assignments; resource locks and compliance processes are not in place.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some governance controls are defined or implemented (e.g., select policies or locks), but coverage is incomplete or not regularly reviewed.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive governance controls, policy assignments, and resource locks are defined, implemented, and reviewed regularly at the platform level.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Governance · 
-          Ref: H01.01, H02.01, H03.01, H04.01 · 
+          Ref: H01.01, H01.02, H01.03, H02.01 · 
           Resolves 5 control(s)
         </div>
       </div>
@@ -988,17 +1343,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Security</h3>
       
       <div class="q-item">
-        <div class="q-text">To what extent are centralized security visibility and threat detection controls (including diagnostic coverage, alerting, and incident response integration) implemented and maintained?</div>
+        <div class="q-text">To what extent are centralized security visibility and event monitoring (including diagnostic settings, security alerting, and incident response integration) implemented and enforced across the platform?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; No centralized security visibility; diagnostic coverage is minimal and alerting/incident response is not integrated.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Some diagnostic coverage and alerting exists, but not all resources or scenarios are included; incident response integration is basic.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive diagnostic coverage, alerting, and incident response integration are in place and maintained across all relevant resources.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; Security visibility is fragmented or absent; diagnostic settings and alerting are not consistently enabled or integrated.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Partial implementation of centralized security visibility or alerting (e.g., some resources sending logs, limited incident response integration).</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive, centralized security visibility and alerting are enforced; all critical resources send diagnostics to a central sink and are integrated with incident response processes.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Security · 
-          Ref: F05.01, F05.02, F06.01 · 
+          Ref: D03.01, D03.02, D04.01 · 
           Resolves 3 control(s)
         </div>
       </div>
@@ -1011,17 +1366,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Management and Operations</h3>
       
       <div class="q-item">
-        <div class="q-text">How mature is your centralized monitoring and management workspace topology, including integration with Microsoft Sentinel, alerting, update management, and change tracking across all Azure resources?</div>
+        <div class="q-text">To what extent are centralized management and monitoring capabilities (including Log Analytics workspace topology, update management, alerting, and change tracking) standardized and enforced across all landing zones?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; Monitoring and management are fragmented; workspaces are not centralized, Sentinel is not enabled, and alerting/update/change tracking are inconsistent.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Some centralization of monitoring exists; Sentinel or alerting/update/change tracking is partially implemented but not fully integrated or standardized.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; Fully centralized workspace topology with Microsoft Sentinel, alerting, update management, and change tracking integrated and standardized across all resources.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; No centralized monitoring or management; workspaces are fragmented, update management and alerting are inconsistent, and change tracking is not enforced.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Partial centralization of monitoring or management (e.g., some resources connected to a central workspace, update management or alerting in place for select workloads).</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Centralized Log Analytics workspace topology is enforced, update management and alerting are standardized, and change tracking is implemented for all landing zones.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Management · 
-          Ref: E01.01, E01.02, E02.01, E02.02, E03.01, E03.02, E04.01, E05.01 · 
+          Ref: E01.01, E01.02, E01.03, E02.01, E03.01 · 
           Resolves 4 control(s)
         </div>
       </div>
@@ -1043,17 +1398,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Data Protection</h3>
       
       <div class="q-item">
-        <div class="q-text">What is the level of maturity for data protection controls, including secure storage configuration, private endpoint usage, and Azure Container Registry posture across all critical workloads?</div>
+        <div class="q-text">To what extent are data protection controls (including secure storage configuration, private endpoint coverage, and container registry posture) implemented and validated for all critical data assets?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; Data protection controls are not implemented or are inconsistently applied; storage, private endpoints, and ACR are not secured.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Some workloads have secure storage, private endpoints, or ACR controls, but coverage is incomplete or not enforced.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; All critical workloads have secure storage, private endpoints, and ACR posture controls fully implemented and enforced in line with ALZ best practices.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; Data protection controls are not implemented or are inconsistently applied; storage and registries lack secure configuration and private endpoints.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Some data protection controls are in place (e.g., secure configuration or private endpoints for select assets), but coverage is incomplete or not validated.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; All critical data assets are protected by secure configuration, private endpoints, and registry hardening, with regular validation and documentation.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Security · 
-          Ref: F01.01, F02.01, F03.01, F04.01 · 
+          Ref: D01.01, D01.02, D01.03, D02.01 · 
           Resolves 3 control(s)
         </div>
       </div>
@@ -1070,40 +1425,17 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
       <h3>Resilience</h3>
       
       <div class="q-item">
-        <div class="q-text">To what extent are backup and resilience strategies implemented for critical workloads, including VM backup coverage and recovery validation?</div>
+        <div class="q-text">To what extent is backup and resilience coverage implemented for critical workloads, and are recovery processes regularly tested and validated?</div>
         
         <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; No backup or resilience strategies implemented for critical workloads.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Some critical workloads are protected by backup, but coverage is incomplete and recovery validation is infrequent.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; All critical workloads are protected by backup, with regular recovery validation and documented resilience strategies.</span>
+          <span class="maturity-level"><strong>1</strong> &mdash; No backup or resilience coverage for critical workloads; recovery processes are undocumented or untested.</span>
+          <span class="maturity-level"><strong>2</strong> &mdash; Partial backup coverage or ad hoc recovery testing for some workloads.</span>
+          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive backup coverage for all critical workloads with documented and regularly tested recovery processes.</span>
         </div>
         
         <div class="q-meta">
           ALZ Area: Management · 
-          Ref: E06.01, E06.02 · 
-          Resolves 1 control(s)
-        </div>
-      </div>
-      
-    </div>
-    
-  
-    
-    <div class="card q-domain">
-      <h3>Cost</h3>
-      
-      <div class="q-item">
-        <div class="q-text">How mature are your cost management and forecasting practices, including budget assignment, cost alerts, and regular review of forecast accuracy?</div>
-        
-        <div class="q-maturity">
-          <span class="maturity-level"><strong>1</strong> &mdash; No cost management or forecasting practices in place; budgets and alerts are not configured.</span>
-          <span class="maturity-level"><strong>2</strong> &mdash; Budgets and cost alerts are configured for some departments or subscriptions, but not regularly reviewed or enforced.</span>
-          <span class="maturity-level"><strong>3</strong> &mdash; Comprehensive cost management and forecasting practices are in place, with regular budget assignment, alerts, and forecast accuracy reviews.</span>
-        </div>
-        
-        <div class="q-meta">
-          ALZ Area: Azure Billing and Microsoft Entra ID Tenants · 
-          Ref: A03.03, A03.04, A04.02 · 
+          Ref: E04.01, E04.02 · 
           Resolves 1 control(s)
         </div>
       </div>
@@ -1114,50 +1446,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
 </div>
 
 
-<!-- ════════════════════════════════════════════════════════════════
-     TOP PLATFORM RISKS (from AI executive)
-     ════════════════════════════════════════════════════════════════ -->
-
-<div class="section" id="risks">
-  <h2>Top Platform Adoption Risks</h2>
-  
-  <div class="card">
-    <h3>Critical Data Exposure and Loss</h3>
-    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Security</p>
-    <p><strong>Platform impact:</strong> Loss of sensitive business data or intellectual property, regulatory fines, and erosion of customer trust.</p>
-    <p style="margin-top:6px;"><strong>Technical cause:</strong> Storage accounts and PaaS services lack private endpoints and compliant security posture; no backup coverage for VMs.</p>
-  </div>
-  
-  <div class="card">
-    <h3>Compromised Platform Security and Visibility</h3>
-    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Management</p>
-    <p><strong>Platform impact:</strong> Increased likelihood of undetected security breaches, delayed incident response, and inability to meet compliance requirements.</p>
-    <p style="margin-top:6px;"><strong>Technical cause:</strong> No centralized security monitoring or diagnostics; SOC workspace topology is fragmented and lacks retention.</p>
-  </div>
-  
-  <div class="card">
-    <h3>Uncontrolled Privileged Access</h3>
-    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Identity and Access Management</p>
-    <p><strong>Platform impact:</strong> Elevated risk of accidental or malicious changes, regulatory violations, and audit failures.</p>
-    <p style="margin-top:6px;"><strong>Technical cause:</strong> Excessive Owner role assignments, no Privileged Identity Management (PIM), and lack of break-glass account validation.</p>
-  </div>
-  
-  <div class="card">
-    <h3>Network Security Vulnerabilities</h3>
-    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Network Topology and Connectivity</p>
-    <p><strong>Platform impact:</strong> Exposure to external attacks (e.g., DDoS), lateral movement by threat actors, and potential service outages.</p>
-    <p style="margin-top:6px;"><strong>Technical cause:</strong> No Azure Firewall, missing DDoS protection, and absence of hub-spoke network topology.</p>
-  </div>
-  
-  <div class="card">
-    <h3>Weak Cost and Governance Controls</h3>
-    <p style="font-size:12px;color:var(--accent);margin-bottom:6px;">ALZ Design Area: Governance</p>
-    <p><strong>Platform impact:</strong> Unpredictable cloud spend, lack of accountability, and inability to enforce organizational policy.</p>
-    <p style="margin-top:6px;"><strong>Technical cause:</strong> No cost forecasting, missing resource locks, and incomplete governance policy coverage.</p>
-  </div>
-  
-</div>
-
+<!-- Platform risks are now shown deterministically in the Platform Risk Overview section above -->
 
 <!-- ════════════════════════════════════════════════════════════════
      ALZ DESIGN AREA REFERENCES (from MCP grounding)
@@ -1209,10 +1498,10 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
     
     <div style="margin-top:12px;font-size:12px;color:var(--muted);">
       Phase timing:
-      context=12.36s
-      &middot; signals=173.14s
-      &middot; evaluators=274.49s
-      &middot; ai=398.68s
+      context=22.05s
+      &middot; signals=224.33s
+      &middot; evaluators=238.53s
+      &middot; ai=379.08s
       &middot; reporting=0.0s
       
     </div>
