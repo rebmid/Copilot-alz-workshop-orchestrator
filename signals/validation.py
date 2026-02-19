@@ -75,21 +75,21 @@ def validate_signal_bindings(
     violations: list[dict[str, str]] = []
 
     for cid, ctrl in pack.controls.items():
-        required_sigs = ctrl.get("required_signals", [])
+        required_sigs = ctrl.required_signals
         if not required_sigs:
             continue  # manual / process-only control — skip
 
         # Check 1: evaluator must exist (match short id OR full_id)
-        full_id = ctrl.get("full_id", "")
+        full_id = ctrl.full_id
         has_evaluator = cid in evaluator_ids or full_id in evaluator_ids
         if not has_evaluator:
             violations.append({
                 "control_id": cid,
-                "name": ctrl.get("name", ""),
+                "name": ctrl.title,
                 "type": "missing_evaluator",
                 "detail": (
                     f"Data-driven control '{cid}' requires signals "
-                    f"{required_sigs} but has no registered evaluator"
+                    f"{list(required_sigs)} but has no registered evaluator"
                 ),
             })
 
@@ -99,7 +99,7 @@ def validate_signal_bindings(
             if bus_name is None:
                 violations.append({
                     "control_id": cid,
-                    "name": ctrl.get("name", ""),
+                    "name": ctrl.title,
                     "type": "missing_signal_bus_name",
                     "detail": (
                         f"Signal '{sig_key}' referenced by control '{cid}' "
@@ -109,7 +109,7 @@ def validate_signal_bindings(
             elif bus_name not in SIGNAL_PROVIDERS:
                 violations.append({
                     "control_id": cid,
-                    "name": ctrl.get("name", ""),
+                    "name": ctrl.title,
                     "type": "missing_provider",
                     "detail": (
                         f"Signal '{sig_key}' maps to bus name '{bus_name}' "
@@ -153,8 +153,10 @@ def build_signal_execution_summary(
     # Total controls = all results (automated + manual backfill from checklist)
     total_controls = len(results)
     signal_errors = sum(1 for r in results if r.get("status") == "SignalError")
+    eval_errors = sum(1 for r in results if r.get("status") == "EvaluationError")
     manual = sum(1 for r in results if r.get("status") == "Manual")
-    automated = total_controls - manual - signal_errors
+    not_verified = sum(1 for r in results if r.get("status") == "NotVerified")
+    automated = total_controls - manual - signal_errors - eval_errors - not_verified
 
     # Signals referenced = non-null signal_bus_name values in the pack
     referenced_bus_names = {
@@ -174,7 +176,8 @@ def build_signal_execution_summary(
     ]
     signal_execution_failures = len(failures)
 
-    # Signal API errors (from results with status == "Error" or "SignalError")
+    # Signal/eval errors (from results with error statuses)
+    from schemas.taxonomy import ERROR_STATUSES as _ERR
     api_errors = [
         {
             "control_id": r.get("control_id", ""),
@@ -182,7 +185,7 @@ def build_signal_execution_summary(
             "notes": r.get("notes", ""),
         }
         for r in results
-        if r.get("status") in ("Error", "SignalError")
+        if r.get("status") in _ERR
     ]
 
     # Reconciliation: referenced == implemented, zero missing

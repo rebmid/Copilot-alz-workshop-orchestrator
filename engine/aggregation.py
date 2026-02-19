@@ -1,16 +1,32 @@
-"""Enterprise-scale aggregation — multi-subscription scope model.
+"""Enterprise-scale aggregation — tenant-scoped assessment model.
 
-Enriches flat per-control results with enterprise metadata so downstream
-consumers (CSA workbook, AI reasoning engine) see:
+┌──────────────────────────────────────────────────────────────────┐
+│  SCOPE MODEL (Foundation Layer 3)                                │
+│                                                                  │
+│  Assessment Scope  = Tenant                                      │
+│  Subscriptions     = Inputs (data sources, NOT evaluation units) │
+│  Controls          = Tenant-scoped evaluation                    │
+│                                                                  │
+│  Fields like ``subscriptions_affected`` are COVERAGE BREAKDOWN   │
+│  metadata — they describe how widely a tenant-scoped finding     │
+│  manifests across input subscriptions.  They are NOT per-        │
+│  subscription maturity scores.                                   │
+└──────────────────────────────────────────────────────────────────┘
+
+Enriches flat per-control results with coverage breakdown metadata so
+downstream consumers (CSA workbook, AI reasoning engine) see:
 
   - **Coverage metric** (e.g. 17/100 compliant)
-  - **Affected subscription count**
+  - **Affected subscription count** (coverage breakdown — NOT per-sub maturity)
   - **Scope level** (L1 Subscription / L2 Management Group / L3 Tenant)
   - **Scope pattern** (Platform Governance Gap / Isolated Drift / Moderate Spread)
   - **Representative evidence** (max 3 examples)
 
 Design rules:
   - One result per control — never per-subscription rows.
+  - Maturity is always tenant-wide, never per-subscription.
+  - Subscription counts are *coverage breakdown* — how many input
+    subscriptions exhibit a finding.  That distinction matters.
   - Scoring math is **untouched**; these fields ride alongside existing ones.
   - No duplicate control entries.
 """
@@ -121,15 +137,22 @@ def enrich_results_enterprise(
     signal_bus: Any | None = None,
     scope: Any | None = None,
 ) -> list[dict[str, Any]]:
-    """Enrich each control result with enterprise-scale aggregation metadata.
+    """Enrich each control result with coverage breakdown metadata.
+
+    Assessment scope is **Tenant**.  Subscriptions are **inputs**.
+    The fields added here are *coverage breakdown* — they describe how
+    widely a tenant-scoped finding manifests across input subscriptions.
+    They are NOT per-subscription maturity scores.
 
     Adds the following fields to each result dict (in-place):
 
-    - ``subscriptions_assessed``  — total subscriptions in assessment scope
-    - ``subscriptions_affected``  — subscriptions where control status ≠ Pass
+    - ``subscriptions_assessed``  — total input subscriptions in scope
+    - ``subscriptions_affected``  — input subs where control status ≠ Pass
+                                    (coverage breakdown, not per-sub maturity)
     - ``coverage_pct``            — compliant / applicable × 100 (or None)
     - ``coverage_display``        — human-readable string e.g. "17/100 compliant"
     - ``scope_level``             — "Subscription" | "Management Group" | "Tenant"
+                                    (where the finding manifests, not the assessment scope)
     - ``scope_pattern``           — "Platform Governance Gap" | "Isolated Drift" |
                                     "Moderate Spread" | "None"
     - ``sample_evidence``         — max 3 representative evidence items
@@ -144,7 +167,7 @@ def enrich_results_enterprise(
     )
 
     for r in results:
-        status = r.get("status", "Manual")
+        status = r.get("status", "EvaluationError")
         evidence = r.get("evidence", [])
         coverage_ratio = r.get("coverage_ratio")
 
@@ -243,6 +266,11 @@ def build_enterprise_control_summary(
     sorted by risk score (descending).  Never includes raw per-subscription
     signal arrays.
 
+    All fields are tenant-scoped.  ``subscriptions_affected`` /
+    ``subscriptions_assessed`` are **coverage breakdown** — they show how
+    widely a tenant-scoped finding manifests across input subscriptions.
+    They are NOT per-subscription maturity.
+
     Shape per control::
 
         {
@@ -266,7 +294,7 @@ def build_enterprise_control_summary(
             continue
 
         # Derive risk_level from severity (simple mapping)
-        sev = r.get("severity", "Medium")
+        sev = r["severity"]   # taxonomy-validated: always present
         risk_map = {
             "Critical": "Critical",
             "High": "High",

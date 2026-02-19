@@ -153,7 +153,7 @@
   <div class="grid-4" style="margin-bottom:16px;">
     <div class="kpi {{ 'danger' if readiness_snapshot.overall_score is not none and readiness_snapshot.overall_score < 40 else ('warn' if readiness_snapshot.overall_score is not none and readiness_snapshot.overall_score < 65 else 'ok') }}">
       <div class="value">{% if readiness_snapshot.overall_score is not none %}{{ readiness_snapshot.overall_score }}%{% else %}N/A{% endif %}</div>
-      <div class="label">Overall Maturity</div>
+      <div class="label">Tenant Maturity</div>
     </div>
     <div class="kpi">
       <div class="value">{{ readiness_snapshot.automated_controls }}/{{ readiness_snapshot.total_controls }}</div>
@@ -208,14 +208,13 @@
 {% endif %}
 
 <!-- ════════════════════════════════════════════════════════════════
-     PLATFORM RISK OVERVIEW (deterministic — no LLM)
+     PLATFORM RISK PRIORITIZATION (deterministic — no LLM)
      ════════════════════════════════════════════════════════════════ -->
 {% if risk_overview %}
 <div class="section" id="risks">
-  <h2>Platform Risk Overview</h2>
+  <h2>Platform Risk Prioritization</h2>
   <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
-    Risks derived deterministically from control metadata.
-    <span style="font-style:italic;">{{ risk_overview.formula }}</span>
+    Risks ranked deterministically by tenant-wide impact and severity weighting.
   </p>
 
   <div class="grid-4" style="margin-bottom:16px;">
@@ -237,39 +236,36 @@
     </div>
   </div>
 
-  {% for tier_name, tier_color in [('Critical', 'danger'), ('High', 'warn'), ('Medium', 'accent'), ('Hygiene', 'success')] %}
-  {% set controls = risk_overview.tiers[tier_name] %}
-  {% if controls %}
-  <div class="card tier-border-{{ tier_color }}">    <h3><span class="tag tag-{{ 'critical' if tier_name == 'Critical' else ('high' if tier_name == 'High' else ('medium' if tier_name == 'Medium' else 'low')) }}">{{ tier_name }}</span> Risks ({{ controls | length }})</h3>
+  {% for dt in risk_overview.display_tiers %}
+  <div class="card" style="border-left:4px solid {{ dt.colour }};">
+    <h3><span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:13px;font-weight:700;color:#fff;background:{{ dt.colour }};">{{ dt.label }}</span> ({{ dt.controls | length }})</h3>
     <table>
       <tr>
-        <th style="width:50px;">Score</th>
+        <th style="width:160px;">Risk Tier</th>
         <th>Control</th>
         <th>Section</th>
         <th>Severity</th>
         <th>Status</th>
+        <th>Confidence</th>
         <th>Scope</th>
+        <th>Type</th>
         <th>Foundation</th>
-        <th>Evidence</th>
       </tr>
-      {% for c in controls[:15] %}
+      {% for c in dt.controls %}
       <tr>
-        <td style="text-align:center;font-weight:700;">{{ c.risk_score }}</td>
+        <td style="text-align:center;"><span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:600;color:#fff;background:{{ c.tier_colour }};">{{ c.display_tier }}</span></td>
         <td><a href="#ctrl-{{ c.short_id }}" style="color:var(--accent);text-decoration:none;">{{ c.text }}</a></td>
         <td>{{ c.section }}</td>
         <td><span class="tag tag-{{ c.severity | lower }}">{{ c.severity }}</span></td>
         <td><span class="tag tag-{{ 'critical' if c.status == 'Fail' else ('high' if c.status == 'Partial' else 'medium') }}">{{ c.status }}</span></td>
+        <td style="text-align:center;"><span style="font-weight:600;color:{{ '#2ecc71' if c.confidence == 'High' else ('#e67e22' if c.confidence == 'Medium' else '#e74c3c') }};">{{ c.confidence }}</span></td>
         <td>{{ c.scope_level }}</td>
+        <td style="font-size:12px;">{{ c.control_type }}</td>
         <td style="text-align:center;">{% if c.is_foundational %}<strong style="color:var(--success);">Y</strong>{% endif %}</td>
-        <td style="font-size:12px;color:var(--muted);">{{ c.notes[:80] }}{% if c.notes | length > 80 %}&hellip;{% endif %}</td>
       </tr>
       {% endfor %}
-      {% if controls | length > 15 %}
-      <tr><td colspan="8" style="text-align:center;color:var(--muted);font-size:13px;">… and {{ controls | length - 15 }} more</td></tr>
-      {% endif %}
     </table>
   </div>
-  {% endif %}
   {% endfor %}
 </div>
 {% endif %}
@@ -398,35 +394,104 @@
   <!-- Overview -->
   <div class="mode-panel active" id="mode-overview">
     <div class="card">
+      <h3>ALZ Design Areas</h3>
+      <p style="margin:0 0 8px;color:var(--muted);font-size:12px;">Tenant-wide maturity per canonical ALZ design area &mdash; sorted by risk, not alphabetical.</p>
       <table>
         <tr>
           <th>Design Area</th>
           <th>Maturity</th>
+          <th>Automation</th>
+          <th>Critical Fails</th>
           <th>Pass</th>
-          <th>Partial</th>
           <th>Fail</th>
-          <th>Manual</th>
+          <th>Partial</th>
           <th>Total</th>
         </tr>
-        {% for s in scoring.section_scores if s.section != 'Unknown' %}
+        {% for s in alz_core_sections %}
         <tr>
           <td><strong>{{ s.section }}</strong></td>
           <td>
             {% if s.maturity_percent is not none %}
               <span class="{{ 'maturity-danger' if s.maturity_percent < 40 else ('maturity-warn' if s.maturity_percent < 65 else 'maturity-ok') }}">{{ s.maturity_percent }}%</span>
             {% else %}
-              <span style="color:var(--muted);">Customer operating model validation required</span>
+              <span style="color:var(--muted);font-size:12px;">Automation: 0% · Manual validation required</span>
+            {% endif %}
+          </td>
+          <td>
+            <span style="font-weight:600;">{{ s.automation_percent }}%</span>
+            <span style="font-size:11px;color:var(--muted);">({{ s.automated_controls }}/{{ s.total_controls }})</span>
+          </td>
+          <td style="text-align:center;">
+            {% if s.critical_fail_count > 0 %}
+              <span style="color:var(--danger);font-weight:700;">{{ s.critical_fail_count }}</span>
+              {% if s.critical_partial_count > 0 %}
+                <span style="font-size:11px;color:var(--warn);">+{{ s.critical_partial_count }}p</span>
+              {% endif %}
+            {% elif s.critical_partial_count > 0 %}
+              <span style="color:var(--warn);font-weight:600;">{{ s.critical_partial_count }}p</span>
+            {% else %}
+              <span style="color:var(--success);">0</span>
             {% endif %}
           </td>
           <td>{{ s.counts.get('Pass', 0) }}</td>
-          <td>{{ s.counts.get('Partial', 0) }}</td>
           <td>{{ s.counts.get('Fail', 0) }}</td>
-          <td>{{ s.counts.get('Manual', 0) }}</td>
+          <td>{{ s.counts.get('Partial', 0) }}</td>
           <td>{{ s.total_controls }}</td>
         </tr>
         {% endfor %}
       </table>
     </div>
+
+    {% if overlay_sections %}
+    <div class="card" style="margin-top:4px;">
+      <h3>Operational Overlay</h3>
+      <p style="margin:0 0 8px;color:var(--muted);font-size:12px;">Derived domains that cross-cut ALZ design areas &mdash; Data Protection, Resilience, Cost.</p>
+      <table>
+        <tr>
+          <th>Domain</th>
+          <th>Maturity</th>
+          <th>Automation</th>
+          <th>Critical Fails</th>
+          <th>Pass</th>
+          <th>Fail</th>
+          <th>Partial</th>
+          <th>Total</th>
+        </tr>
+        {% for s in overlay_sections %}
+        <tr>
+          <td><strong>{{ s.section }}</strong></td>
+          <td>
+            {% if s.maturity_percent is not none %}
+              <span class="{{ 'maturity-danger' if s.maturity_percent < 40 else ('maturity-warn' if s.maturity_percent < 65 else 'maturity-ok') }}">{{ s.maturity_percent }}%</span>
+            {% else %}
+              <span style="color:var(--muted);font-size:12px;">Automation: 0% · Manual validation required</span>
+            {% endif %}
+          </td>
+          <td>
+            <span style="font-weight:600;">{{ s.automation_percent }}%</span>
+            <span style="font-size:11px;color:var(--muted);">({{ s.automated_controls }}/{{ s.total_controls }})</span>
+          </td>
+          <td style="text-align:center;">
+            {% if s.critical_fail_count > 0 %}
+              <span style="color:var(--danger);font-weight:700;">{{ s.critical_fail_count }}</span>
+              {% if s.critical_partial_count > 0 %}
+                <span style="font-size:11px;color:var(--warn);">+{{ s.critical_partial_count }}p</span>
+              {% endif %}
+            {% elif s.critical_partial_count > 0 %}
+              <span style="color:var(--warn);font-weight:600;">{{ s.critical_partial_count }}p</span>
+            {% else %}
+              <span style="color:var(--success);">0</span>
+            {% endif %}
+          </td>
+          <td>{{ s.counts.get('Pass', 0) }}</td>
+          <td>{{ s.counts.get('Fail', 0) }}</td>
+          <td>{{ s.counts.get('Partial', 0) }}</td>
+          <td>{{ s.total_controls }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% endif %}
   </div>
 
   <!-- Scale -->
@@ -435,12 +500,14 @@
       <h3>Scale — Management Groups, RBAC, Policy Scope</h3>
       {% if assessment_modes.Scale %}
       <table>
-        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        <tr><th>Section</th><th>Maturity</th><th>Automation</th><th>Critical Fails</th><th>Pass</th><th>Fail</th></tr>
         {% for s in assessment_modes.Scale %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
-          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);font-size:12px;">Automation: 0% · Manual validation required</span>{% endif %}</td>
+          <td>{{ s.automation_percent }}% <span style="font-size:11px;color:var(--muted);">({{ s.automated_controls }}/{{ s.total_controls }})</span></td>
+          <td style="text-align:center;">{% if s.critical_fail_count > 0 %}<span style="color:var(--danger);font-weight:700;">{{ s.critical_fail_count }}</span>{% else %}<span style="color:var(--success);">0</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td>
         </tr>
         {% endfor %}
       </table>
@@ -456,12 +523,14 @@
       <h3>Security — PIM, Private Endpoints, SOC Topology</h3>
       {% if assessment_modes.Security %}
       <table>
-        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        <tr><th>Section</th><th>Maturity</th><th>Automation</th><th>Critical Fails</th><th>Pass</th><th>Fail</th></tr>
         {% for s in assessment_modes.Security %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
-          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);font-size:12px;">Automation: 0% · Manual validation required</span>{% endif %}</td>
+          <td>{{ s.automation_percent }}% <span style="font-size:11px;color:var(--muted);">({{ s.automated_controls }}/{{ s.total_controls }})</span></td>
+          <td style="text-align:center;">{% if s.critical_fail_count > 0 %}<span style="color:var(--danger);font-weight:700;">{{ s.critical_fail_count }}</span>{% else %}<span style="color:var(--success);">0</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td>
         </tr>
         {% endfor %}
       </table>
@@ -477,12 +546,14 @@
       <h3>Operations — Diagnostics, Alert→Action Mapping, Change Tracking</h3>
       {% if assessment_modes.Operations %}
       <table>
-        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        <tr><th>Section</th><th>Maturity</th><th>Automation</th><th>Critical Fails</th><th>Pass</th><th>Fail</th></tr>
         {% for s in assessment_modes.Operations %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
-          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);font-size:12px;">Automation: 0% · Manual validation required</span>{% endif %}</td>
+          <td>{{ s.automation_percent }}% <span style="font-size:11px;color:var(--muted);">({{ s.automated_controls }}/{{ s.total_controls }})</span></td>
+          <td style="text-align:center;">{% if s.critical_fail_count > 0 %}<span style="color:var(--danger);font-weight:700;">{{ s.critical_fail_count }}</span>{% else %}<span style="color:var(--success);">0</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td>
         </tr>
         {% endfor %}
       </table>
@@ -498,12 +569,14 @@
       <h3>Cost — Budgets, Forecast Delta, Idle Resources</h3>
       {% if assessment_modes.Cost %}
       <table>
-        <tr><th>Section</th><th>Maturity</th><th>Pass</th><th>Fail</th><th>Manual</th></tr>
+        <tr><th>Section</th><th>Maturity</th><th>Automation</th><th>Critical Fails</th><th>Pass</th><th>Fail</th></tr>
         {% for s in assessment_modes.Cost %}
         <tr>
           <td>{{ s.section }}</td>
-          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);">Customer operating model validation required</span>{% endif %}</td>
-          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td> <td>{{ s.counts.get('Manual', 0) }}</td>
+          <td>{% if s.maturity_percent is not none %}{{ s.maturity_percent }}%{% else %}<span style="color:var(--muted);font-size:12px;">Automation: 0% · Manual validation required</span>{% endif %}</td>
+          <td>{{ s.automation_percent }}% <span style="font-size:11px;color:var(--muted);">({{ s.automated_controls }}/{{ s.total_controls }})</span></td>
+          <td style="text-align:center;">{% if s.critical_fail_count > 0 %}<span style="color:var(--danger);font-weight:700;">{{ s.critical_fail_count }}</span>{% else %}<span style="color:var(--success);">0</span>{% endif %}</td>
+          <td>{{ s.counts.get('Pass', 0) }}</td> <td>{{ s.counts.get('Fail', 0) }}</td>
         </tr>
         {% endfor %}
       </table>
@@ -562,7 +635,7 @@
     <div class="grid-4" style="margin-bottom:14px;">
       <div class="kpi">
         <div class="value">{{ data_confidence.subscription_count }}</div>
-        <div class="label">Subscriptions Assessed</div>
+        <div class="label">Subscriptions (Input Scope)</div>
       </div>
       <div class="kpi">
         <div class="value">{{ 'Yes' if data_confidence.mg_visibility else 'No' }}</div>
@@ -672,7 +745,7 @@
 </div>
 {% endif %}
 
-<!-- Platform risks are now shown deterministically in the Platform Risk Overview section above -->
+<!-- Platform risks are now shown deterministically in the Platform Risk Prioritization section above -->
 
 <!-- ════════════════════════════════════════════════════════════════
      ALZ DESIGN AREA REFERENCES (from MCP grounding)
