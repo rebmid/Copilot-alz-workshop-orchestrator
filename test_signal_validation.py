@@ -13,6 +13,10 @@ Verifies (per spec):
 from __future__ import annotations
 import sys
 
+# Ensure stdout handles Unicode on Windows terminals that default to cp1252
+if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
+
 # ── Imports ───────────────────────────────────────────────────────
 from signals.validation import (
     build_signal_registry,

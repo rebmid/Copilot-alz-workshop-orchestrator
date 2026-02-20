@@ -2,8 +2,13 @@
 import argparse
 import json
 import os
+import sys
 import time
 from datetime import datetime, timezone
+
+# Ensure stdout handles Unicode on Windows terminals that default to cp1252
+if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
 
 from azure.identity import AzureCliCredential
 
