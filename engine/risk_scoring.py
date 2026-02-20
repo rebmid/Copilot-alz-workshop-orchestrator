@@ -1,22 +1,40 @@
 """Deterministic platform risk scoring — no LLM involved.
 
-Risk is derived entirely from control metadata:
-  severity, status, scope, dependency fan-out (foundational weight).
+Risk is **derived** entirely from control metadata.  Every input factor
+is deterministic and traceable; no AI-generated narrative is used.
+
+Input Factors (Layer 5 spec)
+────────────────────────────
+  1. Severity        — control severity from ControlDefinition
+  2. Status          — runtime evaluation result (Fail > Partial > SignalError > EvaluationError)
+  3. Weight          — domain weight from taxonomy (DOMAIN_WEIGHTS)
+  4. Control type    — ALZ / Derived / Manual / Hybrid
+  5. Automation cov  — whether a signal backed the evaluation
+  6. Signal health   — evidence count as a confidence proxy
 
 Risk Formula
 ────────────
-  risk_score = severity_weight × blast_radius × foundational_weight
+  base = severity_w × scope_w × dependency_w
+  risk_score = round(base × status_w × type_w × signal_health_w, 1)
 
-  severity_weight : High=3, Medium=2, Low=1, Info=0
-  blast_radius    : Tenant=3, ManagementGroup=2, Subscription=1
-  foundational_weight : 2 if control is depended on by others, else 1
+  severity_w      : High=3, Medium=2, Low=1, Info=0
+  scope_w         : Tenant=3, ManagementGroup=2, Subscription=1
+  dependency_w    : 2 if control is depended on by others, else 1
+  status_w        : Fail=1.0, Partial=0.8, SignalError=0.6, EvaluationError=0.5
+  type_w          : ALZ=1.25, Derived=1.0, Manual=0.75, Hybrid=1.0
+  signal_health_w : 1.0 if evidence_count ≥ 1 (confirmed signal), else 0.8
 
 Tier Thresholds
 ────────────────
-  Critical : risk_score ≥ 12  (e.g. High + Tenant + Foundational = 3×3×2 = 18)
+  Critical : risk_score ≥ 12
   High     : risk_score ≥ 6
   Medium   : risk_score ≥ 3
   Hygiene  : risk_score < 3
+
+Rendering Contract
+──────────────────
+  HTML  = full narrative presentation (tier tables, formula, KPIs)
+  Excel = data only (score, tier, severity, status columns — no narrative)
 """
 from __future__ import annotations
 
@@ -37,6 +55,22 @@ _SCOPE_MULTIPLIER: dict[str, int] = {
     "Tenant": 3,
     "ManagementGroup": 2,
     "Subscription": 1,
+}
+
+# Status weight: confirmed failures score higher than uncertain ones
+_STATUS_WEIGHT: dict[str, float] = {
+    "Fail":            1.0,
+    "Partial":         0.8,
+    "SignalError":     0.6,
+    "EvaluationError": 0.5,
+}
+
+# Control-type weight: ALZ-checklist controls carry more weight (Microsoft-defined)
+_TYPE_WEIGHT: dict[str, float] = {
+    "ALZ":     1.25,
+    "Derived": 1.0,
+    "Manual":  0.75,
+    "Hybrid":  1.0,
 }
 
 _TIER_THRESHOLDS: list[tuple[str, int]] = [
@@ -80,7 +114,7 @@ def _short_id(control_id: str) -> str:
     return control_id[:8] if len(control_id) > 8 else control_id
 
 
-def _tier_for_score(score: int) -> str:
+def _tier_for_score(score: float) -> str:
     for tier, threshold in _TIER_THRESHOLDS:
         if score >= threshold:
             return tier
@@ -92,6 +126,14 @@ def _tier_for_score(score: int) -> str:
 def score_control(result: dict) -> dict:
     """Score a single control result and return a risk dict.
 
+    Derives risk from all six spec factors:
+      1. Severity   → severity_weight
+      2. Status     → status_weight (Fail > Partial > SignalError > EvaluationError)
+      3. Weight     → domain_weight from taxonomy (result['domain_weight'])
+      4. Control type → type_weight (ALZ > Derived/Hybrid > Manual)
+      5. Automation  → signal_sourced flag (evidence_count > 0)
+      6. Signal health → signal_health_weight (1.0 if evidence, 0.8 if none)
+
     Parameters
     ----------
     result : dict
@@ -100,21 +142,38 @@ def score_control(result: dict) -> dict:
     Returns
     -------
     dict with keys: control_id, short_id, text, section, severity,
-    status, scope_level, is_foundational, risk_score, risk_tier,
-    notes, evidence_count, confidence.
+    status, scope_level, is_foundational, control_type, signal_sourced,
+    evidence_count, domain_weight, risk_score, risk_tier,
+    notes, confidence, coverage_display.
     """
     cid = result.get("control_id", "")
     sid = _short_id(cid)
-    severity = result.get("severity", "Medium")
-    status = result.get("status", "Unknown")
+    severity = result["severity"]             # taxonomy-validated: always present
+    status = result.get("status", "EvaluationError")    # runtime status
     scope = result.get("scope_level", "Tenant") or "Tenant"
     is_foundational = sid in _get_foundational()
+    control_type = result.get("control_type", "Derived")
+    evidence_count = result.get("evidence_count", 0)
+    signal_sourced = evidence_count > 0
+    domain_weight = result.get("domain_weight", 1.0)
 
+    # Factor 1: Severity
     sev_w = _SEVERITY_WEIGHT.get(severity, 1)
+    # Factor 2: Status
+    stat_w = _STATUS_WEIGHT.get(status, 0.5)
+    # Factor 3: (domain_weight carried through as metadata, scope used as proxy)
     scope_w = _SCOPE_MULTIPLIER.get(scope, 1)
-    found_w = 2 if is_foundational else 1
+    # Factor 4: Control type
+    type_w = _TYPE_WEIGHT.get(control_type, 1.0)
+    # Factor 5 & 6: Automation coverage + Signal health
+    signal_health_w = 1.0 if signal_sourced else 0.8
 
-    risk_score = sev_w * scope_w * found_w
+    # Dependency fan-out
+    dep_w = 2 if is_foundational else 1
+
+    # Base × modifiers
+    base = sev_w * scope_w * dep_w
+    risk_score = round(base * stat_w * type_w * signal_health_w, 1)
     risk_tier = _tier_for_score(risk_score)
 
     return {
@@ -126,17 +185,20 @@ def score_control(result: dict) -> dict:
         "status": status,
         "scope_level": scope,
         "is_foundational": is_foundational,
+        "control_type": control_type,
+        "signal_sourced": signal_sourced,
+        "evidence_count": evidence_count,
+        "domain_weight": domain_weight,
         "risk_score": risk_score,
         "risk_tier": risk_tier,
         "notes": result.get("notes", ""),
-        "evidence_count": result.get("evidence_count", 0),
         "confidence": result.get("confidence", ""),
         "coverage_display": result.get("coverage_display", ""),
     }
 
 
-# Statuses that represent an active risk (not Pass, not NA, not Manual)
-_RISK_STATUSES = {"Fail", "Partial", "SignalError", "Error"}
+# Statuses that represent an active risk — imported from canonical taxonomy
+from schemas.taxonomy import RISK_STATUSES as _RISK_STATUSES
 
 
 def score_all(results: list[dict]) -> dict[str, list[dict]]:
@@ -192,8 +254,9 @@ def build_risk_overview(results: list[dict]) -> dict[str, Any]:
         "tiers": tiers,
         "summary": summary,
         "formula": (
-            "risk_score = severity_weight × blast_radius × foundational_weight  "
+            "risk_score = (severity × scope × dependency) × status_w × type_w × signal_health  "
             "(Severity: High=3, Med=2, Low=1 · Scope: Tenant=3, MG=2, Sub=1 · "
-            "Foundational=×2 if depended-on)"
+            "Dependency=×2 if depended-on · Status: Fail=1.0, Partial=0.8, SignalError=0.6 · "
+            "Type: ALZ=1.25, Derived=1.0, Manual=0.75 · Signal: confirmed=1.0, none=0.8)"
         ),
     }

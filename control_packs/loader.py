@@ -4,7 +4,14 @@ Usage:
     from control_packs.loader import load_pack, list_packs
     pack = load_pack("alz", "v1.0")
     pack.signals   # signal definitions
-    pack.controls  # control definitions
+    pack.controls  # dict[str, ControlDefinition] — frozen, typed
+
+Taxonomy enforcement:
+    Every ``load_pack()`` call runs ``validate_and_build_controls()``
+    which validates raw JSON dicts and constructs frozen
+    ``ControlDefinition`` instances.  If ANY control has a missing or
+    invalid taxonomy field the loader raises ``TaxonomyViolation`` —
+    the assessment never starts.
 """
 from __future__ import annotations
 
@@ -13,16 +20,23 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from schemas.taxonomy import ControlDefinition
+from engine.taxonomy_validator import validate_and_build_controls
+
 
 @dataclass
 class ControlPack:
-    """A loaded control pack with its signal and control definitions."""
+    """A loaded control pack with its signal and control definitions.
+
+    ``controls`` is ``dict[str, ControlDefinition]`` — every value is a
+    frozen, typed dataclass.  No ``dict[str, Any]`` access patterns.
+    """
     pack_id: str
     name: str
     version: str
     description: str
     signals: dict[str, dict[str, Any]]
-    controls: dict[str, dict[str, Any]]
+    controls: dict[str, ControlDefinition]
     design_areas: dict[str, dict[str, Any]]
     manifest: dict[str, Any]
 
@@ -75,6 +89,12 @@ def load_pack(family: str = "alz", version: str = "v1.0") -> ControlPack:
     """
     Load a control pack by family and version.
 
+    Flow:
+      1. Read manifest, signals, controls JSON from disk.
+      2. ``validate_and_build_controls()`` validates raw dicts and
+         constructs frozen ``ControlDefinition`` instances.
+      3. Pack is returned with typed ``controls``.
+
     Args:
         family: Pack family directory name (e.g. "alz")
         version: Version directory name (e.g. "v1.0")
@@ -101,13 +121,23 @@ def load_pack(family: str = "alz", version: str = "v1.0") -> ControlPack:
     with open(controls_path, encoding="utf-8") as f:
         controls_data = json.load(f)
 
-    return ControlPack(
+    raw_controls = controls_data.get("controls", {})
+    design_areas = controls_data.get("design_areas", {})
+
+    # ── Taxonomy enforcement + typed construction ─────────────────
+    # Validates every field, every enum, every cross-reference.
+    # Returns dict[str, ControlDefinition] or raises TaxonomyViolation.
+    typed_controls = validate_and_build_controls(raw_controls, design_areas)
+
+    pack = ControlPack(
         pack_id=manifest.get("pack_id", ""),
         name=manifest.get("name", ""),
         version=manifest.get("version", ""),
         description=manifest.get("description", ""),
         signals=signals_data.get("signals", {}),
-        controls=controls_data.get("controls", {}),
-        design_areas=controls_data.get("design_areas", {}),
+        controls=typed_controls,
+        design_areas=design_areas,
         manifest=manifest,
     )
+
+    return pack

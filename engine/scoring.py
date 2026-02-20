@@ -1,20 +1,42 @@
 # engine/scoring.py
+"""Deterministic scoring — all status accounting imported from taxonomy.
+
+Every control status is explicitly categorized in schemas/taxonomy.py.
+This module NEVER defines its own status sets.  If a status is missing
+from the taxonomy enum, the system refuses to start (compile-time assert).
+"""
 from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Dict, List, Optional
 
-from schemas.taxonomy import DOMAIN_WEIGHTS
+from schemas.taxonomy import (
+    DOMAIN_WEIGHTS,
+    ALL_CONTROL_STATUSES,
+    MATURITY_STATUSES,
+    AUTO_STATUSES,
+    NON_MATURITY_STATUSES,
+    SIGNAL_ERROR_STATUSES,
+    ERROR_STATUSES,
+    MANUAL_STATUSES,
+    NA_STATUSES,
+)
 
-STATUS_MULTIPLIER = {
-    "Fail": 1.0,
-    "Partial": 0.6,
-    "Pass": 0,
-    "Manual": 0,
-    "NotApplicable": 0,
-    "SignalError": 0,   # excluded from scoring — signal infra failure
-    "Error": 0,         # excluded from scoring — evaluator exception
-    "Unknown": 0,       # excluded from scoring — no evaluator registered
+# ── Status multiplier for gap scoring ─────────────────────────────
+# Every canonical status MUST have an entry.  No implicit zeros.
+STATUS_MULTIPLIER: dict[str, float] = {
+    "Pass":             0,      # no risk
+    "Fail":             1.0,    # full risk weight
+    "Partial":          0.6,    # partial risk weight
+    "Manual":           0,      # excluded — no automation evidence
+    "NotApplicable":    0,      # excluded — does not apply
+    "NotVerified":      0,      # excluded — could not verify
+    "SignalError":      0,      # excluded — signal infra failure
+    "EvaluationError":  0,      # excluded — evaluator crash
 }
+
+# Compile-time: every canonical status has a multiplier
+assert set(STATUS_MULTIPLIER.keys()) == set(ALL_CONTROL_STATUSES), \
+    f"STATUS_MULTIPLIER missing: {set(ALL_CONTROL_STATUSES) - set(STATUS_MULTIPLIER.keys())}"
 
 SEVERITY_WEIGHTS = {
     "Critical": 6,
@@ -29,33 +51,29 @@ SEVERITY_WEIGHTS = {
 # Higher confidence = more weight in scoring
 CONFIDENCE_FLOOR = 0.3  # minimum weight even for low-confidence results
 
-PASS_STATUSES = {"Pass"}
-FAIL_STATUSES = {"Fail"}
-AUTO_STATUSES = {"Pass", "Fail", "Partial", "Info", "NotApplicable"}
-MANUAL_STATUSES = {"Manual"}
-NA_STATUSES = {"NotApplicable"}
-# Explicitly excluded from maturity — never counted as Pass or Fail
-NON_MATURITY_STATUSES = {"Manual", "SignalError"}
-SIGNAL_ERROR_STATUSES = {"SignalError"}
-
 def automation_coverage(results: List[Dict[str, Any]], total_controls: int) -> Dict[str, Any]:
-    automated = sum(1 for r in results if (r.get("status") in AUTO_STATUSES))
-    manual = sum(1 for r in results if (r.get("status") in MANUAL_STATUSES))
-    not_applicable = sum(1 for r in results if (r.get("status") in NA_STATUSES))
-    signal_errors = sum(1 for r in results if (r.get("status") in SIGNAL_ERROR_STATUSES))
+    automated = sum(1 for r in results if r.get("status") in AUTO_STATUSES)
+    manual = sum(1 for r in results if r.get("status") in MANUAL_STATUSES)
+    not_applicable = sum(1 for r in results if r.get("status") in NA_STATUSES)
+    signal_errors = sum(1 for r in results if r.get("status") in SIGNAL_ERROR_STATUSES)
+    eval_errors = sum(1 for r in results if r.get("status") == "EvaluationError")
+    not_verified = sum(1 for r in results if r.get("status") == "NotVerified")
     pct = round((automated / total_controls) * 100.0, 1) if total_controls else 0.0
 
     # automation_integrity: what fraction of attempted automated controls
-    # actually executed cleanly (no signal failures).  Separate from maturity.
-    attempted = automated + signal_errors
-    automation_integrity = round(1.0 - (signal_errors / attempted), 4) if attempted else 1.0
+    # actually executed cleanly (no signal or eval failures).
+    # "attempted" = controls that tried to run automation (succeeded + failed infra)
+    attempted = automated + signal_errors + eval_errors
+    automation_integrity = round(1.0 - ((signal_errors + eval_errors) / attempted), 4) if attempted else 1.0
 
     return {
         "total_controls": total_controls,
         "automated_controls": automated,
         "manual_controls": manual,
         "not_applicable_controls": not_applicable,
+        "not_verified_controls": not_verified,
         "signal_error_controls": signal_errors,
+        "evaluation_error_controls": eval_errors,
         "automation_percent": pct,
         "automation_integrity": automation_integrity,
         # Assessment coverage: conversation-guide framing
@@ -64,32 +82,44 @@ def automation_coverage(results: List[Dict[str, Any]], total_controls: int) -> D
     }
 
 def section_scores(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    # Group by section
+    """Compute tenant-wide maturity per ALZ design area.
+
+    Groups controls by design area (section) and calculates a single
+    maturity percentage for each.  This is tenant-wide — it is NOT
+    per-subscription maturity.  Subscriptions are inputs; design areas
+    are the evaluation dimension.
+
+    Each section dict now includes:
+      - automation_percent: % of total controls that are automated
+      - critical_fail_count: # of controls with severity Critical/High
+        AND status Fail
+      - critical_partial_count: same for Partial
+    """
+    # Group by section — taxonomy-validated, section is always present
     by_section = defaultdict(list)
     for r in results:
-        by_section[r.get("section") or r.get("category") or "Unknown"].append(r)
+        by_section[r["section"]].append(r)
 
     out = []
     for section, items in by_section.items():
         counts = defaultdict(int)
         for r in items:
-            counts[r.get("status") or "Unknown"] += 1
+            counts[r.get("status", "EvaluationError")] += 1
 
-        # Exclude NotApplicable and NON_MATURITY_STATUSES from maturity
-        # SignalError is explicitly excluded here — not accidental omission
-        automated_items = [r for r in items
-                           if r.get("status") in AUTO_STATUSES
-                           and r.get("status") not in NA_STATUSES]
-        auto_total = len(automated_items)
-        auto_pass = sum(1 for r in automated_items if r.get("status") == "Pass")
-        auto_fail = sum(1 for r in automated_items if r.get("status") == "Fail")
+        # Maturity: only MATURITY_STATUSES (Pass, Fail, Partial)
+        # Everything else is explicitly excluded — no implicit omission
+        maturity_items = [r for r in items
+                          if r.get("status") in MATURITY_STATUSES]
+        auto_total = len(maturity_items)
+        auto_pass = sum(1 for r in maturity_items if r.get("status") == "Pass")
+        auto_fail = sum(1 for r in maturity_items if r.get("status") in ("Fail", "Partial"))
 
         # Confidence-weighted maturity
         maturity = None
         if auto_total > 0:
             total_weight = 0.0
             pass_weight = 0.0
-            for r in automated_items:
+            for r in maturity_items:
                 conf = _effective_confidence(r)
                 total_weight += conf
                 if r.get("status") == "Pass":
@@ -104,15 +134,33 @@ def section_scores(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 sum(r["coverage_ratio"] for r in coverage_items) / len(coverage_items) * 100, 1
             )
 
+        # ── Automation coverage % per section ─────────────────────
+        total_ctrl = len(items)
+        automation_pct = round((auto_total / total_ctrl) * 100) if total_ctrl else 0
+
+        # ── Critical fail / partial counts (High + Critical severity) ─
+        _high_sev = {"High", "Critical"}
+        critical_fail = sum(
+            1 for r in items
+            if r.get("severity") in _high_sev and r.get("status") == "Fail"
+        )
+        critical_partial = sum(
+            1 for r in items
+            if r.get("severity") in _high_sev and r.get("status") == "Partial"
+        )
+
         out.append({
             "section": section,
             "counts": dict(counts),
             "automated_controls": auto_total,
             "automated_pass": auto_pass,
             "automated_fail": auto_fail,
-            "total_controls": len(items),
+            "total_controls": total_ctrl,
             "maturity_percent": maturity,
             "avg_coverage_percent": avg_coverage,
+            "automation_percent": automation_pct,
+            "critical_fail_count": critical_fail,
+            "critical_partial_count": critical_partial,
         })
 
     # sort: lowest maturity first, None at end
@@ -131,6 +179,11 @@ def _effective_confidence(r: Dict[str, Any]) -> float:
     return max(CONFIDENCE_LABEL.get(label, 0.7), CONFIDENCE_FLOOR)
 
 def overall_maturity(sections: List[Dict[str, Any]]) -> float:
+    """Tenant-wide overall maturity across all design areas.
+
+    Weighted by automated control count per section.  This is a single
+    tenant-scoped metric — never computed per-subscription.
+    """
     # Weighted by automated_controls
     total_auto = sum(s["automated_controls"] for s in sections)
     if total_auto == 0:
@@ -154,7 +207,7 @@ def most_impactful_gaps(results: List[Dict[str, Any]], top_n: int = 10) -> List[
         evidence_count = r.get("evidence_count", 0) or 0
 
         severity_weight = SEVERITY_WEIGHTS.get(severity, 2)
-        domain_weight = DOMAIN_WEIGHTS.get(r.get("section", "Unknown"), 1.0)
+        domain_weight = DOMAIN_WEIGHTS.get(r["section"], 1.0)
         status_multiplier = STATUS_MULTIPLIER.get(status, 0)
         evidence_factor = 1 + min(evidence_count, 50) / 20
         confidence = _effective_confidence(r)
@@ -178,11 +231,15 @@ def most_impactful_gaps(results: List[Dict[str, Any]], top_n: int = 10) -> List[
     return gaps[:top_n]
 
 def compute_scoring(results: list[dict]) -> dict:
-    """
+    """Compute tenant-wide scoring: maturity, section scores, gaps, coverage.
+
     Accepts either:
       - a list of result dicts (backwards compatible)
       - a run dict with 'results' and 'meta' keys
-    Computes maturity ONLY from automated controls (excludes Manual).
+
+    All metrics are tenant-scoped.  Maturity is computed ONLY from
+    automated controls (MATURITY_STATUSES).  There is no per-subscription
+    scoring — subscriptions are inputs, not evaluation units.
     """
     # Support both call patterns
     if isinstance(results, dict):

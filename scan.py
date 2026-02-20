@@ -2,8 +2,13 @@
 import argparse
 import json
 import os
+import sys
 import time
 from datetime import datetime, timezone
+
+# Ensure stdout handles Unicode on Windows terminals that default to cp1252
+if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
 
 from azure.identity import AzureCliCredential
 
@@ -14,6 +19,7 @@ from engine.context import discover_execution_context
 from engine.adapter import run_evaluators_for_scoring
 from engine.scoring import compute_scoring
 from engine.aggregation import enrich_results_enterprise, build_scope_summary
+from schemas.taxonomy import NON_MATURITY_STATUSES
 from engine.run_store import save_run, get_last_run
 from engine.delta import compute_delta
 from engine.rollup import rollup_by_section
@@ -363,7 +369,7 @@ def main():
 
     telemetry.start_phase("evaluators")
     results = run_evaluators_for_scoring(
-        scope, bus, run_id=run_id, checklist=checklist,
+        scope, bus, pack_controls=pack.controls, run_id=run_id, checklist=checklist,
     )
     scoring = compute_scoring(results)
 
@@ -383,12 +389,15 @@ def main():
     sig_summary = build_signal_execution_summary(results, all_bus_events, pack)
     print_signal_execution_summary(sig_summary)
 
-    auto_count = sum(1 for r in results if r["status"] not in ("Manual", "SignalError"))
+    auto_count = sum(1 for r in results if r["status"] not in NON_MATURITY_STATUSES)
     se_count = sum(1 for r in results if r["status"] == "SignalError")
-    manual_count = len(results) - auto_count - se_count
+    ee_count = sum(1 for r in results if r["status"] == "EvaluationError")
+    manual_count = sum(1 for r in results if r["status"] == "Manual")
     parts = [f"{auto_count} automated", f"{manual_count} manual"]
     if se_count:
         parts.append(f"{se_count} signal-error")
+    if ee_count:
+        parts.append(f"{ee_count} eval-error")
     print(f"  Evaluated {' + '.join(parts)} controls")
     telemetry.end_phase("evaluators")
 
@@ -399,14 +408,12 @@ def main():
     if not subscription_ids:
         limitations.append("No subscriptions visible — assessment is empty")
     # Surface any evaluator-level errors and signal failures
+    from schemas.taxonomy import ERROR_STATUSES as _ERR_STATUSES
     for r in results:
-        if r.get("status") == "Error":
+        st = r.get("status")
+        if st in _ERR_STATUSES:
             limitations.append(
-                f"Control {r['control_id'][:8]} error: {r.get('notes', 'unknown')}"
-            )
-        elif r.get("status") == "SignalError":
-            limitations.append(
-                f"Control {r['control_id'][:8]} signal failure: {r.get('notes', 'all signals errored')}"
+                f"Control {r['control_id'][:8]} {st}: {r.get('notes', 'unknown')}"
             )
 
     # ── Build output ──────────────────────────────────────────────

@@ -53,8 +53,42 @@ def _domain_for_question(question: dict, results_by_id: dict) -> str:
 from schemas.taxonomy import (
     bucket_domain as _bucket_domain,
     MODE_SECTIONS as _MODE_SECTIONS,
+    ALZ_CORE_SECTIONS as _ALZ_CORE,
+    OPERATIONAL_OVERLAY_SECTIONS as _OPS_OVERLAY,
 )
+from engine.scoring import section_scores as _compute_section_scores
 from engine.risk_scoring import build_risk_overview
+
+
+# ── Display-only tier classification (HTML rendering layer) ──────
+# These thresholds are purely presentational; they do NOT change the
+# backend risk_score calculation or the JSON output schema.
+_DISPLAY_TIERS: list[tuple[str, str, float, str]] = [
+    # (label, css_class, min_score, colour_hex)
+    ("Tier 1 \u2014 Platform Critical", "tier-1", 17.0, "#e74c3c"),
+    ("Tier 2 \u2014 High Impact",        "tier-2", 13.0, "#e67e22"),
+    ("Tier 3 \u2014 Significant",        "tier-3",  9.0, "#f1c40f"),
+    ("Tier 4 \u2014 Moderate",           "tier-4",  5.0, "#3498db"),
+]
+_TIER_FALLBACK = ("Tier 5 \u2014 Hygiene", "tier-5", 0.0, "#2ecc71")
+
+
+def _display_tier(score: float) -> dict:
+    """Map a risk_score to a display-only tier dict."""
+    for label, css, threshold, colour in _DISPLAY_TIERS:
+        if score >= threshold:
+            return {"label": label, "css": css, "colour": colour}
+    label, css, _, colour = _TIER_FALLBACK
+    return {"label": label, "css": css, "colour": colour}
+
+
+def _confidence_label(ctrl: dict) -> str:
+    """Derive deterministic confidence from signal metadata."""
+    if ctrl.get("signal_sourced"):
+        return "High"
+    if ctrl.get("status") == "SignalError":
+        return "Medium"
+    return "Low"
 
 
 def _build_report_context(output: dict) -> dict:
@@ -183,8 +217,28 @@ def _build_report_context(output: dict) -> dict:
         })
 
     # ── 6. Domain Deep Dive – assessment modes ────────────────────
-    section_scores = [s for s in scoring.get("section_scores", []) if s.get("section") != "Unknown"]
+    # Always recompute from raw results so new fields are guaranteed.
+    # The pre-computed scoring.section_scores in the JSON may be stale.
+    section_scores = _compute_section_scores(results) if results else scoring.get("section_scores", [])
     section_by_name = {s["section"]: s for s in section_scores}
+
+    # Split into ALZ Core vs Operational Overlay, sort by risk
+    def _risk_sort_key(s: dict) -> tuple:
+        """Sort: critical fail count desc, maturity asc, section name."""
+        return (
+            -(s.get("critical_fail_count", 0) + s.get("critical_partial_count", 0)),
+            s["maturity_percent"] if s["maturity_percent"] is not None else 9999,
+            s["section"],
+        )
+
+    alz_core_sections = sorted(
+        [s for s in section_scores if s["section"] in _ALZ_CORE],
+        key=_risk_sort_key,
+    )
+    overlay_sections = sorted(
+        [s for s in section_scores if s["section"] in _OPS_OVERLAY],
+        key=_risk_sort_key,
+    )
 
     assessment_modes: dict[str, list] = {}
     for mode, section_list in _MODE_SECTIONS.items():
@@ -267,6 +321,40 @@ def _build_report_context(output: dict) -> dict:
     # ── Platform Risk Overview (deterministic) ────────────────────
     risk_overview = build_risk_overview(results)
 
+    # Enrich each risk control with display-only tier & confidence
+    # (rendering layer only — does NOT alter risk_score or JSON schema)
+    _display_tier_counts: dict[str, int] = {}
+    for _tier_ctrls in risk_overview.get("tiers", {}).values():
+        for ctrl in _tier_ctrls:
+            dt = _display_tier(ctrl["risk_score"])
+            ctrl["display_tier"] = dt["label"]
+            ctrl["tier_css"] = dt["css"]
+            ctrl["tier_colour"] = dt["colour"]
+            ctrl["confidence"] = _confidence_label(ctrl)
+            _display_tier_counts[dt["label"]] = _display_tier_counts.get(dt["label"], 0) + 1
+
+    # Build a display-tier ordered list for the template
+    _all_display_labels = [t[0] for t in _DISPLAY_TIERS] + [_TIER_FALLBACK[0]]
+    _all_display_colours = {t[0]: t[3] for t in _DISPLAY_TIERS}
+    _all_display_colours[_TIER_FALLBACK[0]] = _TIER_FALLBACK[3]
+    display_tiers_ordered: list[dict] = []
+    for _dl in _all_display_labels:
+        # Collect controls matching this display tier across all backend tiers
+        tier_controls = []
+        for _tier_ctrls in risk_overview.get("tiers", {}).values():
+            for ctrl in _tier_ctrls:
+                if ctrl.get("display_tier") == _dl:
+                    tier_controls.append(ctrl)
+        # Sort by risk_score desc within display tier
+        tier_controls.sort(key=lambda x: (-x["risk_score"], x["section"]))
+        if tier_controls:
+            display_tiers_ordered.append({
+                "label": _dl,
+                "colour": _all_display_colours[_dl],
+                "controls": tier_controls,
+            })
+    risk_overview["display_tiers"] = display_tiers_ordered
+
     # ALZ design area references from MCP grounding
     alz_design_area_refs = output.get("alz_design_area_references", {})
     alz_design_area_urls = output.get("alz_design_area_urls", {})
@@ -329,6 +417,8 @@ def _build_report_context(output: dict) -> dict:
         "trajectory": trajectory if isinstance(trajectory, dict) else {},
         "capability_unlock_map": capability_unlock_map,
         "assessment_modes": assessment_modes,
+        "alz_core_sections": alz_core_sections,
+        "overlay_sections": overlay_sections,
         "data_confidence": data_confidence,
         "validation_questions": validation_questions,
         "top_business_risks": top_business_risks,

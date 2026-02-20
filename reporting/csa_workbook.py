@@ -1,14 +1,20 @@
 """CSA Workbook builder — template-based, data-only writer.
 
+Layer 5 contract: **Excel = data, HTML = narrative.**
+
 Copies the pre-built ``.xlsm`` template and writes **only** data values
 into the existing sheets:
 
-- ``0_Executive_Summary`` — engagement framing + assessment metrics + top risks
+- ``0_Executive_Summary`` — engagement framing + assessment metrics + deterministic top risks
 - ``1_30-60-90_Roadmap`` — phased remediation initiatives
 - ``2_Control_Details`` — one row per assessed control (columns A–O)
   plus enrichment column P (Control Source)
-- ``3_Risk_Analysis`` — causal risk blocks with failing controls,
-  dependency impact, remediation roadmap, and cascade effect
+- ``3_Risk_Analysis`` — deterministic risk data rows from ``build_risk_overview()``
+  (risk tier, score, severity, status, scope — no AI narrative)
+
+Risk content in this workbook is derived entirely from the deterministic
+risk engine (``engine/risk_scoring.py``).  AI-generated narrative (root
+cause, business impact, cascade effect) is rendered in HTML only.
 
 The template owns **all** visualisation: Dashboard formulas, charts,
 conditional formatting, data validation, and VBA macros.  Python never
@@ -87,24 +93,30 @@ _SHEET_RISK     = "3_Risk_Analysis"
 _CD_HEADER_ROW = 9
 _CD_DATA_START = 10
 
+# Canonical status → workbook display.  Every ControlStatus has an entry.
 _STATUS_MAP: dict[str, str] = {
-    "Pass":         "Fulfilled",
-    "Fail":         "Open",
-    "Manual":       "Not verified",
-    "Partial":      "Open",
+    "Pass":             "Fulfilled",
+    "Fail":             "Open",
+    "Partial":          "Open",
+    "Manual":           "Not verified",
+    "NotApplicable":    "N/A",
+    "NotVerified":      "Not verified",
+    "SignalError":      "Not verified (Signal failure)",
+    "EvaluationError":  "Not verified (Eval error)",
+    # Legacy synonyms (workbook may receive pre-mapped values)
     "Fulfilled":    "Fulfilled",
     "Open":         "Open",
     "Not verified": "Not verified",
     "Not required": "Not required",
     "N/A":          "N/A",
-    "SignalError":  "Not verified (Signal failure)",
-    "Error":        "Not verified",
-    "Unknown":      "Not verified",
 }
 
 
 def _map_status(raw: str) -> str:
-    return _STATUS_MAP.get(raw, "Not verified")
+    mapped = _STATUS_MAP.get(raw)
+    if mapped is None:
+        raise ValueError(f"Unmapped control status '{raw}' — add to _STATUS_MAP or fix evaluator")
+    return mapped
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -132,11 +144,11 @@ def _write_control_detail_rows(
       A: ID  B: Design Area  C: Sub Area  D: WAF Pillar  E: Service
       F: Checklist item  G: Severity  H: Status  I: Comment
       J: AMMP  K: More info  L: Training
-      M: % Compliant  N: Subs Affected  O: Scope Level
+      M: Coverage: % Compliant  N: Coverage: Subs Affected  O: Coverage: Scope Level
 
-    Enterprise-scale columns M–O carry aggregated metadata
-    (populated by ``engine.aggregation.enrich_results_enterprise``).
-    Enrichment appends P: Control Source after the data columns.
+    Coverage breakdown columns M–O show how widely a tenant-scoped finding
+    manifests across input subscriptions.  They are NOT per-subscription
+    maturity.  Enrichment appends P: Control Source after the data columns.
     One row per control — never per-subscription.
 
     Returns the number of rows written.
@@ -146,7 +158,7 @@ def _write_control_detail_rows(
         "ID", "Design Area", "Sub Area", "WAF Pillar", "Service",
         "Checklist item", "Severity", "Status", "Comment",
         "AMMP", "More info", "Training",
-        "% Compliant", "Subs Affected", "Scope Level",
+        "Coverage: % Compliant", "Coverage: Subs Affected", "Coverage: Scope Level",
     ]
     for col, hdr in enumerate(_HEADERS, start=1):
         ws.cell(row=_CD_HEADER_ROW, column=col, value=hdr)
@@ -193,7 +205,9 @@ def _write_control_detail_rows(
         ws.cell(row=row, column=11, value=cl.get("link", ""))       # Learn link
         ws.cell(row=row, column=12, value=cl.get("training", ""))   # Training
 
-        # ── Enterprise-scale columns (M–P) ────────────────────────
+        # ── Coverage breakdown columns (M–P) ──────────────────────
+        # These are tenant-scoped coverage metrics, NOT per-subscription
+        # maturity.  They show how many input subscriptions exhibit a finding.
         # % Compliant: e.g. "85.0%" or "17/100 compliant"
         cov_display = ctrl.get("coverage_display")
         cov_pct = ctrl.get("coverage_pct")
@@ -204,7 +218,7 @@ def _write_control_detail_rows(
         else:
             ws.cell(row=row, column=13, value="")
 
-        # Subs Affected: e.g. "3/10"
+        # Coverage: Subs Affected — how many input subs exhibit this finding (not per-sub maturity)
         subs_affected = ctrl.get("subscriptions_affected")
         subs_assessed = ctrl.get("subscriptions_assessed")
         if subs_affected is not None and subs_assessed:
@@ -213,7 +227,7 @@ def _write_control_detail_rows(
         else:
             ws.cell(row=row, column=14, value="")
 
-        # Scope Level: Subscription | Management Group | Tenant
+        # Coverage: Scope Level — where the finding manifests, not the assessment scope
         ws.cell(row=row, column=15, value=ctrl.get("scope_level", ""))
 
         row += 1
@@ -228,6 +242,10 @@ def _write_control_detail_rows(
 def _populate_executive_summary(ws, run: dict) -> None:
     """Write values into the existing Executive Summary layout.
 
+    Layer 5 contract: Excel = data, HTML = narrative.
+    Top risks (rows 17+) are populated from deterministic risk scoring,
+    NOT from AI-generated business risk language.
+
     Template layout (column A = labels, column B = values):
       Row 1:  CSA ENGAGEMENT FRAMING (title — leave as-is)
       Row 2:  Engagement Objective | <text>
@@ -237,14 +255,16 @@ def _populate_executive_summary(ws, run: dict) -> None:
       Row 7:  Tenant ID | <value>
       Row 8:  Assessment Date | <value>
       Row 9:  Enterprise-Scale Ready | <value>
-      Row 10: Overall Maturity | <value>
+      Row 10: Tenant Maturity | <value>
       Row 11: Data-Driven Controls | <count>
       Row 12: Requires Customer Input | <count>
-      Row 13: Subscriptions Assessed | <count>
-      Row 15: Top Risks (title — leave as-is)
-      Row 16: Risk | Business Impact | Severity (sub-header — leave as-is)
-      Row 17+: risk data rows
+      Row 13: Subscriptions (Input Scope) | <count>
+      Row 15: Top Risks — Deterministic (title — leave as-is)
+      Row 16: Control | Risk Tier | Score (sub-header — leave as-is)
+      Row 17+: deterministic risk data rows
     """
+    from engine.risk_scoring import build_risk_overview
+
     es = run.get("executive_summary", {})
     scoring = run.get("scoring", {})
     ec = run.get("execution_context", {})
@@ -252,22 +272,27 @@ def _populate_executive_summary(ws, run: dict) -> None:
     esr = ai.get("enterprise_scale_readiness", {})
     results = run.get("results", [])
     total_controls = len(results)
-    top_risks = es.get("top_business_risks", [])
 
-    # ── Engagement framing ────────────────────────────────────────
-    risk_titles = [r.get("title", "") for r in top_risks[:5]]
-
+    # ── Engagement framing (factual, not AI-generated) ────────────
     objective = (
         "Assess the customer's Azure landing zone maturity, identify "
         "critical gaps, and deliver a prioritised 30-60-90 remediation "
         "roadmap aligned to Microsoft Cloud Adoption Framework."
     )
+
+    # Derive top risks deterministically for the key message
+    risk_overview = build_risk_overview(results)
+    crit_count = risk_overview["summary"]["critical_count"]
+    high_count = risk_overview["summary"]["high_count"]
+    total_risk = risk_overview["summary"]["total_risk_count"]
+
     key_message = (
         f"This assessment evaluated {total_controls} controls across the "
-        f"tenant using live platform telemetry. Top risk areas include: "
-        f"{', '.join(risk_titles)}. The roadmap ties each action to "
-        f"specific controls and risks, making every recommendation "
-        f"defensible and auditable."
+        f"tenant using live platform telemetry. Deterministic risk scoring "
+        f"identified {total_risk} at-risk controls "
+        f"({crit_count} critical, {high_count} high). "
+        f"The roadmap ties each action to specific controls, making "
+        f"every recommendation defensible and auditable."
     )
     customer_outcome = (
         "A data-driven workbook the customer owns — with scored controls, "
@@ -287,6 +312,9 @@ def _populate_executive_summary(ws, run: dict) -> None:
     ready = esr.get("ready_for_enterprise_scale", False)
     score = esr.get("readiness_score", "")
     ws.cell(row=9, column=2, value="Yes" if ready else f"No  (score: {score})")
+
+    # Scope model: maturity is tenant-wide, never per-subscription
+    ws.cell(row=10, column=1, value="Tenant Maturity")
     maturity = scoring.get('overall_maturity_percent')
     ws.cell(row=10, column=2,
             value=f"{maturity}%" if maturity is not None else "Unavailable")
@@ -298,14 +326,29 @@ def _populate_executive_summary(ws, run: dict) -> None:
     )
     ws.cell(row=11, column=2, value=data_driven)
     ws.cell(row=12, column=2, value=total_controls - data_driven)
+
+    # Subscriptions are inputs (data sources), not evaluation units
+    ws.cell(row=13, column=1, value="Subscriptions (Input Scope)")
     ws.cell(row=13, column=2, value=ec.get("subscription_count_visible", ""))
 
-    # ── Top risks table (row 17+) ─────────────────────────────────
+    # ── Top risks table (row 15+) — deterministic, data-only ─────
+    # Sub-headers
+    ws.cell(row=15, column=1, value="Top Risks — Deterministic")
+    ws.cell(row=16, column=1, value="Control")
+    ws.cell(row=16, column=2, value="Risk Tier")
+    ws.cell(row=16, column=3, value="Score")
+
+    # Flatten top-N from tiers (Critical first, then High)
+    top_controls: list[dict] = []
+    for tier_name in ("Critical", "High", "Medium"):
+        top_controls.extend(risk_overview["tiers"].get(tier_name, []))
+    top_controls = top_controls[:10]  # cap at 10 rows
+
     row = 17
-    for risk in top_risks:
-        ws.cell(row=row, column=1, value=risk.get("title", ""))
-        ws.cell(row=row, column=2, value=risk.get("business_impact", ""))
-        ws.cell(row=row, column=3, value=risk.get("severity", ""))
+    for ctrl in top_controls:
+        ws.cell(row=row, column=1, value=ctrl.get("text", ""))
+        ws.cell(row=row, column=2, value=ctrl.get("risk_tier", ""))
+        ws.cell(row=row, column=3, value=ctrl.get("risk_score", ""))
         row += 1
 
 
@@ -356,161 +399,103 @@ def _populate_roadmap(ws, run: dict) -> int:
 def _cross_ref_roadmap_risks(
     ws, run: dict, start_row: int, end_row: int,
 ) -> None:
-    """Fill column I (Related Risks) by matching initiative controls."""
-    top_risks = run.get("executive_summary", {}).get("top_business_risks", [])
+    """Fill column I (Related Risks) by matching initiative controls to risk tiers.
+
+    Layer 5: uses deterministic risk scoring, not AI-generated risk titles.
+    For each roadmap row, finds related controls from column H and reports
+    their highest deterministic risk tier.
+    """
+    from engine.risk_scoring import build_risk_overview
+
+    results = run.get("results", [])
+    overview = build_risk_overview(results)
+
+    # Build control_id → risk_tier lookup
+    risk_lookup: dict[str, str] = {}
+    for tier_name, controls in overview["tiers"].items():
+        for ctrl in controls:
+            sid = ctrl.get("short_id", "")
+            if sid:
+                risk_lookup[sid] = tier_name
+
     for r in range(start_row, end_row + 1):
         related_ctrls = str(ws.cell(row=r, column=8).value or "")
         if not related_ctrls:
             continue
-        ctrl_ids = {c.strip() for c in related_ctrls.replace(";", ",").split(",")}
-        matched: list[str] = []
-        for risk in top_risks:
-            affected = risk.get("affected_controls", [])
-            affected_shorts = {str(c)[:8] for c in affected}
-            if ctrl_ids & affected_shorts:
-                matched.append(risk.get("title", ""))
-        if matched:
-            ws.cell(row=r, column=9, value="; ".join(matched))
+        ctrl_ids = {c.strip()[:8] for c in related_ctrls.replace(";", ",").split(",")}
+        matched_tiers: set[str] = set()
+        for cid in ctrl_ids:
+            tier = risk_lookup.get(cid)
+            if tier:
+                matched_tiers.add(tier)
+        if matched_tiers:
+            # Show highest tier first
+            tier_order = ["Critical", "High", "Medium", "Hygiene"]
+            sorted_tiers = sorted(matched_tiers, key=lambda t: tier_order.index(t) if t in tier_order else 99)
+            ws.cell(row=r, column=9, value="; ".join(sorted_tiers))
 
 
 # ══════════════════════════════════════════════════════════════════
 # 3_Risk_Analysis  — causal risk blocks
 # ══════════════════════════════════════════════════════════════════
 
-def _populate_risk_analysis(ws, why_payloads: list[dict]) -> int:
-    """Write risk analysis blocks into the existing sheet.
+def _populate_risk_analysis(ws, results: list[dict]) -> int:
+    """Write deterministic risk data rows into the Risk Analysis sheet.
 
-    Each risk block follows the template pattern:
-      Title → Root Cause → Business Impact → Failing Controls table →
-      Dependency Impact table → Remediation Roadmap table →
-      Cascade Effect → blank separator.
+    Layer 5 contract: Excel = data, HTML = narrative.  This sheet
+    contains ONLY scored risk data from ``build_risk_overview()`` —
+    no AI-generated narrative, no root cause text, no cascade prose.
 
-    Returns the number of risk blocks written.
+    Layout:
+      Row 1:  Headers
+      Row 2+: One row per at-risk control, sorted by risk_score desc.
+
+    Columns: Risk Tier | Score | Control | Section | Severity |
+             Status | Scope | Foundational | Control Type |
+             Signal Sourced | Evidence Count
+
+    Returns the number of risk rows written.
     """
-    if not why_payloads:
+    from engine.risk_scoring import build_risk_overview
+
+    if not results:
         return 0
 
     # Unmerge all cells first so we can write freely
     for merge in list(ws.merged_cells.ranges):
         ws.unmerge_cells(str(merge))
 
-    _clear_data_rows(ws, start_row=1, max_col=7)
+    _clear_data_rows(ws, start_row=1, max_col=11)
 
-    row = 1
-    for wp in why_payloads:
-        risk = wp.get("risk", {})
-        title = risk.get("title", wp.get("domain", "Unknown"))
-        severity = risk.get("severity", "Medium").upper()
+    # Headers
+    headers = [
+        "Risk Tier", "Score", "Control", "Section", "Severity",
+        "Status", "Scope", "Foundational", "Control Type",
+        "Signal Sourced", "Evidence Count",
+    ]
+    for ci, h in enumerate(headers, 1):
+        ws.cell(row=1, column=ci, value=h)
 
-        # ── Title ─────────────────────────────────────────────────
-        ws.cell(row=row, column=1,
-                value=f"  {severity} — {title}")
-        row += 1
+    overview = build_risk_overview(results)
+    tiers = overview["tiers"]
 
-        # ── Root Cause ────────────────────────────────────────────
-        ws.cell(row=row, column=1, value="  Root Cause")
-        row += 1
-        ws.cell(row=row, column=1, value=risk.get("technical_cause", ""))
-        row += 2
-
-        # ── Business Impact ───────────────────────────────────────
-        ws.cell(row=row, column=1, value="  Business Impact")
-        row += 1
-        ws.cell(row=row, column=1, value=risk.get("business_impact", ""))
-        row += 2
-
-        # ── Failing / Partial Controls ────────────────────────────
-        ws.cell(row=row, column=1, value="  Failing / Partial Controls")
-        row += 1
-        for ci, h in enumerate(
-            ["Control ID", "Section", "Severity", "Status",
-             "Description", "Notes"], 1,
-        ):
-            ws.cell(row=row, column=ci, value=h)
-        row += 1
-        for fc in wp.get("failing_controls", []):
-            ws.cell(row=row, column=1, value=str(fc.get("control_id", ""))[:8])
-            ws.cell(row=row, column=2, value=fc.get("section", ""))
-            ws.cell(row=row, column=3, value=fc.get("severity", ""))
-            ws.cell(row=row, column=4, value=fc.get("status", ""))
-            ws.cell(row=row, column=5, value=fc.get("text", ""))
-            ws.cell(row=row, column=6, value=fc.get("notes", ""))
-            row += 1
-        row += 1
-
-        # ── Dependency Impact ─────────────────────────────────────
-        deps = wp.get("dependency_impact", [])
-        if deps:
-            ws.cell(row=row, column=1, value="  Dependency Impact")
-            row += 1
-            for ci, h in enumerate(
-                ["Failing Control", "Name", "Blocks Count",
-                 "Blocked Controls"], 1,
-            ):
-                ws.cell(row=row, column=ci, value=h)
-            row += 1
-            for dep in deps:
-                ws.cell(row=row, column=1, value=str(dep.get("control", ""))[:8])
-                ws.cell(row=row, column=2, value=dep.get("name", ""))
-                ws.cell(row=row, column=3, value=str(dep.get("blocks_count", "")))
-                blocks = dep.get("blocks", [])
-                ws.cell(row=row, column=4,
-                        value=", ".join(str(b)[:8] for b in blocks))
-                row += 1
+    row = 2
+    for tier_name in ("Critical", "High", "Medium", "Hygiene"):
+        for ctrl in tiers.get(tier_name, []):
+            ws.cell(row=row, column=1,  value=ctrl["risk_tier"])
+            ws.cell(row=row, column=2,  value=ctrl["risk_score"])
+            ws.cell(row=row, column=3,  value=ctrl.get("text", ""))
+            ws.cell(row=row, column=4,  value=ctrl.get("section", ""))
+            ws.cell(row=row, column=5,  value=ctrl.get("severity", ""))
+            ws.cell(row=row, column=6,  value=ctrl.get("status", ""))
+            ws.cell(row=row, column=7,  value=ctrl.get("scope_level", ""))
+            ws.cell(row=row, column=8,  value="Yes" if ctrl.get("is_foundational") else "")
+            ws.cell(row=row, column=9,  value=ctrl.get("control_type", ""))
+            ws.cell(row=row, column=10, value="Yes" if ctrl.get("signal_sourced") else "No")
+            ws.cell(row=row, column=11, value=ctrl.get("evidence_count", 0))
             row += 1
 
-        # ── Remediation Roadmap ───────────────────────────────────
-        ws.cell(row=row, column=1,
-                value="  Remediation Roadmap (AI-Prioritized)")
-        row += 1
-        for ci, h in enumerate(
-            ["Step", "Action", "Why This Order", "Phase", "Learn URL"], 1,
-        ):
-            ws.cell(row=row, column=ci, value=h)
-        row += 1
-
-        ai_explanation = wp.get("ai_explanation", {})
-        ai_steps = (
-            ai_explanation.get("remediation_steps", [])
-            if isinstance(ai_explanation, dict) else []
-        )
-        steps = ai_steps or wp.get("roadmap_actions", [])
-        for step_idx, step in enumerate(steps, 1):
-            ws.cell(row=row, column=1, value=str(step_idx))
-            ws.cell(row=row, column=2,
-                    value=step.get("action", step.get("title", "")))
-            ws.cell(row=row, column=3,
-                    value=step.get("why_this_order", step.get("rationale", "")))
-            ws.cell(row=row, column=4, value=step.get("phase", ""))
-            refs = step.get("learn_references", [])
-            url = ""
-            if refs and isinstance(refs, list):
-                first = refs[0]
-                url = first.get("url", "") if isinstance(first, dict) else str(first)
-            ws.cell(row=row, column=5, value=url)
-            row += 1
-        row += 1
-
-        # ── Cascade Effect ────────────────────────────────────────
-        ws.cell(row=row, column=1, value="  Cascade Effect")
-        row += 1
-        cascade = (
-            ai_explanation.get("cascade_effect", "")
-            if isinstance(ai_explanation, dict) else ""
-        )
-        if not cascade and deps:
-            blocked_names = []
-            for dep in deps:
-                blocked_names.extend(str(b) for b in dep.get("blocks", []))
-            if blocked_names:
-                cascade = (
-                    f"Remediating these root causes will unblock downstream "
-                    f"controls: {', '.join(blocked_names[:5])}."
-                )
-        ws.cell(row=row, column=1, value=cascade)
-        row += 3  # separator before next block
-
-    return len(why_payloads)
+    return row - 2
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -801,11 +786,14 @@ def build_csa_workbook(
     template's existing data ranges.  It performs NO scoring, NO inference,
     NO sheet creation/deletion, and NO formatting changes.
 
+    Layer 5 contract: Excel = data, HTML = narrative.
+    Risk content is derived from ``build_risk_overview()`` — no AI narrative.
+
     Sheets populated:
-      ``0_Executive_Summary`` — engagement framing + metrics + top risks
+      ``0_Executive_Summary`` — engagement framing + metrics + deterministic top risks
       ``1_30-60-90_Roadmap`` — phased initiatives
       ``2_Control_Details`` — one row per control (A–U) + enrichment (V–Y)
-      ``3_Risk_Analysis`` — causal risk blocks from why-analysis
+      ``3_Risk_Analysis`` — deterministic risk data rows (tier, score, severity, status)
     """
     run = _load_json(run_path)
 
@@ -899,12 +887,12 @@ def build_csa_workbook(
     else:
         print(f"  ⚠ Sheet '{_SHEET_CONTROLS}' not found — skipping")
 
-    # ── 3_Risk_Analysis ───────────────────────────────────────────
-    if _SHEET_RISK in wb.sheetnames and why_payloads:
-        n_risks = _populate_risk_analysis(wb[_SHEET_RISK], why_payloads)
-        print(f"  ✓ 3_Risk_Analysis: {n_risks} risk blocks")
+    # ── 3_Risk_Analysis — deterministic risk data ──────────────────
+    if _SHEET_RISK in wb.sheetnames and results:
+        n_risks = _populate_risk_analysis(wb[_SHEET_RISK], results)
+        print(f"  ✓ 3_Risk_Analysis: {n_risks} risk rows (deterministic)")
     elif _SHEET_RISK in wb.sheetnames:
-        print("  ⚠ 3_Risk_Analysis: no why_payloads — keeping template data")
+        print("  ⚠ 3_Risk_Analysis: no results — keeping template data")
 
     # ── Save ──────────────────────────────────────────────────────
     try:

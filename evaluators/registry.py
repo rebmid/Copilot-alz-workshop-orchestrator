@@ -57,8 +57,8 @@ def evaluate_control(
     if evaluator is None:
         return {
             "control_id": control_id,
-            "status": "Unknown",
-            "severity": "Medium",
+            "status": "EvaluationError",
+            "severity": "High",
             "confidence": "Low",
             "evidence": [],
             "reason": f"No evaluator registered for control {control_id}",

@@ -20,7 +20,7 @@ def fetch_rbac_hygiene(subscriptions: list[str]) -> SignalResult:
         for sub_id in subscriptions:
             try:
                 client = AuthorizationManagementClient(credential, sub_id)
-                assignments.extend(client.role_assignments.list_for_subscription())
+                assignments.extend(client.role_assignments.list_for_subscription())  # type: ignore[attr-defined]
             except Exception:
                 pass  # skip inaccessible subs
 

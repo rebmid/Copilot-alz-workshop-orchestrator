@@ -37,7 +37,12 @@ class CoveragePayload:
 
 @dataclass
 class EvalScope:
-    """Scope targeting for on-demand evaluation."""
+    """Tenant-scoped assessment targeting.
+
+    Assessment Scope = Tenant.  Controls are evaluated at tenant scope.
+    Subscriptions listed here are *inputs* (data sources), not
+    independent evaluation units.  Maturity is never per-subscription.
+    """
     tenant_id: str | None = None
     management_group_id: str | None = None
     subscription_ids: list[str] = field(default_factory=list)
@@ -56,7 +61,7 @@ CONFIDENCE_LABEL = {
 @dataclass
 class ControlResult:
     """Deterministic result from a single control evaluator."""
-    status: str  # Pass | Fail | Partial | Manual | NotApplicable | Unknown | Error | SignalError
+    status: str  # Pass | Fail | Partial | Manual | NotApplicable | NotVerified | SignalError | EvaluationError
     severity: str = "Medium"
     confidence: str = "High"
     confidence_score: float = 1.0  # numeric 0-1 (overrides label when set)

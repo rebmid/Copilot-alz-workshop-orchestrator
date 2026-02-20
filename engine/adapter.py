@@ -4,6 +4,9 @@ Converts evaluate_control() / evaluate_many() output into the flat list of
 dicts that compute_scoring(), rollup_by_section(), most_impactful_gaps(), and
 the reporting layer expect.
 
+Foundation Layer 4: all control metadata access uses typed
+``ControlDefinition`` attributes — no ``dict[str, Any]`` patterns.
+
 Scoring-compatible shape per result:
     {
         control_id, section, category, question, text,
@@ -13,45 +16,89 @@ Scoring-compatible shape per result:
 """
 from __future__ import annotations
 
-import json
-import os
 from typing import Any
 
 from signals.types import EvalScope
 from signals.registry import SignalBus
 from evaluators.registry import EVALUATORS, evaluate_control
-from schemas.taxonomy import DESIGN_AREA_SECTION as _DESIGN_AREA_SECTION
-
-_PACK_CONTROLS_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "control_packs", "alz", "v1.0", "controls.json"
-)
+from schemas.taxonomy import DESIGN_AREA_SECTION as _DESIGN_AREA_SECTION, ControlDefinition
 
 
-def _load_pack_controls() -> dict[str, Any]:
-    """Load the v1.0 control pack controls.json as a lookup."""
-    with open(_PACK_CONTROLS_PATH, encoding="utf-8") as f:
-        pack = json.load(f)
-    return pack.get("controls", {})
+# ── Reverse index: evaluator control_id (full_id) → pack short key ────
+# Built lazily on first use to avoid import-time work.
+_FULLID_INDEX: dict[str, str] = {}
 
 
-def _section_for_control(control_short_id: str, pack_controls: dict) -> str:
-    """Resolve scoring section (Networking/Governance/Security) for a control."""
-    meta = pack_controls.get(control_short_id, {})
-    area: str = meta.get("design_area", "Unknown")
-    return _DESIGN_AREA_SECTION.get(area) or area.title()
+def _build_fullid_index(
+    pack_controls: dict[str, ControlDefinition],
+) -> dict[str, str]:
+    """Build / refresh reverse lookup: ``full_id → pack short key``.
+
+    Called once per assessment run when the first evaluator result is
+    adapted.  This replaces the fragile ``control_id[:8]`` convention
+    which breaks when the pack key is not the first 8 chars of
+    ``full_id`` (e.g. ``netwatch`` vs ``network-watcher-001``).
+    """
+    return {cd.full_id: key for key, cd in pack_controls.items()}
+
+
+def _resolve_pack_key(
+    control_id: str,
+    pack_controls: dict[str, ControlDefinition],
+) -> str:
+    """Resolve an evaluator control_id to its pack short key.
+
+    Strategy:
+      1. Exact match in full_id reverse index (covers all cases)
+      2. ``[:8]`` legacy fallback (GUID controls where key == first 8)
+    Raises ``KeyError`` if neither lookup succeeds.
+    """
+    global _FULLID_INDEX  # noqa: PLW0603
+    if not _FULLID_INDEX:
+        _FULLID_INDEX.update(_build_fullid_index(pack_controls))
+
+    # 1. full_id reverse lookup
+    short_key = _FULLID_INDEX.get(control_id)
+    if short_key is not None:
+        return short_key
+
+    # 2. legacy [:8] fallback
+    candidate = control_id[:8]
+    if candidate in pack_controls:
+        return candidate
+
+    raise KeyError(
+        f"Control '{control_id}' not found in pack — neither full_id "
+        f"reverse index nor [:8] fallback matched any pack key."
+    )
+
+
+def _section_for_control(
+    control_id: str,
+    pack_controls: dict[str, ControlDefinition],
+) -> str:
+    """Resolve scoring section for a control.  No fallback.
+
+    The taxonomy validator guarantees every control has a valid
+    ``alz_design_area`` that maps to ``DESIGN_AREA_SECTION``.
+    If this raises KeyError the pack was loaded without validation.
+    """
+    short_key = _resolve_pack_key(control_id, pack_controls)
+    meta = pack_controls[short_key]
+    return meta.section
 
 
 def adapt_evaluator_result(
     eval_result: dict[str, Any],
-    pack_controls: dict[str, Any],
+    pack_controls: dict[str, ControlDefinition],
 ) -> dict[str, Any]:
     """Convert a single evaluate_control() response to scoring shape."""
     control_id = eval_result.get("control_id", "")
-    short_id = control_id[:8]
-    meta = pack_controls.get(short_id, {})
+    short_key = _resolve_pack_key(control_id, pack_controls)
+    meta = pack_controls.get(short_key)
 
-    section = _section_for_control(short_id, pack_controls)
-    name = meta.get("name", control_id)
+    section = _section_for_control(control_id, pack_controls)
+    name = meta.title if meta else control_id
     evidence = eval_result.get("evidence", [])
 
     # Extract coverage ratio if present
@@ -59,8 +106,8 @@ def adapt_evaluator_result(
     coverage_ratio = None
     if isinstance(coverage, dict):
         coverage_ratio = coverage.get("ratio")
-    elif hasattr(coverage, "ratio"):
-        coverage_ratio = coverage.ratio
+    elif coverage is not None and hasattr(coverage, "ratio"):
+        coverage_ratio = getattr(coverage, "ratio", None)
 
     # Numeric confidence: prefer confidence_score, fall back to label
     confidence_score = eval_result.get("confidence_score")
@@ -68,14 +115,18 @@ def adapt_evaluator_result(
         from signals.types import CONFIDENCE_LABEL
         confidence_score = CONFIDENCE_LABEL.get(eval_result.get("confidence", "High"), 0.7)
 
+    # Severity: evaluator result takes precedence, then pack metadata.
+    # Pack metadata is validated at load time — always present.
+    severity = eval_result.get("severity") or (meta.severity if meta else "Medium")
+
     return {
-        "control_id": meta.get("full_id", control_id),
+        "control_id": meta.full_id if meta else control_id,
         "category": section,
         "section": section,
         "text": name,
         "question": name,
-        "severity": eval_result.get("severity", meta.get("severity", "Medium")),
-        "status": eval_result.get("status", "Unknown"),
+        "severity": severity,
+        "status": eval_result.get("status", "EvaluationError"),
         "evidence_count": len(evidence),
         "evidence": evidence,
         "signal_used": ", ".join(eval_result.get("signals_used", [])) or None,
@@ -90,18 +141,32 @@ def run_evaluators_for_scoring(
     scope: EvalScope,
     bus: SignalBus,
     *,
+    pack_controls: dict[str, ControlDefinition],
     run_id: str = "",
     checklist: dict | None = None,
 ) -> list[dict[str, Any]]:
     """
     Run all registered evaluators and return scoring-compatible results.
 
-    If *checklist* is provided (the full ALZ checklist), non-automated items
-    are included as Manual so that automation_coverage stays correct.
+    Parameters
+    ----------
+    scope : EvalScope
+        Tenant + subscriptions being assessed.
+    bus : SignalBus
+        Signal bus for fetching signal data.
+    pack_controls : dict[str, ControlDefinition]
+        Typed control definitions from the loaded pack.
+    run_id : str
+        Unique run identifier.
+    checklist : dict | None
+        Full ALZ checklist — non-automated items are included as Manual
+        so that automation_coverage stays correct.
     """
-    pack_controls = _load_pack_controls()
-
     # ── Run all evaluators via the new architecture ───────────────
+    # Reset the full_id index so it rebuilds for this pack_controls
+    global _FULLID_INDEX  # noqa: PLW0603
+    _FULLID_INDEX.clear()
+
     automated_results: list[dict[str, Any]] = []
     automated_ids: set[str] = set()
 
@@ -112,19 +177,23 @@ def run_evaluators_for_scoring(
         automated_ids.add(adapted["control_id"])
 
     # ── Backfill manual items from checklist ──────────────────────
+    # Manual items come from the ALZ checklist and are NOT taxonomy-validated.
+    # They carry their own category/severity from the checklist source.
+    # We tag them clearly so scoring can distinguish them from data-driven controls.
     manual_results: list[dict[str, Any]] = []
     if checklist:
         for item in checklist.get("items", []):
             guid = item.get("guid", "")
             if guid in automated_ids:
                 continue
+            category = item.get("category") or "Manual"
             manual_results.append({
                 "control_id": guid,
-                "category": item.get("category", "Unknown"),
-                "section": item.get("category", "Unknown"),
+                "category": category,
+                "section": category,
                 "text": item.get("text", ""),
                 "question": item.get("text", ""),
-                "severity": item.get("severity", ""),
+                "severity": item.get("severity") or "Medium",
                 "status": "Manual",
                 "evidence_count": 0,
                 "evidence": [],
