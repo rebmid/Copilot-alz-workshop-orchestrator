@@ -9,12 +9,10 @@ into the existing sheets:
 - ``1_30-60-90_Roadmap`` — phased remediation initiatives
 - ``2_Control_Details`` — one row per assessed control (columns A–O)
   plus enrichment column P (Control Source)
-- ``3_Risk_Analysis`` — deterministic risk data rows from ``build_risk_overview()``
-  (risk tier, score, severity, status, scope — no AI narrative)
 
-Risk content in this workbook is derived entirely from the deterministic
-risk engine (``engine/risk_scoring.py``).  AI-generated narrative (root
-cause, business impact, cascade effect) is rendered in HTML only.
+Top risks are embedded in the Executive Summary sheet.  AI-generated
+narrative (root cause, business impact, cascade effect) is rendered
+in the HTML report only.
 
 The template owns **all** visualisation: Dashboard formulas, charts,
 conditional formatting, data validation, and VBA macros.  Python never
@@ -87,7 +85,6 @@ _TEMPLATE_PATH = _TEMPLATE_DIR / _TEMPLATE_NAME
 _SHEET_EXEC     = "0_Executive_Summary"
 _SHEET_ROADMAP  = "1_30-60-90_Roadmap"
 _SHEET_CONTROLS = "2_Control_Details"
-_SHEET_RISK     = "3_Risk_Analysis"
 
 # Control Details layout (row 9 = headers, row 10+ = data)
 _CD_HEADER_ROW = 9
@@ -435,68 +432,6 @@ def _cross_ref_roadmap_risks(
             ws.cell(row=r, column=9, value="; ".join(sorted_tiers))
 
 
-# ══════════════════════════════════════════════════════════════════
-# 3_Risk_Analysis  — causal risk blocks
-# ══════════════════════════════════════════════════════════════════
-
-def _populate_risk_analysis(ws, results: list[dict]) -> int:
-    """Write deterministic risk data rows into the Risk Analysis sheet.
-
-    Layer 5 contract: Excel = data, HTML = narrative.  This sheet
-    contains ONLY scored risk data from ``build_risk_overview()`` —
-    no AI-generated narrative, no root cause text, no cascade prose.
-
-    Layout:
-      Row 1:  Headers
-      Row 2+: One row per at-risk control, sorted by risk_score desc.
-
-    Columns: Risk Tier | Score | Control | Section | Severity |
-             Status | Scope | Foundational | Control Type |
-             Signal Sourced | Evidence Count
-
-    Returns the number of risk rows written.
-    """
-    from engine.risk_scoring import build_risk_overview
-
-    if not results:
-        return 0
-
-    # Unmerge all cells first so we can write freely
-    for merge in list(ws.merged_cells.ranges):
-        ws.unmerge_cells(str(merge))
-
-    _clear_data_rows(ws, start_row=1, max_col=11)
-
-    # Headers
-    headers = [
-        "Risk Tier", "Score", "Control", "Section", "Severity",
-        "Status", "Scope", "Foundational", "Control Type",
-        "Signal Sourced", "Evidence Count",
-    ]
-    for ci, h in enumerate(headers, 1):
-        ws.cell(row=1, column=ci, value=h)
-
-    overview = build_risk_overview(results)
-    tiers = overview["tiers"]
-
-    row = 2
-    for tier_name in ("Critical", "High", "Medium", "Hygiene"):
-        for ctrl in tiers.get(tier_name, []):
-            ws.cell(row=row, column=1,  value=ctrl["risk_tier"])
-            ws.cell(row=row, column=2,  value=ctrl["risk_score"])
-            ws.cell(row=row, column=3,  value=ctrl.get("text", ""))
-            ws.cell(row=row, column=4,  value=ctrl.get("section", ""))
-            ws.cell(row=row, column=5,  value=ctrl.get("severity", ""))
-            ws.cell(row=row, column=6,  value=ctrl.get("status", ""))
-            ws.cell(row=row, column=7,  value=ctrl.get("scope_level", ""))
-            ws.cell(row=row, column=8,  value="Yes" if ctrl.get("is_foundational") else "")
-            ws.cell(row=row, column=9,  value=ctrl.get("control_type", ""))
-            ws.cell(row=row, column=10, value="Yes" if ctrl.get("signal_sourced") else "No")
-            ws.cell(row=row, column=11, value=ctrl.get("evidence_count", 0))
-            row += 1
-
-    return row - 2
-
 
 # ══════════════════════════════════════════════════════════════════
 # Signal integrity validation
@@ -793,7 +728,6 @@ def build_csa_workbook(
       ``0_Executive_Summary`` — engagement framing + metrics + deterministic top risks
       ``1_30-60-90_Roadmap`` — phased initiatives
       ``2_Control_Details`` — one row per control (A–U) + enrichment (V–Y)
-      ``3_Risk_Analysis`` — deterministic risk data rows (tier, score, severity, status)
     """
     run = _load_json(run_path)
 
@@ -836,7 +770,7 @@ def build_csa_workbook(
 
     # NEVER delete sheets — template owns all structure
     # Verify expected sheets exist
-    for sheet_name in [_SHEET_EXEC, _SHEET_ROADMAP, _SHEET_CONTROLS, _SHEET_RISK]:
+    for sheet_name in [_SHEET_EXEC, _SHEET_ROADMAP, _SHEET_CONTROLS]:
         if sheet_name not in wb.sheetnames:
             print(f"  ⚠ Sheet '{sheet_name}' not found in template — skipping")
 
@@ -886,13 +820,6 @@ def build_csa_workbook(
                   f"(enrichment skipped: {e})")
     else:
         print(f"  ⚠ Sheet '{_SHEET_CONTROLS}' not found — skipping")
-
-    # ── 3_Risk_Analysis — deterministic risk data ──────────────────
-    if _SHEET_RISK in wb.sheetnames and results:
-        n_risks = _populate_risk_analysis(wb[_SHEET_RISK], results)
-        print(f"  ✓ 3_Risk_Analysis: {n_risks} risk rows (deterministic)")
-    elif _SHEET_RISK in wb.sheetnames:
-        print("  ⚠ 3_Risk_Analysis: no results — keeping template data")
 
     # ── Save ──────────────────────────────────────────────────────
     try:
