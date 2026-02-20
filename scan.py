@@ -148,7 +148,7 @@ def main():
             json.dump(payload, f, indent=2, default=str)
         print(f"  Saved: {why_path}")
 
-        # Step 4: generate CSA Workbook with risk-analysis sheet
+        # Step 4: generate CSA Workbook
         # Find the run JSON path for existing workbook data
         run_source = "demo/demo_run.json" if args.demo else None
         if not run_source:
