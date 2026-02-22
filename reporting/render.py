@@ -1,44 +1,61 @@
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 import os, re
 
-
-# ── Capability labels derived from initiative titles ─────────────
-_CAPABILITY_MAP = {
-    "management group": "Platform management group hierarchy → enables subscription vending & policy inheritance",
-    "diagnostics": "Centralized diagnostics & monitoring → enables operational visibility",
-    "governance polic": "Governance policy baseline → enables compliant resource provisioning",
-    "hub": "Hub connectivity & centralized egress → enables landing zone networking model",
-    "spoke": "Hub connectivity & centralized egress → enables landing zone networking model",
-    "network": "Hub connectivity & centralized egress → enables landing zone networking model",
-    "defender": "Defender for Cloud coverage → enables unified security posture management",
-    "security": "Security baseline enforcement → enables SOC integration",
-    "identity": "Identity & Entra ID integration → enables PIM and break-glass governance",
-    "rbac": "RBAC scoping & delegation → enables subscription-level team autonomy",
-    "policy": "Policy-driven guardrails → enables safe self-service for landing zone teams",
-    "cost": "Cost governance controls → enables FinOps visibility across landing zones",
-    "vending": "Subscription vending automation → enables repeatable landing zone provisioning",
-    "automation": "Platform automation & IaC → enables GitOps-driven landing zone lifecycle",
-}
+from schemas.taxonomy import bucket_domain as _bucket_domain
+from engine.scoring import section_scores as _compute_section_scores
 
 
-def _capability_label(title: str) -> str:
-    """Derive a short platform capability label from an initiative title."""
-    t = title.lower()
-    for keyword, label in _CAPABILITY_MAP.items():
-        if keyword in t:
-            return label
-    return "Platform capability improvement"
+# ── Signal-type classification (locked rules) ────────────────────
+def _signal_type(ctrl: dict) -> str:
+    """Classify a control's signal type.
+
+    Rules (locked):
+      - signal_used present and single  → Confirmed
+      - signal_used present and comma   → Derived
+      - status == 'Manual' AND no signal → Assumed
+    """
+    sig = ctrl.get("signal_used")
+    if sig:
+        return "Derived" if "," in str(sig) else "Confirmed"
+    if ctrl.get("status") == "Manual":
+        return "Assumed"
+    return "Assumed"
+
+
+# ── Confidence badge thresholds ──────────────────────────────────
+def _confidence_badge(value) -> str:
+    """Map a numeric confidence (0-1) or string to ⚠/Medium/High."""
+    if isinstance(value, str):
+        val_map = {"high": 1.0, "medium": 0.8, "low": 0.5}
+        value = val_map.get(value.lower(), 0.5)
+    if value is None:
+        return "Unknown"
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return "Unknown"
+    if v < 0.7:
+        return "Low"
+    if v <= 0.9:
+        return "Medium"
+    return "High"
+
+
+def _confidence_numeric(ctrl: dict) -> float:
+    """Convert a control's confidence to a float 0-1."""
+    c = ctrl.get("confidence")
+    if isinstance(c, (int, float)):
+        return float(c) if c <= 1 else c / 100.0
+    mapping = {"high": 1.0, "medium": 0.8, "low": 0.5}
+    return mapping.get(str(c).lower(), 0.5) if c else 0.5
 
 
 def _domain_for_question(question: dict, results_by_id: dict) -> str:
     """Best-effort domain assignment for a smart question."""
-    # Check explicit domain/category field first
     for key in ("domain", "category"):
         val = question.get(key)
         if val:
             return val
-
-    # Infer from resolved controls
     sections: dict[str, int] = {}
     for cid in question.get("resolves_controls", []):
         ctrl = results_by_id.get(cid)
@@ -50,51 +67,21 @@ def _domain_for_question(question: dict, results_by_id: dict) -> str:
     return "General"
 
 
-from schemas.taxonomy import (
-    bucket_domain as _bucket_domain,
-    MODE_SECTIONS as _MODE_SECTIONS,
-    ALZ_CORE_SECTIONS as _ALZ_CORE,
-    OPERATIONAL_OVERLAY_SECTIONS as _OPS_OVERLAY,
-)
-from engine.scoring import section_scores as _compute_section_scores
-from engine.risk_scoring import build_risk_overview
-
-
-# ── Display-only tier classification (HTML rendering layer) ──────
-# These thresholds are purely presentational; they do NOT change the
-# backend risk_score calculation or the JSON output schema.
-_DISPLAY_TIERS: list[tuple[str, str, float, str]] = [
-    # (label, css_class, min_score, colour_hex)
-    ("Tier 1 \u2014 Platform Critical", "tier-1", 17.0, "#e74c3c"),
-    ("Tier 2 \u2014 High Impact",        "tier-2", 13.0, "#e67e22"),
-    ("Tier 3 \u2014 Significant",        "tier-3",  9.0, "#f1c40f"),
-    ("Tier 4 \u2014 Moderate",           "tier-4",  5.0, "#3498db"),
-]
-_TIER_FALLBACK = ("Tier 5 \u2014 Hygiene", "tier-5", 0.0, "#2ecc71")
-
-
-def _display_tier(score: float) -> dict:
-    """Map a risk_score to a display-only tier dict."""
-    for label, css, threshold, colour in _DISPLAY_TIERS:
-        if score >= threshold:
-            return {"label": label, "css": css, "colour": colour}
-    label, css, _, colour = _TIER_FALLBACK
-    return {"label": label, "css": css, "colour": colour}
-
-
-def _confidence_label(ctrl: dict) -> str:
-    """Derive deterministic confidence from signal metadata."""
-    if ctrl.get("signal_sourced"):
-        return "High"
-    if ctrl.get("status") == "SignalError":
-        return "Medium"
-    return "Low"
-
+# ═════════════════════════════════════════════════════════════════
+#  REPORT CONTEXT BUILDER  — 5-Section CSA Decision-Driven Layout
+# ═════════════════════════════════════════════════════════════════
 
 def _build_report_context(output: dict) -> dict:
     """
-    Derive all report-specific fields from the raw run JSON.
-    Returns a new dict to be merged into the template context.
+    Derive the 5-section CSA Decision-Driven report context from
+    structured JSON fields only.  No scoring-engine changes.
+
+    Sections:
+      1. Foundation Gate
+      2. Top Business Risks (cards)
+      3. 30/60/90 Roadmap
+      4. Design Area Breakdown (hierarchical)
+      5. Workshop Decision Funnel
     """
     scoring = output.get("scoring", {})
     ai = output.get("ai", {})
@@ -102,332 +89,318 @@ def _build_report_context(output: dict) -> dict:
     exec_ctx = output.get("execution_context", {})
     results = output.get("results", [])
     results_by_id = {r["control_id"]: r for r in results if "control_id" in r}
-
-    # ── 1. Platform Readiness Snapshot ────────────────────────────
-    esr = ai.get("enterprise_scale_readiness", {})
-    executive = ai.get("executive", {})
-    overall_score = scoring.get("overall_maturity_percent")
     auto_cov = scoring.get("automation_coverage", {})
 
-    platform_readiness_text = (
-        esr.get("summary")
-        or executive.get("summary", "")
-    )
-    # If summary is empty, build from scaling_recommendations
-    if not platform_readiness_text:
-        recs = esr.get("scaling_recommendations", [])
-        if recs:
-            platform_readiness_text = " ".join(recs[:3])
-
-    readiness_snapshot = {
-        "overall_score": overall_score,
-        "automation_percent": auto_cov.get("automation_percent"),
-        "automated_controls": auto_cov.get("automated_controls", auto_cov.get("data_driven", 0)),
-        "total_controls": auto_cov.get("total_controls", 0),
-        "ready_for_enterprise_scale": esr.get("ready_for_enterprise_scale"),
-        "readiness_score": esr.get("readiness_score"),
-        "max_subscriptions": esr.get("max_supported_subscriptions_current_state"),
-        "platform_readiness_text": platform_readiness_text,
-    }
-
-    # ── 2. Landing Zone Adoption Blockers ─────────────────────────
-    blockers = esr.get("blockers", [])
+    # Shared lookups
+    esr = ai.get("enterprise_scale_readiness", {})
+    executive = ai.get("executive", {})
     initiatives = ai.get("initiatives", [])
     init_by_id = {i["initiative_id"]: i for i in initiatives if "initiative_id" in i}
+    roadmap_src = ai.get("transformation_roadmap", {})
+    trajectory = roadmap_src.get("maturity_trajectory", {})
 
-    lz_blockers = []
-    for b in blockers:
+    # ── 1. FOUNDATION GATE ────────────────────────────────────────
+    ready = esr.get("ready_for_enterprise_scale")
+    blockers_raw = esr.get("blockers", [])
+    min_inits = esr.get("minimum_initiatives_required", [])
+
+    gate_blockers = []
+    for b in blockers_raw:
         resolving_id = b.get("resolving_initiative", "")
         resolving_init = init_by_id.get(resolving_id, {})
-        lz_blockers.append({
-            "capability": b.get("category", "Unknown"),
+        # Derive confidence from controls in that initiative
+        init_controls = resolving_init.get("controls", [])
+        conf_values = [_confidence_numeric(results_by_id[c])
+                       for c in init_controls if c in results_by_id]
+        avg_conf = sum(conf_values) / len(conf_values) if conf_values else None
+        # Derive dependencies from resolving initiative
+        deps = resolving_init.get("dependencies", [])
+        dep_titles = [init_by_id[d].get("title", d)
+                      for d in deps if d in init_by_id] if deps else []
+
+        gate_blockers.append({
+            "category": b.get("category", "Unknown"),
             "description": b.get("description", ""),
             "severity": b.get("severity", ""),
-            "remediation_initiative": resolving_init.get("title", resolving_id),
+            "resolving_initiative_id": resolving_id,
+            "resolving_initiative_title": resolving_init.get("title", resolving_id),
+            "confidence": _confidence_badge(avg_conf),
+            "dependencies": dep_titles,
         })
 
-    # Fallback: if no ESR blockers, derive from failing controls grouped by initiative
-    if not lz_blockers and initiatives:
-        for init in initiatives:
-            failing = [results_by_id.get(c, {}) for c in init.get("controls", [])
-                       if results_by_id.get(c, {}).get("status") in ("Fail", "Partial")]
-            if failing:
-                lz_blockers.append({
-                    "capability": init.get("caf_discipline", "Unknown"),
-                    "description": init.get("why_it_matters", ""),
-                    "severity": init.get("blast_radius", ""),
-                    "remediation_initiative": init.get("title", ""),
-                })
+    # Improvement opportunities (when ready): scaling recommendations
+    improvement_opportunities = esr.get("scaling_recommendations", [])
 
-    # ── 3. Highest-Impact Remediation Sequence ────────────────────
-    roadmap = ai.get("transformation_roadmap", {})
-    dep_graph = roadmap.get("dependency_graph", [])
-
-    # Build a lookup from action prefix to dep_graph entry
-    dep_lookup: dict[str, dict] = {}
-    for dg in dep_graph if isinstance(dep_graph, list) else []:
-        dep_lookup[dg.get("action", "")[:40]] = dg
-
-    initiative_sequence = []
-    for init in sorted(initiatives, key=lambda x: x.get("priority", 99)):
-        title = init.get("title", "")
-        iid = init.get("initiative_id", "")
-        depends = init.get("depends_on", [])
-
-        # Try matching dep_graph for phase info
-        phase = ""
-        for dg in dep_graph if isinstance(dep_graph, list) else []:
-            if title[:30].lower() in dg.get("action", "").lower():
-                phase = dg.get("phase", "")
-                if not depends:
-                    depends = dg.get("depends_on", [])
-                break
-
-        # Resolve dependency IDs to titles
-        dep_titles = []
-        for dep in depends:
-            if dep in init_by_id:
-                dep_titles.append(init_by_id[dep].get("title", dep))
-            else:
-                dep_titles.append(str(dep)[:60])
-
-        initiative_sequence.append({
-            "initiative_id": iid,
-            "title": title,
-            "priority": init.get("priority"),
-            "controls_count": len(init.get("controls", [])),
-            "depends_on": dep_titles,
-            "capability_unlocked": _capability_label(title),
-            "phase": phase,
-            "caf_discipline": init.get("caf_discipline", ""),
-        })
-
-    # ── 4. Maturity After Roadmap Execution ───────────────────────
-    trajectory = roadmap.get("maturity_trajectory", {})
-
-    # ── 5. Capability Unlock View ─────────────────────────────────
-    capability_unlock_map = []
-    for init in sorted(initiatives, key=lambda x: x.get("priority", 99)):
-        title = init.get("title", "")
-        capability_unlock_map.append({
-            "initiative": title,
-            "initiative_id": init.get("initiative_id", ""),
-            "capability_enabled": _capability_label(title),
-            "alz_design_area": init.get("alz_design_area", init.get("caf_discipline", "General")),
-        })
-
-    # ── 6. Domain Deep Dive – assessment modes ────────────────────
-    # Always recompute from raw results so new fields are guaranteed.
-    # The pre-computed scoring.section_scores in the JSON may be stale.
-    section_scores = _compute_section_scores(results) if results else scoring.get("section_scores", [])
-    section_by_name = {s["section"]: s for s in section_scores}
-
-    # Split into ALZ Core vs Operational Overlay, sort by risk
-    def _risk_sort_key(s: dict) -> tuple:
-        """Sort: critical fail count desc, maturity asc, section name."""
-        return (
-            -(s.get("critical_fail_count", 0) + s.get("critical_partial_count", 0)),
-            s["maturity_percent"] if s["maturity_percent"] is not None else 9999,
-            s["section"],
-        )
-
-    alz_core_sections = sorted(
-        [s for s in section_scores if s["section"] in _ALZ_CORE],
-        key=_risk_sort_key,
-    )
-    overlay_sections = sorted(
-        [s for s in section_scores if s["section"] in _OPS_OVERLAY],
-        key=_risk_sort_key,
-    )
-
-    assessment_modes: dict[str, list] = {}
-    for mode, section_list in _MODE_SECTIONS.items():
-        mode_sections = []
-        for sname in section_list:
-            ss = section_by_name.get(sname)
-            if ss:
-                mode_sections.append(ss)
-        assessment_modes[mode] = mode_sections
-
-    # Data Confidence mode: built differently
-    # ── Execution context label ───────────────────────────────────
-    _id_type = exec_ctx.get("identity_type", "unknown").replace("_", " ").title()
-    _cred = exec_ctx.get("credential_method", "")
-    _role = exec_ctx.get("rbac_highest_role", "")
-    _scope = exec_ctx.get("rbac_scope", "")
-    if _cred:
-        exec_context_label = f"Delegated {_id_type} via {_cred}"
-        exec_context_detail = f"Delegated {_id_type} · {_role or 'Unknown Role'} · {_scope + ' Scope' if _scope else 'Unknown Scope'}"
-    else:
-        exec_context_label = f"Delegated {_id_type}"
-        exec_context_detail = _id_type
-
-    data_confidence = {
-        "subscription_count": len(meta.get("subscription_ids", [])),
-        "subscription_ids": meta.get("subscription_ids", []),
-        "mg_visibility": exec_ctx.get("management_group_access", False),
-        "identity_type": exec_ctx.get("identity_type", "Unknown"),
-        "exec_context_label": exec_context_label,
-        "exec_context_detail": exec_context_detail,
-        "tenant_id": exec_ctx.get("tenant_id", ""),
-        "tenant_display_name": exec_ctx.get("tenant_display_name", ""),
-        "tenant_default_domain": exec_ctx.get("tenant_default_domain", ""),
-        "total_controls": auto_cov.get("total_controls", 0),
+    foundation_gate = {
+        "ready": ready,
+        "readiness_score": esr.get("readiness_score"),
+        "max_subscriptions": esr.get("max_supported_subscriptions_current_state"),
+        "blockers": gate_blockers,
+        "minimum_initiatives": min_inits,
+        "improvement_opportunities": improvement_opportunities,
+        "overall_maturity": scoring.get("overall_maturity_percent"),
         "automated_controls": auto_cov.get("automated_controls", auto_cov.get("data_driven", 0)),
-        "manual_controls": auto_cov.get("manual_controls", auto_cov.get("requires_customer_input", 0)),
-        "automation_percent": auto_cov.get("automation_percent", 0),
-        "limitations": output.get("limitations", []),
+        "total_controls": auto_cov.get("total_controls", 0),
+        "automation_percent": auto_cov.get("automation_percent"),
     }
 
-    # Graph access: infer from whether identity-related signals returned data
-    graph_access = False
-    for r in results:
-        sig = r.get("signal_used") or ""
-        if "graph_api" in sig.lower() or "pim" in sig.lower() or "break_glass" in sig.lower():
-            if r.get("evidence_count", 0) > 0 or r.get("status") not in ("Manual",):
-                graph_access = True
+    # ── 2. TOP BUSINESS RISKS (card layout) ──────────────────────
+    raw_risks = executive.get("top_business_risks", [])[:5]
+
+    risk_cards = []
+    for risk in raw_risks:
+        affected = risk.get("affected_controls", [])
+        # Derive design area from majority section of affected controls
+        section_counts: dict[str, int] = {}
+        ctrl_confs: list[float] = []
+        for cid in affected:
+            ctrl = results_by_id.get(cid, {})
+            sec = ctrl.get("section")
+            if sec:
+                section_counts[sec] = section_counts.get(sec, 0) + 1
+            ctrl_confs.append(_confidence_numeric(ctrl))
+        design_area = max(section_counts, key=section_counts.get) if section_counts else "Unknown"
+        avg_risk_conf = sum(ctrl_confs) / len(ctrl_confs) if ctrl_confs else None
+
+        # Derive signal type badge (majority of affected controls)
+        sig_counts = {"Confirmed": 0, "Derived": 0, "Assumed": 0}
+        for cid in affected:
+            ctrl = results_by_id.get(cid, {})
+            sig_counts[_signal_type(ctrl)] += 1
+        signal_badge = max(sig_counts, key=sig_counts.get) if any(sig_counts.values()) else "Assumed"
+
+        # Derive fix initiative by matching affected_controls ∩ init.controls
+        fix_initiative = None
+        for init in initiatives:
+            if set(affected) & set(init.get("controls", [])):
+                fix_initiative = {
+                    "id": init.get("initiative_id"),
+                    "title": init.get("title"),
+                    "blast_radius": init.get("blast_radius"),
+                }
                 break
-    data_confidence["graph_access"] = graph_access
 
-    # ── Workshop overlay ──────────────────────────────────────────
-    workshop = output.get("workshop", {})
-    if workshop:
-        data_confidence["workshop_applied"] = True
-        data_confidence["workshop_completion"] = workshop.get("completion_percent", 0)
-        data_confidence["workshop_resolved"] = workshop.get("controls_resolved", 0)
-        data_confidence["workshop_remaining"] = workshop.get("manual_remaining",
-                                                              data_confidence.get("manual_controls", 0))
-        data_confidence["workshop_confidence"] = workshop.get("confidence_level", "Low")
-        data_confidence["workshop_questions_answered"] = workshop.get("questions_answered", 0)
-        # Recalculate manual controls from workshop perspective
-        data_confidence["manual_controls"] = workshop.get("manual_remaining",
-                                                           data_confidence.get("manual_controls", 0))
-    else:
-        data_confidence["workshop_applied"] = False
+        # Score drivers (structured, from metadata)
+        status_breakdown = {"Fail": 0, "Partial": 0, "Pass": 0, "Manual": 0}
+        severity_set = set()
+        for cid in affected:
+            ctrl = results_by_id.get(cid, {})
+            st = ctrl.get("status", "Manual")
+            status_breakdown[st] = status_breakdown.get(st, 0) + 1
+            sev = ctrl.get("severity")
+            if sev:
+                severity_set.add(sev)
 
-    # ── 7. Assessment Scope & Confidence (dedicated section) ──────
-    # (reuses data_confidence dict above)
+        score_drivers = []
+        if "Critical" in severity_set or "High" in severity_set:
+            score_drivers.append(f"Contains {', '.join(sorted(severity_set))} severity controls")
+        score_drivers.append(f"{len(affected)} affected control(s)")
+        if status_breakdown.get("Fail", 0):
+            score_drivers.append(f"{status_breakdown['Fail']} in Fail state")
+        if fix_initiative:
+            score_drivers.append(f"Blast radius: {fix_initiative['blast_radius']}")
 
-    # ── 8. Customer Validation Questions ──────────────────────────
+        risk_cards.append({
+            "title": risk.get("title", ""),
+            "design_area": design_area,
+            "risk_level": risk.get("severity", "Medium"),
+            "signal_badge": signal_badge,
+            "confidence": _confidence_badge(avg_risk_conf),
+            "business_impact": risk.get("business_impact", ""),
+            "technical_cause": risk.get("technical_cause", ""),
+            "score_drivers": score_drivers,
+            "fix_initiative": fix_initiative,
+            "affected_count": len(affected),
+        })
+
+    # ── 3. 30/60/90 ROADMAP ──────────────────────────────────────
+    roadmap_phases = roadmap_src.get("roadmap_30_60_90", {})
+    phase_labels = [
+        ("30_days", "0–30 Days", "Foundational blockers"),
+        ("60_days", "30–60 Days", "Risk reducers"),
+        ("90_days", "60–90 Days", "Optimization"),
+    ]
+
+    roadmap_sections = []
+    for phase_key, phase_label, phase_desc in phase_labels:
+        entries = roadmap_phases.get(phase_key, [])
+        phase_items = []
+        for entry in entries:
+            iid = entry.get("initiative_id", "")
+            init = init_by_id.get(iid, {})
+            controls = init.get("controls", [])
+
+            # Risks reduced: count of top_business_risks whose affected_controls
+            # overlap with this initiative's controls
+            risks_reduced = 0
+            for risk in raw_risks:
+                if set(risk.get("affected_controls", [])) & set(controls):
+                    risks_reduced += 1
+
+            # Prerequisites (dependencies)
+            deps = entry.get("dependency_on", [])
+            # Estimated effort from initiative.delivery_model
+            effort = init.get("delivery_model", {}).get("estimated_duration", "")
+            blast = init.get("blast_radius", "")
+
+            phase_items.append({
+                "initiative_id": iid,
+                "title": entry.get("action", init.get("title", "")),
+                "caf_discipline": entry.get("caf_discipline", init.get("caf_discipline", "")),
+                "controls_count": len(controls),
+                "risks_reduced": risks_reduced,
+                "dependencies": deps,
+                "estimated_effort": effort,
+                "blast_radius": blast,
+                "owner_role": entry.get("owner_role", init.get("owner_role", "")),
+                "success_criteria": entry.get("success_criteria", init.get("success_criteria", "")),
+            })
+
+        roadmap_sections.append({
+            "key": phase_key,
+            "label": phase_label,
+            "description": phase_desc,
+            "entries": phase_items,
+        })
+
+    # ── 4. DESIGN AREA BREAKDOWN (hierarchical) ──────────────────
+    section_scores = _compute_section_scores(results) if results else scoring.get("section_scores", [])
+
+    # Group results by section
+    controls_by_section: dict[str, list] = {}
+    for r in results:
+        sec = r.get("section", "Other")
+        controls_by_section.setdefault(sec, []).append(r)
+
+    design_areas = []
+    for ss in section_scores:
+        sec_name = ss["section"]
+        sec_controls = controls_by_section.get(sec_name, [])
+
+        # Per-control enrichment for the controls table
+        enriched_controls = []
+        conf_values = []
+        for ctrl in sec_controls:
+            sig_type = _signal_type(ctrl)
+            conf_val = _confidence_numeric(ctrl)
+            conf_values.append(conf_val)
+
+            # "Why We Think This" from notes + evidence + signal_used
+            why_parts = []
+            sig = ctrl.get("signal_used")
+            if sig:
+                why_parts.append(f"Signal: {sig}")
+            notes = ctrl.get("notes")
+            if notes:
+                why_parts.append(notes)
+            evidence = ctrl.get("evidence", [])
+            if evidence:
+                for ev in evidence[:3]:
+                    if isinstance(ev, dict):
+                        why_parts.append(str(ev.get("detail", ev.get("value", ""))))
+                    elif isinstance(ev, str):
+                        why_parts.append(ev)
+
+            enriched_controls.append({
+                "control_id": ctrl.get("control_id", ""),
+                "text": ctrl.get("text", ctrl.get("question", "")),
+                "status": ctrl.get("status", "Manual"),
+                "signal_type": sig_type,
+                "why": " · ".join(why_parts) if why_parts else "No signal data available",
+                "severity": ctrl.get("severity", ""),
+                "confidence": _confidence_badge(conf_val),
+            })
+
+        # Section-level confidence: average of control confidences
+        avg_section_conf = sum(conf_values) / len(conf_values) if conf_values else None
+
+        design_areas.append({
+            "section": sec_name,
+            "maturity_percent": ss.get("maturity_percent"),
+            "counts": ss.get("counts", {}),
+            "automated_controls": ss.get("automated_controls", 0),
+            "total_controls": ss.get("total_controls", 0),
+            "automation_percent": ss.get("automation_percent", 0),
+            "critical_fail_count": ss.get("critical_fail_count", 0),
+            "critical_partial_count": ss.get("critical_partial_count", 0),
+            "confidence": _confidence_badge(avg_section_conf),
+            "controls": enriched_controls,
+        })
+
+    # Sort by risk: critical fails desc, maturity asc
+    design_areas.sort(key=lambda s: (
+        -(s.get("critical_fail_count", 0) + s.get("critical_partial_count", 0)),
+        s["maturity_percent"] if s["maturity_percent"] is not None else 9999,
+        s["section"],
+    ))
+
+    # ── 5. WORKSHOP DECISION FUNNEL ──────────────────────────────
     smart_qs = ai.get("smart_questions", [])
-    validation_questions: dict[str, list] = {}
+
+    # Build per-domain grouping
+    domain_questions: dict[str, list] = {}
     for q in smart_qs:
         domain = _bucket_domain(_domain_for_question(q, results_by_id))
-        validation_questions.setdefault(domain, []).append(q)
+        domain_questions.setdefault(domain, []).append(q)
 
-    # top business risks
-    top_business_risks = executive.get("top_business_risks", [])
+    # Build per-domain risks and blockers
+    domain_risks: dict[str, list] = {}
+    for risk in raw_risks:
+        for cid in risk.get("affected_controls", []):
+            ctrl = results_by_id.get(cid, {})
+            sec = ctrl.get("section")
+            if sec:
+                domain = _bucket_domain(sec)
+                domain_risks.setdefault(domain, [])
+                if risk not in domain_risks[domain]:
+                    domain_risks[domain].append(risk)
 
-    # ── Platform Risk Overview (deterministic) ────────────────────
-    risk_overview = build_risk_overview(results)
+    domain_blockers: dict[str, list] = {}
+    for b in blockers_raw:
+        cat = b.get("category", "")
+        domain = _bucket_domain(cat) if cat else "General"
+        domain_blockers.setdefault(domain, []).append(b)
 
-    # Enrich each risk control with display-only tier & confidence
-    # (rendering layer only — does NOT alter risk_score or JSON schema)
-    _display_tier_counts: dict[str, int] = {}
-    for _tier_ctrls in risk_overview.get("tiers", {}).values():
-        for ctrl in _tier_ctrls:
-            dt = _display_tier(ctrl["risk_score"])
-            ctrl["display_tier"] = dt["label"]
-            ctrl["tier_css"] = dt["css"]
-            ctrl["tier_colour"] = dt["colour"]
-            ctrl["confidence"] = _confidence_label(ctrl)
-            _display_tier_counts[dt["label"]] = _display_tier_counts.get(dt["label"], 0) + 1
+    # All domains that have questions, risks, or blockers
+    all_domains = sorted(set(
+        list(domain_questions.keys()) +
+        list(domain_risks.keys()) +
+        list(domain_blockers.keys())
+    ))
 
-    # Build a display-tier ordered list for the template
-    _all_display_labels = [t[0] for t in _DISPLAY_TIERS] + [_TIER_FALLBACK[0]]
-    _all_display_colours = {t[0]: t[3] for t in _DISPLAY_TIERS}
-    _all_display_colours[_TIER_FALLBACK[0]] = _TIER_FALLBACK[3]
-    display_tiers_ordered: list[dict] = []
-    for _dl in _all_display_labels:
-        # Collect controls matching this display tier across all backend tiers
-        tier_controls = []
-        for _tier_ctrls in risk_overview.get("tiers", {}).values():
-            for ctrl in _tier_ctrls:
-                if ctrl.get("display_tier") == _dl:
-                    tier_controls.append(ctrl)
-        # Sort by risk_score desc within display tier
-        tier_controls.sort(key=lambda x: (-x["risk_score"], x["section"]))
-        if tier_controls:
-            display_tiers_ordered.append({
-                "label": _dl,
-                "colour": _all_display_colours[_dl],
-                "controls": tier_controls,
-            })
-    risk_overview["display_tiers"] = display_tiers_ordered
+    workshop_funnel = []
+    for domain in all_domains:
+        d_risks = domain_risks.get(domain, [])[:3]
+        d_blockers = domain_blockers.get(domain, [])[:3]
+        d_questions = domain_questions.get(domain, [])[:3]
 
-    # ALZ design area references from MCP grounding
-    alz_design_area_refs = output.get("alz_design_area_references", {})
-    alz_design_area_urls = output.get("alz_design_area_urls", {})
+        # Count controls impacted if questions/smart-qs are implemented
+        controls_impacted = set()
+        for q in domain_questions.get(domain, []):
+            controls_impacted.update(q.get("resolves_controls", []))
 
-    # ── Provenance — scan telemetry for credibility ───────────────
-    telemetry = output.get("telemetry", {})
-    is_live = telemetry.get("live_run", False)
-    sig_avail = output.get("signal_availability", {})
-
-    if is_live:
-        rg_queries      = telemetry.get("rg_query_count")
-        arm_calls       = telemetry.get("arm_call_count")
-        total_api       = (rg_queries or 0) + (arm_calls or 0) if rg_queries is not None or arm_calls is not None else None
-        signals_fetched = telemetry.get("signals_fetched")
-        signals_cached  = telemetry.get("signals_cached")
-        signal_errors   = telemetry.get("signal_errors")
-        data_driven_count = auto_cov.get("automated_controls", auto_cov.get("data_driven"))
-
-        signal_inventory: dict[str, int] = {}
-        for cat, sigs in sig_avail.items():
-            if isinstance(sigs, list):
-                signal_inventory[cat] = len(sigs)
-
-        provenance = {
-            "live": True,
-            "statement": (
-                "This report was generated from live platform telemetry. "
-                "No questionnaire or Excel input was used."
-            ),
-            "scan_duration_sec": telemetry.get("assessment_duration_sec"),
-            "api_calls_total": total_api,
-            "rg_queries": rg_queries,
-            "arm_calls": arm_calls,
-            "signals_fetched": signals_fetched,
-            "signals_cached": signals_cached,
-            "signal_errors": signal_errors,
-            "signal_inventory": signal_inventory,
-            "signal_categories": len(signal_inventory),
-            "data_driven_controls": data_driven_count,
-            "total_controls": auto_cov.get("total_controls"),
-            "phase_context_sec": telemetry.get("phase_context_sec"),
-            "phase_signals_sec": telemetry.get("phase_signals_sec"),
-            "phase_evaluators_sec": telemetry.get("phase_evaluators_sec"),
-            "phase_ai_sec": telemetry.get("phase_ai_sec"),
-            "phase_reporting_sec": telemetry.get("phase_reporting_sec"),
-        }
-    else:
-        provenance = {
-            "live": False,
-            "statement": (
-                "Demo Mode \u2014 No live telemetry. "
-                "Metrics shown are from cached or sample data."
-            ),
-        }
+        workshop_funnel.append({
+            "domain": domain,
+            "risks": [{"title": r.get("title"), "severity": r.get("severity")} for r in d_risks],
+            "blockers": [{"description": b.get("description"), "severity": b.get("severity")} for b in d_blockers],
+            "questions": [{
+                "question": q.get("question", ""),
+                "type": q.get("type", ""),
+                "follow_up": q.get("follow_up_recommendation", ""),
+                "impact_if_yes": q.get("impact_if_yes", ""),
+                "impact_if_no": q.get("impact_if_no", ""),
+                "controls_impacted": len(q.get("resolves_controls", [])),
+            } for q in d_questions],
+            "total_controls_impacted": len(controls_impacted),
+        })
 
     return {
-        "readiness_snapshot": readiness_snapshot,
-        "lz_blockers": lz_blockers,
-        "initiative_sequence": initiative_sequence,
+        "foundation_gate": foundation_gate,
+        "risk_cards": risk_cards,
+        "roadmap_sections": roadmap_sections,
         "trajectory": trajectory if isinstance(trajectory, dict) else {},
-        "capability_unlock_map": capability_unlock_map,
-        "assessment_modes": assessment_modes,
-        "alz_core_sections": alz_core_sections,
-        "overlay_sections": overlay_sections,
-        "data_confidence": data_confidence,
-        "validation_questions": validation_questions,
-        "top_business_risks": top_business_risks,
-        "risk_overview": risk_overview,
-        "platform_readiness_text": platform_readiness_text,
-        "workshop": output.get("workshop", {}),
-        "alz_design_area_references": alz_design_area_refs,
-        "alz_design_area_urls": alz_design_area_urls,
-        "provenance": provenance,
+        "design_areas": design_areas,
+        "workshop_funnel": workshop_funnel,
     }
 
 

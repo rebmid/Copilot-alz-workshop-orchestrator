@@ -86,12 +86,34 @@ def discover_execution_context(credential: AzureCliCredential) -> dict:
 
     try:
         if subs:
+            # Resolve the current principal's object ID so we only inspect
+            # *their* role assignments, not every assignment on the subscription.
+            principal_id = None
+            try:
+                me_resp = requests.get(
+                    "https://graph.microsoft.com/v1.0/me",
+                    headers={
+                        "Authorization": "Bearer "
+                        + credential.get_token("https://graph.microsoft.com/.default").token
+                    },
+                    timeout=10,
+                )
+                if me_resp.ok:
+                    principal_id = me_resp.json().get("id")
+            except Exception:
+                pass  # Graph may not be reachable; fall back to unfiltered
+
             # Check role assignments on the first visible subscription
             sub_id = subs[0]
+            filter_expr = (
+                f"assignedTo('{principal_id}')"
+                if principal_id
+                else "atScope()"
+            )
             ra_resp = requests.get(
                 f"https://management.azure.com/subscriptions/{sub_id}"
                 f"/providers/Microsoft.Authorization/roleAssignments"
-                f"?api-version=2022-04-01&$filter=atScope()",
+                f"?api-version=2022-04-01&$filter={filter_expr}",
                 headers={"Authorization": f"Bearer {token}"},
                 timeout=15,
             )
