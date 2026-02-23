@@ -185,6 +185,152 @@
         "maturity_trend": { "type": "string" },
         "recommended_next_initiative": { "type": "string" }
       }
+    },
+
+    "evidence_refs": {
+      "description": "Reusable evidence_refs schema — every derived object must carry this.",
+      "type": "object",
+      "required": ["controls", "signals"],
+      "properties": {
+        "controls": { "type": "array", "items": { "type": "string" }, "description": "Control IDs that ground this conclusion." },
+        "risks": { "type": "array", "items": { "type": "string" }, "description": "Risk titles or IDs." },
+        "blockers": { "type": "array", "items": { "type": "string" }, "description": "Blocker categories or descriptions." },
+        "signals": { "type": "array", "items": { "type": "string" }, "description": "Signal keys (signal:key format)." },
+        "mcp_queries": { "type": "array", "items": { "type": "string" }, "description": "MCP queries used for grounding." }
+      }
+    },
+
+    "decision_impact_model": {
+      "type": "object",
+      "description": "Per-initiative 'what breaks if not implemented' — deterministic joins only.",
+      "required": ["items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["initiative_id", "if_not_implemented", "confidence", "evidence_refs", "assumptions"],
+            "properties": {
+              "initiative_id": { "type": "string" },
+              "if_not_implemented": {
+                "type": "object",
+                "required": ["enterprise_scale_blocked", "critical_risks_remaining", "fail_controls_remaining", "blocked_initiatives", "maturity_ceiling_notes"],
+                "properties": {
+                  "enterprise_scale_blocked": { "type": "boolean" },
+                  "critical_risks_remaining": { "type": "integer" },
+                  "fail_controls_remaining": { "type": "integer" },
+                  "blocked_initiatives": { "type": "array", "items": { "type": "string" } },
+                  "maturity_ceiling_notes": { "type": "string" }
+                }
+              },
+              "confidence": {
+                "type": "object",
+                "required": ["value", "basis", "label"],
+                "properties": {
+                  "value": { "type": "number", "minimum": 0, "maximum": 1 },
+                  "basis": { "type": "string" },
+                  "label": { "type": "string", "enum": ["None", "Low", "Medium", "High"] }
+                }
+              },
+              "evidence_refs": { "$ref": "#/properties/evidence_refs" },
+              "assumptions": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+
+    "scaling_simulation": {
+      "type": "object",
+      "description": "Deterministic scaling projection for multi-subscription scenarios. Every impact driven by a rule_id.",
+      "required": ["scenarios"],
+      "properties": {
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["scenario", "current_subscriptions", "target_subscriptions", "derived_impacts"],
+            "properties": {
+              "scenario": { "type": "string" },
+              "current_subscriptions": { "type": "integer" },
+              "target_subscriptions": { "type": "integer" },
+              "derived_impacts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["impact_statement", "rule_id", "evidence_refs", "assumptions"],
+                  "properties": {
+                    "impact_statement": { "type": "string" },
+                    "rule_id": { "type": "string", "pattern": "^RULE-[A-Z]+-\\d{3}$" },
+                    "evidence_refs": { "$ref": "#/properties/evidence_refs" },
+                    "assumptions": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "drift_model": {
+      "type": "object",
+      "description": "Deterministic drift likelihood from signal gaps. No freeform inference.",
+      "required": ["mode", "drift_likelihood", "drift_score", "active_factors", "confidence", "evidence_refs", "assumptions"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["static", "activity_log_backed"] },
+        "drift_likelihood": { "type": "string", "enum": ["Low", "Medium", "High"] },
+        "drift_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "active_factors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["factor", "description", "weight"],
+            "properties": {
+              "factor": { "type": "string" },
+              "description": { "type": "string" },
+              "weight": { "type": "number" }
+            }
+          }
+        },
+        "all_factors_evaluated": { "type": "integer" },
+        "confidence": {
+          "type": "object",
+          "required": ["value", "basis", "label"],
+          "properties": {
+            "value": { "type": "number", "minimum": 0, "maximum": 1 },
+            "basis": { "type": "string" },
+            "label": { "type": "string", "enum": ["None", "Low", "Medium", "High"] }
+          }
+        },
+        "evidence_refs": { "$ref": "#/properties/evidence_refs" },
+        "assumptions": { "type": "array", "items": { "type": "string" } },
+        "activity_log_insights": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "cost_simulation": {
+      "type": "object",
+      "description": "Category-based cost drivers. No dollar amounts unless mode=tool_backed.",
+      "required": ["mode", "drivers"],
+      "properties": {
+        "mode": { "type": "string", "enum": ["category_only", "tool_backed"] },
+        "drivers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["initiative_id", "resources_introduced", "billing_meters", "estimated_monthly_category", "evidence_refs", "assumptions"],
+            "properties": {
+              "initiative_id": { "type": "string" },
+              "resources_introduced": { "type": "array", "items": { "type": "string" } },
+              "billing_meters": { "type": "array", "items": { "type": "string" } },
+              "estimated_monthly_category": { "type": "string", "enum": ["Low", "Medium", "High"] },
+              "evidence_refs": { "$ref": "#/properties/evidence_refs" },
+              "assumptions": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
     }
   }
 }

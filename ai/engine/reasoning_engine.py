@@ -21,6 +21,11 @@ from alz.loader import (
     build_prompt_checklist_context,
     get_design_area_learn_urls,
 )
+from engine.guardrails import validate_anti_drift
+from engine.scaling_rules import build_scaling_simulation
+from engine.drift_model import build_drift_model
+from engine.cost_simulation import build_cost_simulation
+from engine.decision_impact import build_decision_impact_model
 
 
 class ReasoningEngine:
@@ -298,6 +303,48 @@ class ReasoningEngine:
         # ── Progress analysis (derived, no AOAI call) ─────────────
         progress = self._derive_progress(assessment)
 
+        # ── Anti-drift derived models (deterministic, no AOAI) ────
+        # Extract signals and results from the assessment payload
+        # so the derived-model builders can work from factual data.
+        _signals = assessment.get("signals", {})
+        _results = assessment.get("results", [])
+        _exec_ctx = assessment.get("execution_context", {})
+        _section_scores = assessment.get("design_area_maturity", [])
+        _top_risks = (executive or {}).get("top_business_risks", [])
+        _blockers = (readiness or {}).get("blockers", [])
+
+        print("  [derived] Building anti-drift models …")
+
+        try:
+            scaling_sim = build_scaling_simulation(_results, _signals, _exec_ctx)
+            print(f"        → scaling_simulation: {sum(len(s.get('derived_impacts', [])) for s in scaling_sim.get('scenarios', []))} impacts across {len(scaling_sim.get('scenarios', []))} scenarios")
+        except Exception as e:
+            print(f"  ⚠ scaling_simulation failed: {e}")
+            scaling_sim = {"scenarios": []}
+
+        try:
+            drift = build_drift_model(_results, _signals, _signals.get("activity_log"))
+            print(f"        → drift_model: {drift.get('drift_likelihood', '?')} likelihood (score={drift.get('drift_score', '?')})")
+        except Exception as e:
+            print(f"  ⚠ drift_model failed: {e}")
+            drift = {}
+
+        try:
+            cost_sim = build_cost_simulation(initiatives, _results, mcp_pricing_available=False)
+            print(f"        → cost_simulation: {len(cost_sim.get('drivers', []))} drivers ({cost_sim.get('mode', '?')})")
+        except Exception as e:
+            print(f"  ⚠ cost_simulation failed: {e}")
+            cost_sim = {"mode": "category_only", "drivers": []}
+
+        try:
+            decision_impact = build_decision_impact_model(
+                initiatives, _results, _top_risks, _blockers, _section_scores, _signals,
+            )
+            print(f"        → decision_impact_model: {len(decision_impact.get('items', []))} items")
+        except Exception as e:
+            print(f"  ⚠ decision_impact_model failed: {e}")
+            decision_impact = {"items": []}
+
         # ── Assemble unified output ───────────────────────────────
         output: dict[str, Any] = {
             "meta": {
@@ -326,6 +373,11 @@ class ReasoningEngine:
             "alz_design_area_references": design_area_refs,
             "alz_design_area_urls": get_design_area_learn_urls(),
             "progress_analysis": progress,
+            # Anti-drift derived models (deterministic)
+            "scaling_simulation": scaling_sim,
+            "drift_model": drift,
+            "cost_simulation": cost_sim,
+            "decision_impact_model": decision_impact,
             # Keep raw blocks for backwards compatibility
             "_raw": {
                 "roadmap": roadmap_raw,
@@ -333,6 +385,16 @@ class ReasoningEngine:
                 "grounding_context": grounding_ctx,
             },
         }
+
+        # ── Anti-drift validation ─────────────────────────────────
+        drift_violations = validate_anti_drift(output)
+        if drift_violations:
+            print(f"\n  ⚠ Anti-drift guardrail violations ({len(drift_violations)}):")
+            for v in drift_violations[:20]:
+                print(f"    • {v}")
+            output["_anti_drift_violations"] = drift_violations
+        else:
+            print("  ✓ Anti-drift validation passed — no violations")
 
         print(f"\n  ✓ Reasoning engine complete — {len(enriched_initiatives)} initiatives, "
               f"{len(implementation_decisions)} pattern decisions, "
