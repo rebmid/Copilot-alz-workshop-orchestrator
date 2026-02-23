@@ -347,3 +347,198 @@ class TestRewriteInitiativeIds:
         map1 = rewrite_initiative_ids(inits1, roadmap1)
         map2 = rewrite_initiative_ids(inits2, roadmap2)
         assert map1["INIT-001"] == map2["INIT-001"]
+
+
+# ── normalize_initiative_id ──────────────────────────────────────
+
+from engine.id_rewriter import normalize_initiative_id
+
+
+class TestNormalizeInitiativeId:
+    """Tests for normalize_initiative_id()."""
+
+    def test_already_hash(self):
+        """Hash-format IDs pass through unchanged."""
+        assert normalize_initiative_id("INIT-abcdef01", {}) == "INIT-abcdef01"
+
+    def test_ordinal_mapped(self):
+        """Ordinal IDs are resolved via id_map."""
+        id_map = {"INIT-001": "INIT-abcdef01"}
+        assert normalize_initiative_id("INIT-001", id_map) == "INIT-abcdef01"
+
+    def test_ordinal_unmapped(self):
+        """Ordinal IDs not in id_map return None."""
+        assert normalize_initiative_id("INIT-999", {}) is None
+
+    def test_none_input(self):
+        """None/empty inputs return None."""
+        assert normalize_initiative_id(None, {}) is None
+        assert normalize_initiative_id("", {}) is None
+
+    def test_hash_with_suffix(self):
+        """Hash IDs with collision suffix pass through."""
+        assert normalize_initiative_id("INIT-abcdef01-2", {}) == "INIT-abcdef01-2"
+
+
+# ── clamp_readiness_score ────────────────────────────────────────
+
+from engine.id_rewriter import clamp_readiness_score, READINESS_SCORE_MAX
+
+
+class TestClampReadinessScore:
+    """Tests for clamp_readiness_score()."""
+
+    def test_score_within_range(self):
+        """Scores already within range are kept (as int)."""
+        r = {"readiness_score": 75}
+        clamp_readiness_score(r)
+        assert r["readiness_score"] == 75
+        assert "assumptions" not in r
+
+    def test_score_above_max(self):
+        """Scores above max are clamped with assumption."""
+        r = {"readiness_score": 150}
+        clamp_readiness_score(r)
+        assert r["readiness_score"] == READINESS_SCORE_MAX
+        assert any("clamped" in a for a in r["assumptions"])
+
+    def test_score_below_zero(self):
+        """Negative scores are clamped to 0."""
+        r = {"readiness_score": -5}
+        clamp_readiness_score(r)
+        assert r["readiness_score"] == 0
+        assert any("clamped" in a for a in r["assumptions"])
+
+    def test_none_readiness(self):
+        """None input does not crash."""
+        clamp_readiness_score(None)  # no exception
+
+    def test_missing_score(self):
+        """Dict without readiness_score is a no-op."""
+        r = {"blockers": []}
+        clamp_readiness_score(r)
+        assert "readiness_score" not in r
+
+    def test_float_score(self):
+        """Float score is truncated to int."""
+        r = {"readiness_score": 72.8}
+        clamp_readiness_score(r)
+        assert r["readiness_score"] == 72
+
+    def test_non_numeric_score(self):
+        """Non-numeric score is left untouched."""
+        r = {"readiness_score": "high"}
+        clamp_readiness_score(r)
+        assert r["readiness_score"] == "high"
+
+    def test_max_constant(self):
+        """READINESS_SCORE_MAX is 100 (matching prompt contract)."""
+        assert READINESS_SCORE_MAX == 100
+
+
+# ── validate_pipeline_integrity ──────────────────────────────────
+
+from engine.id_rewriter import validate_pipeline_integrity
+
+
+class TestValidatePipelineIntegrity:
+    """Tests for validate_pipeline_integrity()."""
+
+    def test_clean_pipeline(self):
+        """No violations on well-formed data."""
+        initiatives = [
+            {"initiative_id": "INIT-aabbccdd", "controls": ["C1"], "caf_discipline": "Governance", "alz_design_area": "governance"},
+        ]
+        readiness = {
+            "readiness_score": 50,
+            "blockers": [
+                {"category": "governance", "resolving_initiative": "INIT-aabbccdd"},
+            ],
+        }
+        blocker_map = {"governance": "INIT-aabbccdd"}
+        decision_impact = {
+            "items": [
+                {"initiative_id": "INIT-aabbccdd", "evidence_refs": {"controls": ["C1"]}, "confidence": {"value": 0.6}},
+            ],
+        }
+        violations = validate_pipeline_integrity(readiness, initiatives, blocker_map, decision_impact)
+        # Should have no structural violations (category alignment is advisory)
+        invalid_refs = [v for v in violations if "not in initiatives list" in v]
+        assert len(invalid_refs) == 0
+
+    def test_invalid_blocker_ref(self):
+        """Blocker pointing to non-existent initiative is flagged."""
+        initiatives = [{"initiative_id": "INIT-aabbccdd", "controls": ["C1"]}]
+        readiness = {
+            "blockers": [
+                {"category": "governance", "resolving_initiative": "INIT-99999999"},
+            ],
+        }
+        violations = validate_pipeline_integrity(readiness, initiatives, {}, {"items": []})
+        assert any("INIT-99999999" in v and "not in initiatives" in v for v in violations)
+
+    def test_null_blocker_ref_is_ok(self):
+        """Null resolving_initiative is acceptable (unmappable)."""
+        readiness = {
+            "blockers": [
+                {"category": "governance", "resolving_initiative": None},
+            ],
+        }
+        violations = validate_pipeline_integrity(readiness, [], {}, {"items": []})
+        assert not any("not in initiatives" in v for v in violations)
+
+    def test_zero_confidence_with_controls(self):
+        """Items with controls but zero confidence are flagged."""
+        initiatives = [{"initiative_id": "INIT-aabbccdd", "controls": ["C1"]}]
+        decision_impact = {
+            "items": [
+                {
+                    "initiative_id": "INIT-aabbccdd",
+                    "evidence_refs": {"controls": ["C1", "C2"]},
+                    "confidence": {"value": 0.0},
+                },
+            ],
+        }
+        violations = validate_pipeline_integrity(None, initiatives, {}, decision_impact)
+        assert any("confidence=0.0" in v for v in violations)
+
+    def test_unrecognised_id_format(self):
+        """Initiative IDs with unknown format are flagged."""
+        initiatives = [{"initiative_id": "PLAN-Alpha", "controls": ["C1"]}]
+        violations = validate_pipeline_integrity(None, initiatives, {}, {"items": []})
+        assert any("PLAN-Alpha" in v and "unrecognised" in v for v in violations)
+
+    def test_none_readiness(self):
+        """None readiness doesn't crash."""
+        violations = validate_pipeline_integrity(None, [], {}, {"items": []})
+        assert isinstance(violations, list)
+
+
+# ── patch_blocker_initiatives with None ──────────────────────────
+
+class TestPatchBlockerInitiativesNullHandling:
+    """Tests for patch_blocker_initiatives() with None (unmappable) blockers."""
+
+    def test_null_mapping_sets_null_and_assumption(self):
+        """When blocker_init_map has None value, set null + assumption."""
+        readiness = {
+            "blockers": [
+                {"category": "Governance", "resolving_initiative": "INIT-old"},
+            ],
+        }
+        mapping: dict[str, str | None] = {"governance": None}
+        patch_blocker_initiatives(readiness, mapping)
+        b = readiness["blockers"][0]
+        assert b["resolving_initiative"] is None
+        assert any("No deterministic mapping" in a for a in b.get("assumptions", []))
+
+    def test_valid_mapping_applied(self):
+        """Non-None mappings are applied normally."""
+        readiness = {
+            "blockers": [
+                {"category": "Governance", "resolving_initiative": "INIT-old"},
+            ],
+        }
+        mapping: dict[str, str | None] = {"governance": "INIT-aabbccdd"}
+        patch_blocker_initiatives(readiness, mapping)
+        assert readiness["blockers"][0]["resolving_initiative"] == "INIT-aabbccdd"

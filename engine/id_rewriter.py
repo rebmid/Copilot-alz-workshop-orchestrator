@@ -29,8 +29,39 @@ import re
 from typing import Any
 
 
-# ── Regex matching INIT-NNN ordinal IDs ──────────────────────────
+# ── Regex matching initiative IDs ─────────────────────────────────
+# Ordinal: INIT-001, INIT-002, ...
+# Hash:    INIT-a1b2c3d4
 _INIT_ID_RE = re.compile(r"INIT-\d{3,}")
+_INIT_HASH_RE = re.compile(r"^INIT-[0-9a-f]{8}(?:-\d+)?$")
+
+
+# ── Single-entry-point normalisation ─────────────────────────────
+
+def normalize_initiative_id(raw_id: str, id_map: dict[str, str]) -> str | None:
+    """Resolve *any* initiative-ID string to its canonical hash-based form.
+
+    Parameters
+    ----------
+    raw_id : str
+        An initiative ID in any format — ordinal ``INIT-001`` or
+        hash ``INIT-a1b2c3d4``.
+    id_map : dict[str, str]
+        The old→new map produced by ``build_id_map``.
+
+    Returns
+    -------
+    str | None
+        The canonical hash-based ID, or ``None`` if the ID cannot be
+        resolved (not in the map and not already valid hash-format).
+    """
+    if not raw_id:
+        return None
+    # Already in canonical hash form?
+    if _INIT_HASH_RE.match(raw_id):
+        return raw_id
+    # Mapped ordinal → hash?
+    return id_map.get(raw_id)
 
 
 def _hash_controls(controls: list[str]) -> str:
@@ -207,7 +238,7 @@ def normalize_dependency_graph(
 
 def patch_blocker_initiatives(
     readiness: dict | None,
-    blocker_mapping: dict[str, str],
+    blocker_mapping: dict[str, str | None],
 ) -> None:
     """Patch enterprise_scale_readiness blockers with deterministic
     resolving_initiative from the decision_impact blocker mapping.
@@ -220,7 +251,7 @@ def patch_blocker_initiatives(
         The enterprise_scale_readiness output (contains ``blockers``).
     blocker_mapping : dict
         Output of ``resolve_blockers_to_initiatives()`` —
-        maps blocker description hash or category → initiative_id.
+        maps blocker category (lowercase) → initiative_id or None.
     """
     if not blocker_mapping or not readiness:
         return
@@ -228,9 +259,19 @@ def patch_blocker_initiatives(
     blockers = readiness.get("blockers", [])
     for blocker in blockers:
         category = blocker.get("category", "").lower()
-        # The blocker_mapping is keyed by category (lowercase)
         if category in blocker_mapping:
-            blocker["resolving_initiative"] = blocker_mapping[category]
+            resolved = blocker_mapping[category]
+            if resolved is not None:
+                blocker["resolving_initiative"] = resolved
+            else:
+                # No deterministic match — set null + assumption
+                blocker["resolving_initiative"] = None
+                assumptions = blocker.get("assumptions", [])
+                assumptions.append(
+                    "No deterministic mapping available — "
+                    "no initiative controls overlap this blocker category."
+                )
+                blocker["assumptions"] = assumptions
 
 
 def rewrite_initiative_ids(
@@ -283,3 +324,135 @@ def rewrite_initiative_ids(
         )
 
     return id_map
+
+
+# ── Readiness score normalisation ─────────────────────────────────
+
+READINESS_SCORE_MAX = 100
+
+
+def clamp_readiness_score(readiness: dict | None) -> None:
+    """Clamp readiness_score to [0, READINESS_SCORE_MAX] in-place.
+
+    If the raw value exceeds the maximum, it is clamped and an
+    assumption note is appended explaining the adjustment.
+    """
+    if not readiness:
+        return
+    raw = readiness.get("readiness_score")
+    if raw is None:
+        return
+    if not isinstance(raw, (int, float)):
+        return
+
+    clamped = max(0, min(int(raw), READINESS_SCORE_MAX))
+    if clamped != int(raw):
+        readiness["readiness_score"] = clamped
+        assumptions = readiness.setdefault("assumptions", [])
+        assumptions.append(
+            f"readiness_score clamped from {int(raw)} to {clamped} "
+            f"(valid range 0\u2013{READINESS_SCORE_MAX})."
+        )
+    else:
+        readiness["readiness_score"] = clamped
+
+
+# ── Pipeline validation report ────────────────────────────────────
+
+def validate_pipeline_integrity(
+    readiness: dict | None,
+    initiatives: list[dict],
+    blocker_mapping: dict[str, str | None],
+    decision_impact: dict,
+) -> list[str]:
+    """Run structural integrity checks and return a list of violation strings.
+
+    Prints a summary report during generation.  Returns violations so
+    callers can embed them in the output JSON.
+    """
+    violations: list[str] = []
+    valid_ids = {i.get("initiative_id") for i in initiatives if i.get("initiative_id")}
+
+    # \u2500\u2500 1. Blocker \u2192 initiative referential integrity \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    blockers = (readiness or {}).get("blockers", [])
+    valid_blocker_refs = 0
+    invalid_blocker_refs = 0
+
+    for b in blockers:
+        ref = b.get("resolving_initiative")
+        if ref is None:
+            continue  # explicitly null \u2014 unmappable, acceptable
+        if ref in valid_ids:
+            valid_blocker_refs += 1
+        else:
+            invalid_blocker_refs += 1
+            violations.append(
+                f"Blocker '{b.get('category', '?')}': "
+                f"resolving_initiative '{ref}' not in initiatives list."
+            )
+
+    # \u2500\u2500 2. Blocker category \u2194 initiative alignment (advisory) \u2500\u2500\u2500
+    for b in blockers:
+        ref = b.get("resolving_initiative")
+        if ref is None or ref not in valid_ids:
+            continue
+        bcat = b.get("category", "").lower()
+        from schemas.taxonomy import BLOCKER_CATEGORY_TO_SECTIONS
+        expected_sections = BLOCKER_CATEGORY_TO_SECTIONS.get(bcat, [])
+        if not expected_sections:
+            continue
+        init = next((i for i in initiatives if i.get("initiative_id") == ref), None)
+        if not init:
+            continue
+        init_caf = (init.get("caf_discipline") or "").lower()
+        init_area = (init.get("alz_design_area") or "").lower()
+        has_overlap = (
+            bcat in init_caf
+            or bcat in init_area
+            or any(s.lower() in init_area for s in expected_sections)
+            or any(s.lower() in init_caf for s in expected_sections)
+            or len(init.get("controls", [])) > 0
+        )
+        if not has_overlap:
+            violations.append(
+                f"Blocker '{bcat}': mapped to '{ref}' which may not "
+                f"cover expected sections {expected_sections}."
+            )
+
+    # \u2500\u2500 3. Decision impact: controls > 0 implies confidence > 0 \u2500\u2500
+    zero_conf_with_controls = 0
+    for item in decision_impact.get("items", []):
+        controls = item.get("evidence_refs", {}).get("controls", [])
+        conf_val = item.get("confidence", {}).get("value", 0.0)
+        if len(controls) > 0 and conf_val == 0.0:
+            zero_conf_with_controls += 1
+            violations.append(
+                f"Decision impact '{item.get('initiative_id', '?')}': "
+                f"{len(controls)} controls but confidence=0.0."
+            )
+
+    # \u2500\u2500 4. Initiative ID format consistency \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    mixed_format = 0
+    for i in initiatives:
+        iid = i.get("initiative_id", "")
+        if iid and not _INIT_HASH_RE.match(iid) and not _INIT_ID_RE.match(iid):
+            mixed_format += 1
+            violations.append(f"Initiative ID '{iid}' has unrecognised format.")
+
+    # \u2500\u2500 Print report \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+    print("\\n  \u2500\u2500 Pipeline Integrity Validation Report \u2500\u2500")
+    print(f"    Blockers: {valid_blocker_refs} valid refs, "
+          f"{invalid_blocker_refs} invalid refs, "
+          f"{sum(1 for b in blockers if b.get('resolving_initiative') is None)} null (unmappable)")
+    print(f"    Decision impact: {zero_conf_with_controls} items with "
+          f"non-empty controls but zero confidence (target: 0)")
+    print(f"    Initiative IDs: {len(valid_ids)} total, "
+          f"{mixed_format} format violations")
+    if violations:
+        print(f"    \u26a0 {len(violations)} validation issue(s):")
+        for v in violations[:15]:
+            print(f"      \u2022 {v}")
+    else:
+        print("    \u2713 All structural integrity checks passed")
+
+    return violations

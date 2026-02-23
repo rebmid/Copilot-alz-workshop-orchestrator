@@ -49,7 +49,7 @@ def resolve_blockers_to_initiatives(
     blockers: list[dict],
     initiatives: list[dict],
     results: list[dict],
-) -> dict[str, str]:
+) -> dict[str, str | None]:
     """
     Deterministically resolve blockers to initiatives via control overlap.
 
@@ -61,7 +61,7 @@ def resolve_blockers_to_initiatives(
       3. Falls back to LLM-declared resolving_initiative only if no
          deterministic match is found AND the LLM reference is valid.
 
-    Returns: dict of blocker_key → initiative_id
+    Returns: dict of blocker_key → initiative_id (or None if unmappable)
     """
     results_by_id = {r.get("control_id", ""): r for r in results if r.get("control_id")}
 
@@ -88,12 +88,15 @@ def resolve_blockers_to_initiatives(
 
     valid_init_ids = set(init_controls_map.keys())
 
-    blocker_init_map: dict[str, str] = {}
+    blocker_init_map: dict[str, str | None] = {}
 
     for b in blockers:
-        blocker_key = b.get("category", "") or b.get("description", "")
-        if not blocker_key:
+        raw_key = b.get("category", "") or b.get("description", "")
+        if not raw_key:
             continue
+        # Normalize key to lowercase — patch_blocker_initiatives also
+        # lowercases the category at lookup time.
+        blocker_key = raw_key.lower()
 
         # Strategy 1: Match by affected_controls overlap
         affected = set(b.get("affected_controls", []))
@@ -111,7 +114,7 @@ def resolve_blockers_to_initiatives(
 
         # Strategy 2: Match by category → section → initiative with most
         # failing controls in that section
-        category = b.get("category", "").lower()
+        category = blocker_key  # already lowercase
         target_sections = _BLOCKER_CATEGORY_TO_SECTIONS.get(category, [])
         if target_sections:
             best_init = None
@@ -144,6 +147,10 @@ def resolve_blockers_to_initiatives(
         llm_ref = b.get("resolving_initiative", "")
         if llm_ref and llm_ref in valid_init_ids:
             blocker_init_map[blocker_key] = llm_ref
+            continue
+
+        # No deterministic match — set null
+        blocker_init_map[blocker_key] = None
 
     return blocker_init_map
 
@@ -277,18 +284,22 @@ def build_decision_impact_model(
         # Enterprise-scale blocked: if this initiative resolves a blocker
         resolves_blockers = [
             cat for cat, res_init in blocker_init_map.items()
-            if res_init == iid
+            if res_init == iid and res_init is not None
         ]
         enterprise_blocked = len(resolves_blockers) > 0
 
         # Maturity ceiling
         ceiling = _maturity_ceiling_if_skipped(init, results, section_scores)
 
-        # Confidence: average of underlying control confidences
+        # Confidence: average of underlying control confidences.
+        # Only include controls that actually have a confidence_score.
+        # Do NOT substitute a default — missing means missing.
         ctrl_confidences = [
-            r.get("confidence_score", 0.5)
+            r["confidence_score"]
             for r in results
             if r.get("control_id") in init_controls
+            and "confidence_score" in r
+            and isinstance(r["confidence_score"], (int, float))
         ]
         # Signal coverage for this initiative's signals
         init_signals = set()
@@ -299,7 +310,7 @@ def build_decision_impact_model(
         covered = sum(1 for s in init_signals if signals_dict.get(s))
         signal_pct = (covered / max(len(init_signals), 1)) * 100
 
-        confidence = compute_derived_confidence(ctrl_confidences, signal_pct)
+        confidence = compute_derived_confidence(list(map(float, ctrl_confidences)), signal_pct)
 
         item = {
             "initiative_id": iid,

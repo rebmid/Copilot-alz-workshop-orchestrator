@@ -276,7 +276,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <div class="kpi-label">Overall Maturity</div>
     </div>
     <div class="kpi">
-      <div class="kpi-value" style="color:var(--accent)">{{ foundation_gate.readiness_score|default('--') }}{% if foundation_gate.readiness_score %}/10{% endif %}</div>
+      <div class="kpi-value" style="color:var(--accent)">{{ foundation_gate.readiness_score|default('--') }}{% if foundation_gate.readiness_score is not none %}/100{% endif %}</div>
       <div class="kpi-label">Readiness Score</div>
     </div>
     <div class="kpi">

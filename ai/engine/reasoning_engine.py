@@ -243,6 +243,10 @@ class ReasoningEngine:
             readiness.clear()
             readiness.update(remapped)
 
+        # Clamp readiness_score to valid range
+        from engine.id_rewriter import clamp_readiness_score
+        clamp_readiness_score(readiness)
+
         # ── 6. Smart questions ────────────────────────────────────
         print(f"  [6/{total_passes}] Generating smart questions …")
         sq_raw = self._safe_run(
@@ -450,6 +454,13 @@ class ReasoningEngine:
             from engine.id_rewriter import patch_blocker_initiatives
             patch_blocker_initiatives(readiness, blocker_init_mapping)
 
+        # ── Pipeline integrity validation ──────────────────────────
+        from engine.id_rewriter import validate_pipeline_integrity
+        _pipeline_violations = validate_pipeline_integrity(
+            readiness, enriched_initiatives,
+            blocker_init_mapping, decision_impact,
+        )
+
         # ── Normalize LLM dependency graph ────────────────────────
         # Add initiative_id to each entry and convert text depends_on
         # to initiative ID arrays for join stability.
@@ -504,6 +515,8 @@ class ReasoningEngine:
             "blocker_initiative_mapping": blocker_init_mapping,
             # Initiative ID mapping (ordinal → hash) for traceability
             "_initiative_id_map": _id_map,
+            # Pipeline structural integrity violations
+            "_pipeline_violations": _pipeline_violations,
             # Keep raw blocks for backwards compatibility
             "_raw": {
                 "roadmap": roadmap_raw,
