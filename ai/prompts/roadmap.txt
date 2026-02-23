@@ -94,7 +94,8 @@ Return ONLY valid JSON matching this schema:
   "dependency_graph": [
     {
       "action": "...",
-      "depends_on": ["..."],
+      "initiative_id": "INIT-xxx",
+      "depends_on": ["INIT-xxx"],
       "phase": "30_days | 60_days | 90_days"
     }
   ],
@@ -102,6 +103,9 @@ Return ONLY valid JSON matching this schema:
 }
 
 Cluster failed and manual controls into 5–10 initiatives.
+Each initiative_id must use the format INIT-xxx (e.g. INIT-001).
+IDs will be deterministically remapped post-LLM — do not worry about hash derivation.
+Use depends_on arrays with initiative_id references (INIT-xxx), not free-text action strings.
 
 Write outcomes, not tasks.
 Actions must begin with a measurable platform outcome.

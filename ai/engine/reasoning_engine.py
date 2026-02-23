@@ -25,7 +25,12 @@ from engine.guardrails import validate_anti_drift
 from engine.scaling_rules import build_scaling_simulation
 from engine.drift_model import build_drift_model
 from engine.cost_simulation import build_cost_simulation
-from engine.decision_impact import build_decision_impact_model
+from engine.decision_impact import build_decision_impact_model, resolve_blockers_to_initiatives
+from engine.dependency_engine import build_initiative_dependency_graph, reorder_roadmap_phases
+from engine.risk_impact import build_risk_impact_model
+from engine.transform_optimizer import build_transformation_optimization
+from engine.maturity_trajectory import compute_maturity_trajectory
+from graph.knowledge_graph import ControlKnowledgeGraph
 
 
 class ReasoningEngine:
@@ -124,6 +129,12 @@ class ReasoningEngine:
 
         initiatives = roadmap_raw.get("initiative_execution_plan", [])
         print(f"        → {len(initiatives)} initiative(s)")
+
+        # ── 1b. Rewrite initiative IDs (hash-based, deterministic) ─
+        # Replaces ordinal INIT-001..NNN with INIT-{sha256(controls)[:8]}
+        # so IDs are stable across runs regardless of LLM ordering.
+        from engine.id_rewriter import rewrite_initiative_ids
+        _id_map = rewrite_initiative_ids(initiatives, roadmap_raw)
 
         # ── 2. Executive briefing ─────────────────────────────────
         print(f"  [2/{total_passes}] Generating executive briefing …")
@@ -224,6 +235,13 @@ class ReasoningEngine:
             label="Readiness",
             max_tokens=8000,
         )
+
+        # Remap any residual ordinal IDs in readiness output
+        if _id_map and readiness:
+            from engine.id_rewriter import remap_readiness
+            remapped = remap_readiness(readiness, _id_map)
+            readiness.clear()
+            readiness.update(remapped)
 
         # ── 6. Smart questions ────────────────────────────────────
         print(f"  [6/{total_passes}] Generating smart questions …")
@@ -345,19 +363,119 @@ class ReasoningEngine:
             print(f"  ⚠ decision_impact_model failed: {e}")
             decision_impact = {"items": []}
 
+        # ── 3-Layer Deterministic Decision Engine ─────────────────
+        # Layer 1: Dependency Engine — strict architectural ordering
+        # Layer 2: Risk Impact — executive framing (NO sequencing influence)
+        # Layer 3: Transformation Optimizer — parallelization within dep boundaries
+        # Plus: deterministic maturity trajectory & blocker resolution
+
+        # Extract control-level dependencies from the knowledge graph
+        # (full_id → [prerequisite full_ids]) for the dependency engine
+        _control_deps: dict[str, list[str]] = {}
+        try:
+            _kg = ControlKnowledgeGraph()
+            for _sid, _node in _kg.controls.items():
+                _full_id = _node.full_id
+                _prereq_full_ids = [
+                    _kg.controls[p].full_id
+                    for p in _node.depends_on
+                    if p in _kg.controls
+                ]
+                if _prereq_full_ids:
+                    _control_deps[_full_id] = _prereq_full_ids
+        except Exception as e:
+            print(f"  ⚠ Could not load control dependencies from KG: {e}")
+
+        print("  [derived] Building 3-layer deterministic decision engine …")
+
+        # Layer 1: Dependency Engine
+        try:
+            dep_graph = build_initiative_dependency_graph(
+                initiatives, control_dependencies=_control_deps or None,
+            )
+            print(f"        → dependency_engine: {len(dep_graph.get('initiative_order', []))} initiatives ordered, "
+                  f"{len(dep_graph.get('dependency_violations', []))} violations detected")
+        except Exception as e:
+            print(f"  ⚠ dependency_engine failed: {e}")
+            dep_graph = {"initiative_order": [], "initiative_deps": {}, "phase_assignment": {}, "parallel_groups": [], "dependency_violations": []}
+
+        # Layer 2: Risk Impact (narrative only — NOT for sequencing)
+        try:
+            risk_impact = build_risk_impact_model(
+                initiatives, _results, _top_risks, _section_scores,
+            )
+            print(f"        → risk_impact: {len(risk_impact.get('items', []))} items, "
+                  f"total maturity lift {risk_impact.get('summary', {}).get('total_maturity_lift_percent', 0):.1f}%")
+        except Exception as e:
+            print(f"  ⚠ risk_impact failed: {e}")
+            risk_impact = {"items": [], "summary": {}}
+
+        # Layer 3: Transformation Optimizer
+        try:
+            transform_opt = build_transformation_optimization(
+                initiatives, dep_graph, risk_impact, _results,
+            )
+            print(f"        → transform_optimizer: {len(transform_opt.get('quick_wins', []))} quick wins, "
+                  f"{len(transform_opt.get('parallel_tracks', []))} parallel tracks")
+        except Exception as e:
+            print(f"  ⚠ transform_optimizer failed: {e}")
+            transform_opt = {"quick_wins": [], "parallel_tracks": [], "optimization_notes": [], "effort_matrix": []}
+
+        # Deterministic maturity trajectory
+        _current_maturity = assessment.get("scoring", {}).get("overall_maturity_percent", 0.0)
+        try:
+            det_trajectory = compute_maturity_trajectory(
+                initiatives, _results,
+                phase_assignment=dep_graph.get("phase_assignment", {}),
+                current_maturity_percent=_current_maturity,
+            )
+            print(f"        → maturity_trajectory: {det_trajectory.get('current_percent', 0):.1f}% → "
+                  f"{det_trajectory.get('post_90_day_percent', 0):.1f}% (90d)")
+        except Exception as e:
+            print(f"  ⚠ maturity_trajectory failed: {e}")
+            det_trajectory = {}
+
+        # Deterministic blocker → initiative resolution
+        try:
+            blocker_init_mapping = resolve_blockers_to_initiatives(
+                _blockers, initiatives, _results,
+            )
+            print(f"        → blocker_mapping: {len(blocker_init_mapping)} blockers resolved")
+        except Exception as e:
+            print(f"  ⚠ blocker_mapping failed: {e}")
+            blocker_init_mapping = {}
+
+        # Patch readiness blockers with deterministic resolving_initiative
+        if blocker_init_mapping and readiness:
+            from engine.id_rewriter import patch_blocker_initiatives
+            patch_blocker_initiatives(readiness, blocker_init_mapping)
+
+        # ── Normalize LLM dependency graph ────────────────────────
+        # Add initiative_id to each entry and convert text depends_on
+        # to initiative ID arrays for join stability.
+        from engine.id_rewriter import normalize_dependency_graph
+        _raw_dep_graph = roadmap_raw.get("dependency_graph", [])
+        _raw_roadmap_3060 = roadmap_raw.get("roadmap_30_60_90", {})
+        if _raw_dep_graph and _raw_roadmap_3060:
+            normalized_dep_graph = normalize_dependency_graph(
+                _raw_dep_graph, _raw_roadmap_3060,
+            )
+        else:
+            normalized_dep_graph = _raw_dep_graph
+
         # ── Assemble unified output ───────────────────────────────
         output: dict[str, Any] = {
             "meta": {
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "assessment_run_id": run_id,
                 "tenant_id": tenant_id,
-                "pipeline_version": "2.0-architectural-decision-support",
+                "pipeline_version": "2.1-structural-consistency",
             },
             "executive": executive,
             "enterprise_scale_readiness": readiness,
             "transformation_roadmap": {
                 "roadmap_30_60_90": roadmap_raw.get("roadmap_30_60_90", {}),
-                "dependency_graph": roadmap_raw.get("dependency_graph", []),
+                "dependency_graph": normalized_dep_graph,
                 "critical_path": roadmap_raw.get("critical_path", []),
                 "parallel_execution_groups": roadmap_raw.get("parallel_execution_groups", []),
                 "maturity_trajectory": roadmap_raw.get("maturity_trajectory", {}),
@@ -378,6 +496,14 @@ class ReasoningEngine:
             "drift_model": drift,
             "cost_simulation": cost_sim,
             "decision_impact_model": decision_impact,
+            # 3-Layer Deterministic Decision Engine
+            "dependency_graph_model": dep_graph,
+            "risk_impact_model": risk_impact,
+            "transform_optimization": transform_opt,
+            "deterministic_trajectory": det_trajectory,
+            "blocker_initiative_mapping": blocker_init_mapping,
+            # Initiative ID mapping (ordinal → hash) for traceability
+            "_initiative_id_map": _id_map,
             # Keep raw blocks for backwards compatibility
             "_raw": {
                 "roadmap": roadmap_raw,

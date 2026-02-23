@@ -14,6 +14,8 @@ from engine.guardrails import (
     insufficient_evidence_marker,
 )
 
+from schemas.taxonomy import BLOCKER_CATEGORY_TO_SECTIONS
+
 
 def _build_initiative_index(initiatives: list[dict]) -> dict:
     """Map initiative_id → initiative dict."""
@@ -37,6 +39,113 @@ def _build_dependency_reverse_map(initiatives: list[dict]) -> dict[str, list[str
 def _controls_for_initiative(initiative: dict) -> set[str]:
     """Extract control_id set from an initiative."""
     return set(initiative.get("controls", []))
+
+
+# Use canonical mapping from schemas.taxonomy
+_BLOCKER_CATEGORY_TO_SECTIONS = BLOCKER_CATEGORY_TO_SECTIONS
+
+
+def resolve_blockers_to_initiatives(
+    blockers: list[dict],
+    initiatives: list[dict],
+    results: list[dict],
+) -> dict[str, str]:
+    """
+    Deterministically resolve blockers to initiatives via control overlap.
+
+    For each blocker:
+      1. If the blocker has affected_controls, find the initiative whose
+         controls overlap most with those affected controls.
+      2. If no affected_controls, match by category → section → initiative
+         with the most failing controls in that section.
+      3. Falls back to LLM-declared resolving_initiative only if no
+         deterministic match is found AND the LLM reference is valid.
+
+    Returns: dict of blocker_key → initiative_id
+    """
+    results_by_id = {r.get("control_id", ""): r for r in results if r.get("control_id")}
+
+    # Build initiative → controls set index
+    init_controls_map: dict[str, set[str]] = {}
+    for init in initiatives:
+        iid = init.get("initiative_id", "")
+        if iid:
+            init_controls_map[iid] = set(init.get("controls", []))
+
+    # Build initiative → sections covered
+    init_sections: dict[str, set[str]] = {}
+    for init in initiatives:
+        iid = init.get("initiative_id", "")
+        if not iid:
+            continue
+        sections = set()
+        for ctrl_id in init.get("controls", []):
+            ctrl = results_by_id.get(ctrl_id, {})
+            sec = ctrl.get("section", "")
+            if sec:
+                sections.add(sec)
+        init_sections[iid] = sections
+
+    valid_init_ids = set(init_controls_map.keys())
+
+    blocker_init_map: dict[str, str] = {}
+
+    for b in blockers:
+        blocker_key = b.get("category", "") or b.get("description", "")
+        if not blocker_key:
+            continue
+
+        # Strategy 1: Match by affected_controls overlap
+        affected = set(b.get("affected_controls", []))
+        if affected:
+            best_init = None
+            best_overlap = 0
+            for iid, ctrl_set in init_controls_map.items():
+                overlap = len(affected & ctrl_set)
+                if overlap > best_overlap:
+                    best_overlap = overlap
+                    best_init = iid
+            if best_init:
+                blocker_init_map[blocker_key] = best_init
+                continue
+
+        # Strategy 2: Match by category → section → initiative with most
+        # failing controls in that section
+        category = b.get("category", "").lower()
+        target_sections = _BLOCKER_CATEGORY_TO_SECTIONS.get(category, [])
+        if target_sections:
+            best_init = None
+            best_fail_count = 0
+            for iid, ctrl_set in init_controls_map.items():
+                # Count failing controls in target sections
+                fail_count = 0
+                for ctrl_id in ctrl_set:
+                    ctrl = results_by_id.get(ctrl_id, {})
+                    if (ctrl.get("section", "") in target_sections
+                            and ctrl.get("status") in ("Fail", "Partial")):
+                        fail_count += 1
+                if fail_count > best_fail_count:
+                    best_fail_count = fail_count
+                    best_init = iid
+            if best_init:
+                blocker_init_map[blocker_key] = best_init
+                continue
+
+            # Also try matching by initiative section coverage
+            for iid, sections in init_sections.items():
+                if any(ts in sections for ts in target_sections):
+                    blocker_init_map[blocker_key] = iid
+                    break
+            if blocker_key in blocker_init_map:
+                continue
+
+        # Strategy 3: Fallback to LLM-declared resolving_initiative
+        # (only if the referenced initiative actually exists)
+        llm_ref = b.get("resolving_initiative", "")
+        if llm_ref and llm_ref in valid_init_ids:
+            blocker_init_map[blocker_key] = llm_ref
+
+    return blocker_init_map
 
 
 def _count_risks_for_controls(
@@ -139,12 +248,12 @@ def build_decision_impact_model(
     init_index = _build_initiative_index(initiatives)
     dep_reverse = _build_dependency_reverse_map(initiatives)
 
-    # Build blocker → initiative mapping
-    blocker_init_map: dict[str, str] = {}
-    for b in blockers:
-        resolving = b.get("resolving_initiative", "")
-        if resolving:
-            blocker_init_map[b.get("category", "") or b.get("description", "")] = resolving
+    # Build blocker → initiative mapping (DETERMINISTIC)
+    # Instead of trusting LLM-generated resolving_initiative,
+    # we derive the mapping from control overlap:
+    # A blocker maps to an initiative whose controls include any of
+    # the blocker's affected controls, or whose section/category matches.
+    blocker_init_map = resolve_blockers_to_initiatives(blockers, initiatives, results)
 
     items = []
     for init in initiatives:

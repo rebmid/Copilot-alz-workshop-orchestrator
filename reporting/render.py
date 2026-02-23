@@ -97,26 +97,50 @@ def _build_report_context(output: dict) -> dict:
     initiatives = ai.get("initiatives", [])
     init_by_id = {i["initiative_id"]: i for i in initiatives if "initiative_id" in i}
     roadmap_src = ai.get("transformation_roadmap", {})
-    trajectory = roadmap_src.get("maturity_trajectory", {})
+
+    # ── Deterministic models (from 3-layer decision engine) ───────
+    dep_graph = ai.get("dependency_graph_model", {})
+    risk_impact = ai.get("risk_impact_model", {})
+    transform_opt = ai.get("transform_optimization", {})
+    deterministic_trajectory = ai.get("deterministic_trajectory", {})
+
+    # Risk impact lookup by initiative_id
+    risk_impact_by_id = {
+        item["initiative_id"]: item
+        for item in risk_impact.get("items", [])
+    }
+
+    # Use deterministic trajectory if available, else fall back to LLM
+    trajectory = deterministic_trajectory if deterministic_trajectory else roadmap_src.get("maturity_trajectory", {})
 
     # ── 1. FOUNDATION GATE ────────────────────────────────────────
     ready = esr.get("ready_for_enterprise_scale")
     blockers_raw = esr.get("blockers", [])
     min_inits = esr.get("minimum_initiatives_required", [])
 
+    # Deterministic blocker→initiative mapping (from decision_impact)
+    # Falls back to LLM resolving_initiative if deterministic model unavailable
+    blocker_mapping = ai.get("blocker_initiative_mapping", {})
+
     gate_blockers = []
     for b in blockers_raw:
-        resolving_id = b.get("resolving_initiative", "")
+        blocker_key = b.get("category", "") or b.get("description", "")
+        # Prefer deterministic mapping, fall back to LLM
+        resolving_id = blocker_mapping.get(blocker_key, b.get("resolving_initiative", ""))
         resolving_init = init_by_id.get(resolving_id, {})
         # Derive confidence from controls in that initiative
         init_controls = resolving_init.get("controls", [])
         conf_values = [_confidence_numeric(results_by_id[c])
                        for c in init_controls if c in results_by_id]
         avg_conf = sum(conf_values) / len(conf_values) if conf_values else None
-        # Derive dependencies from resolving initiative
-        deps = resolving_init.get("dependencies", [])
+        # Derive dependencies from dependency engine (preferred) or initiative
+        init_deps_model = dep_graph.get("initiative_deps", {})
+        deps = init_deps_model.get(resolving_id, resolving_init.get("dependencies", []))
         dep_titles = [init_by_id[d].get("title", d)
                       for d in deps if d in init_by_id] if deps else []
+
+        # Enrich with risk impact data
+        impact_data = risk_impact_by_id.get(resolving_id, {})
 
         gate_blockers.append({
             "category": b.get("category", "Unknown"),
@@ -126,6 +150,8 @@ def _build_report_context(output: dict) -> dict:
             "resolving_initiative_title": resolving_init.get("title", resolving_id),
             "confidence": _confidence_badge(avg_conf),
             "dependencies": dep_titles,
+            "controls_resolved": impact_data.get("controls_resolved", 0),
+            "risks_reduced": impact_data.get("risks_reduced", 0),
         })
 
     # Improvement opportunities (when ready): scaling recommendations
@@ -214,7 +240,39 @@ def _build_report_context(output: dict) -> dict:
         })
 
     # ── 3. 30/60/90 ROADMAP ──────────────────────────────────────
+    # Use dependency-engine-reordered roadmap if available
+    dep_phase_assignment = dep_graph.get("phase_assignment", {})
+    dep_initiative_order = dep_graph.get("initiative_order", [])
+    dep_init_deps = dep_graph.get("initiative_deps", {})
+
     roadmap_phases = roadmap_src.get("roadmap_30_60_90", {})
+
+    # If dependency engine ran, reorder phases deterministically
+    if dep_phase_assignment and dep_initiative_order:
+        # Rebuild roadmap from dependency engine assignments
+        reordered_phases: dict[str, list[dict]] = {"30_days": [], "60_days": [], "90_days": []}
+        # Collect all roadmap entries by initiative_id
+        all_rm_entries: dict[str, dict] = {}
+        for pk in ("30_days", "60_days", "90_days"):
+            for entry in roadmap_phases.get(pk, []):
+                eid = entry.get("initiative_id", "")
+                if eid:
+                    all_rm_entries[eid] = entry
+        # Place in correct phase per dependency engine
+        for iid in dep_initiative_order:
+            target_phase = dep_phase_assignment.get(iid, "90_days")
+            entry = all_rm_entries.get(iid)
+            if entry:
+                reordered_phases[target_phase].append(entry)
+        # Add any entries not in the dependency graph
+        seen_ids = set(dep_initiative_order)
+        for pk in ("30_days", "60_days", "90_days"):
+            for entry in roadmap_phases.get(pk, []):
+                eid = entry.get("initiative_id", "")
+                if eid and eid not in seen_ids:
+                    reordered_phases[pk].append(entry)
+        roadmap_phases = reordered_phases
+
     phase_labels = [
         ("30_days", "0–30 Days", "Foundational blockers"),
         ("60_days", "30–60 Days", "Risk reducers"),
@@ -230,28 +288,36 @@ def _build_report_context(output: dict) -> dict:
             init = init_by_id.get(iid, {})
             controls = init.get("controls", [])
 
-            # Risks reduced: count of top_business_risks whose affected_controls
-            # overlap with this initiative's controls
-            risks_reduced = 0
-            for risk in raw_risks:
-                if set(risk.get("affected_controls", [])) & set(controls):
-                    risks_reduced += 1
+            # Use risk impact model for enrichment (deterministic)
+            impact = risk_impact_by_id.get(iid, {})
+            risks_reduced = impact.get("risks_reduced", 0)
+            controls_resolved = impact.get("controls_resolved", 0)
+            blast_label = impact.get("blast_radius_label", init.get("blast_radius", ""))
 
-            # Prerequisites (dependencies)
-            deps = entry.get("dependency_on", [])
+            # Fall back to manual risk counting if risk impact model unavailable
+            if not impact and raw_risks:
+                risks_reduced = sum(
+                    1 for risk in raw_risks
+                    if set(risk.get("affected_controls", [])) & set(controls)
+                )
+
+            # Dependencies from dependency engine (preferred) or entry
+            deps = dep_init_deps.get(iid, entry.get("dependency_on", []))
+            dep_titles = [init_by_id.get(d, {}).get("title", d) for d in deps if d in init_by_id]
+
             # Estimated effort from initiative.delivery_model
             effort = init.get("delivery_model", {}).get("estimated_duration", "")
-            blast = init.get("blast_radius", "")
 
             phase_items.append({
                 "initiative_id": iid,
                 "title": entry.get("action", init.get("title", "")),
                 "caf_discipline": entry.get("caf_discipline", init.get("caf_discipline", "")),
                 "controls_count": len(controls),
+                "controls_resolved": controls_resolved,
                 "risks_reduced": risks_reduced,
-                "dependencies": deps,
+                "dependencies": dep_titles if dep_titles else deps,
                 "estimated_effort": effort,
-                "blast_radius": blast,
+                "blast_radius": blast_label,
                 "owner_role": entry.get("owner_role", init.get("owner_role", "")),
                 "success_criteria": entry.get("success_criteria", init.get("success_criteria", "")),
             })
