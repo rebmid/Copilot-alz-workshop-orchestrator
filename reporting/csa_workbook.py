@@ -6,7 +6,7 @@ Copies the pre-built ``.xlsm`` template and writes **only** data values
 into the existing sheets:
 
 - ``0_Executive_Summary`` — engagement framing + assessment metrics + deterministic top risks
-- ``1_30-60-90_Roadmap`` — phased remediation initiatives
+- ``1_30-60-90_Roadmap`` — phased remediation items (keyed by checklist_id)
 - ``2_Control_Details`` — one row per assessed control (columns A–O)
   plus enrichment column P (Control Source)
 
@@ -356,7 +356,7 @@ def _populate_executive_summary(ws, run: dict) -> None:
 def _populate_roadmap(ws, run: dict) -> int:
     """Write values into the existing Roadmap layout (row 1 = headers).
 
-    Columns: Phase | Action | Initiative ID | CAF Discipline | Owner |
+    Columns: Phase | Action | Checklist ID | CAF Discipline | Owner |
              Success Criteria | Dependencies | Related Controls | Related Risks
 
     Returns the number of rows written.
@@ -364,28 +364,28 @@ def _populate_roadmap(ws, run: dict) -> int:
     tr = run.get("transformation_roadmap", {})
     roadmap = tr.get("roadmap_30_60_90", {})
     tp = run.get("transformation_plan", {})
-    init_lookup: dict[str, dict] = {
-        i.get("initiative_id", ""): i
+    item_lookup: dict[str, dict] = {
+        i.get("checklist_id", i.get("initiative_id", "")): i
         for i in tp.get("initiatives", [])
-        if i.get("initiative_id")
+        if i.get("checklist_id") or i.get("initiative_id")
     }
 
     phase_map = {"30_days": "30 Days", "60_days": "60 Days", "90_days": "90 Days"}
     row = 2
     for phase_key, phase_label in phase_map.items():
         for item in roadmap.get(phase_key, []):
-            iid = item.get("initiative_id", "")
-            init_detail = init_lookup.get(iid, {})
+            cid = item.get("checklist_id", item.get("initiative_id", ""))
+            item_detail = item_lookup.get(cid, {})
             ws.cell(row=row, column=1, value=phase_label)
             ws.cell(row=row, column=2, value=item.get("action", ""))
-            ws.cell(row=row, column=3, value=iid)
+            ws.cell(row=row, column=3, value=cid)
             ws.cell(row=row, column=4, value=item.get("caf_discipline", ""))
             ws.cell(row=row, column=5, value=item.get("owner_role", ""))
             ws.cell(row=row, column=6, value=item.get("success_criteria", ""))
             ws.cell(row=row, column=7, value=_join_list(
                 item.get("dependency_on", [])))
             ws.cell(row=row, column=8, value=_join_list(
-                init_detail.get("controls", [])))
+                item_detail.get("controls", [])))
             ws.cell(row=row, column=9, value="")  # filled by cross-ref below
             row += 1
 
@@ -396,7 +396,7 @@ def _populate_roadmap(ws, run: dict) -> int:
 def _cross_ref_roadmap_risks(
     ws, run: dict, start_row: int, end_row: int,
 ) -> None:
-    """Fill column I (Related Risks) by matching initiative controls to risk tiers.
+    """Fill column I (Related Risks) by matching item controls to risk tiers.
 
     Layer 5: uses deterministic risk scoring, not AI-generated risk titles.
     For each roadmap row, finds related controls from column H and reports
@@ -726,7 +726,7 @@ def build_csa_workbook(
 
     Sheets populated:
       ``0_Executive_Summary`` — engagement framing + metrics + deterministic top risks
-      ``1_30-60-90_Roadmap`` — phased initiatives
+      ``1_30-60-90_Roadmap`` — phased remediation items (keyed by checklist_id)
       ``2_Control_Details`` — one row per control (A–U) + enrichment (V–Y)
     """
     run = _load_json(run_path)
@@ -798,7 +798,7 @@ def build_csa_workbook(
         ws_rm = wb[_SHEET_ROADMAP]
         _clear_data_rows(ws_rm, start_row=2, max_col=9)
         n_roadmap = _populate_roadmap(ws_rm, run)
-        print(f"  ✓ 1_30-60-90_Roadmap: {n_roadmap} initiatives")
+        print(f"  ✓ 1_30-60-90_Roadmap: {n_roadmap} items")
 
     # ── 2_Control_Details (primary data sheet) ────────────────────
     if _SHEET_CONTROLS in wb.sheetnames:

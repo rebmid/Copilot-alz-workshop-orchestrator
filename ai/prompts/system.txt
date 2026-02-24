@@ -66,3 +66,34 @@ creating structures that already exist.
 
 Every action must begin with a measurable platform outcome.
 Never start an action with: Deploy, Create, Configure, Enable, Install, Set up.
+
+## Anti-Drift Guardrails (MANDATORY)
+The following rules are enforced by automated validators.  Violations will be flagged.
+
+### Evidence-Based Language Only
+- NEVER claim an environment "fails" or "passes" a compliance framework (PCI-DSS, HIPAA, SOC 2,
+  GDPR, FedRAMP, NIST, ISO 27001, HITRUST).
+- INSTEAD say "commonly required in regulated environments" or "aligns with [framework] objectives."
+- Every recommendation must be traceable to specific controls, signals, or risks from the assessment.
+
+### No Fabricated Numbers
+- NEVER include dollar amounts ($X/month) for cost estimates.
+- Use directional categories only: Low, Medium, High.  The cost_simulation model handles this.
+- If referencing specific pricing, it must come from MCP pricing tool data (mode=tool_backed).
+
+### Computed Confidence Only
+- NEVER use phrases like "high confidence" or "we are confident" in narrative text.
+- Confidence is a computed value (0-1 with basis string) attached to derived objects.
+- If you need to express certainty, reference the confidence object: "Based on 12 controls at
+  avg confidence 0.82 …"
+
+### Assumption Transparency
+- Every derived conclusion must declare its assumptions.
+- Assumptions are explicit strings, not implied context.
+- When evidence is insufficient, use the canonical marker:
+  "Insufficient evidence (needs customer confirmation)"
+
+### Scope Awareness
+- Do not make claims about resources or configurations not visible in the assessment data.
+- If subscription_count_visible=1, do not claim knowledge of other subscriptions.
+- If management_group_access=false, qualify MG-related recommendations accordingly.

@@ -174,6 +174,10 @@ class ControlDefinition:
     caf_guidance: str
     caf_url: str
 
+    # ── Checklist grounding (Azure/review-checklists authority) ───
+    checklist_ids: tuple[str, ...] = ()     # e.g. ("D07.01",)
+    checklist_guids: tuple[str, ...] = ()   # matching GUIDs from ALZ checklist
+
     # ── Computed / derived (set in __post_init__) ─────────────────
     weight: float = field(init=False)
     remediation_group: str = field(init=False)
@@ -248,6 +252,8 @@ class ControlDefinition:
             required_signals=tuple(raw["required_signals"]),
             caf_guidance=raw.get("caf_guidance", ""),
             caf_url=raw.get("caf_url", ""),
+            checklist_ids=tuple(raw.get("checklist_ids", ())),
+            checklist_guids=tuple(raw.get("checklist_guids", ())),
             signal_category=raw.get("signal_category"),
         )
 
@@ -375,6 +381,88 @@ def bucket_domain(raw: str) -> str:
     if raw in DOMAIN_BUCKETS:
         return raw
     return raw  # non-taxonomy sections (Manual backfill) pass through
+
+
+# ══════════════════════════════════════════════════════════════════
+# Cross-taxonomy mapping tables – Structural Consistency Layer
+# ══════════════════════════════════════════════════════════════════
+# These mappings connect the three taxonomy systems:
+#   A) KG `affects[].discipline`  (7 short labels)
+#   B) Official ALZ design areas  (8 names from MS docs)
+#   C) CAF lifecycle phases       (used in initiative.caf_discipline)
+#
+# Locking these here prevents free-text drift across modules.
+
+# ── Official 8 ALZ Design Area Names (from MS docs) ──────────────
+OFFICIAL_ALZ_DESIGN_AREAS: tuple[str, ...] = (
+    "Azure Billing and Microsoft Entra ID Tenants",
+    "Identity and Access Management",
+    "Network Topology and Connectivity",
+    "Security",
+    "Management",
+    "Resource Organization",
+    "Platform Automation and DevOps",
+    "Governance",
+)
+
+# ── KG discipline → internal design-area slug ─────────────────────
+# Maps the Knowledge Graph 'affects[].discipline' short labels to
+# the internal slugs used in DESIGN_AREA_SECTION.
+KG_DISCIPLINE_TO_SLUG: dict[str, str] = {
+    "identity":     "identity",
+    "security":     "security",
+    "network":      "network",
+    "management":   "management",
+    "automation":   "management",   # automation maps to management slug
+    "organization": "governance",
+    "cost":         "cost",
+}
+
+# ── Blocker category → display sections ───────────────────────────
+# Maps the readiness-pass blocker short categories to display-section
+# names used in control results.  Canonical source — decision_impact.py
+# MUST import from here rather than defining its own copy.
+BLOCKER_CATEGORY_TO_SECTIONS: dict[str, list[str]] = {
+    "governance":  ["Resource Organization", "Governance"],
+    "security":    ["Security"],
+    "networking":  ["Network Topology and Connectivity", "Networking"],
+    "network topology and connectivity": ["Network Topology and Connectivity", "Networking"],
+    "identity":    ["Identity and Access Management", "Identity"],
+    "identity and access management": ["Identity and Access Management", "Identity"],
+    "management":  ["Management"],
+    "automation":  ["Platform Automation and DevOps"],
+    "platform automation and devops": ["Platform Automation and DevOps"],
+    "billing":     ["Azure Billing and Microsoft Entra ID Tenants"],
+    "azure billing and microsoft entra id tenants": ["Azure Billing and Microsoft Entra ID Tenants"],
+    "resource organization": ["Resource Organization", "Governance"],
+    "resilience":  ["Resilience"],
+    "data protection": ["Security"],
+    "cost governance": ["Governance", "Azure Billing and Microsoft Entra ID Tenants"],
+}
+
+# ── CAF Lifecycle Phases ──────────────────────────────────────────
+CAF_PHASES: tuple[str, ...] = (
+    "Plan",
+    "Ready",
+    "Adopt",
+    "Govern",
+    "Manage",
+    "Secure",
+)
+
+
+def normalize_section_to_alz(section: str) -> str:
+    """Return the official ALZ design area name for a control section.
+
+    Handles both display sections ("Networking") and official names
+    ("Network Topology and Connectivity").  Returns the input
+    unchanged if no mapping is found.
+    """
+    # Already an official name?
+    if section in OFFICIAL_ALZ_DESIGN_AREAS:
+        return section
+    # Map via SECTION_TO_DESIGN_AREA
+    return SECTION_TO_DESIGN_AREA.get(section, section)
 
 
 # ══════════════════════════════════════════════════════════════════

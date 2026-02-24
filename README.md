@@ -1,17 +1,21 @@
 # Azure Landing Zone Assessor (`lz-assessor`)
 
-A comprehensive, automated Azure Landing Zone assessment tool designed for **Cloud Solution Architects (CSAs)** conducting landing zone assessments. It evaluates an Azure tenant against Microsoft's [Azure Landing Zone (ALZ) checklist](https://github.com/Azure/review-checklists), scores controls deterministically, then enriches the results with AI-generated advisory output — producing a ready-to-deliver **CSA workbook**, **executive HTML report**, and **target architecture** in a single command.
+A deterministic Azure Landing Zone assessment engine built for **Cloud Solution Architects (CSAs)**.
 
-## Why This Matters
+It evaluates an Azure tenant against Microsoft's [Azure Review Checklists](https://github.com/Azure/review-checklists), scores controls from live platform signals, and produces structured, traceable remediation outputs suitable for enterprise engagements.
 
-Enterprise customers often have a landing zone but **lack a reliable way to measure enterprise-scale readiness and identify the architectural gaps that block transformation**.
+## Why This Exists
 
-This agent:
+Most landing zone assessments rely on interviews, slideware, or static checklists.
 
-- Uses **read-only access (safe for customer environments)**
-- Evaluates **real platform signals — not questionnaires**
-- Selects controls dynamically based on **intent**
-- Produces a **defensible, risk-aligned roadmap**
+This engine evaluates **actual Azure configuration state** using read-only telemetry and maps findings directly to Microsoft's Azure Review Checklist IDs.
+
+It is designed to:
+
+- Ground every finding in a canonical checklist control
+- Separate deterministic evaluation from AI enrichment
+- Produce deliverables that can withstand architectural scrutiny
+- Accelerate CSA workshops without replacing architectural judgement
 
 **Run one command → get a scored assessment, executive briefing, and a traceable 30-60-90 plan.**
 
@@ -22,41 +26,108 @@ This agent:
 > Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
 ---
+## 📸 Demo Walkthrough
 
-## Demo Screenshots
+### 1️⃣ Platform Snapshot
 
-| Execution Context | Control Evaluation with Evidence |
-|---|---|
-| ![Execution Context](docs/demo/00a_execution-context.png) | ![Control Evaluation](docs/demo/02_automated-control-evaluation-with-evidence.png) |
+Deterministic maturity scoring across ALZ design areas with automation coverage and enterprise readiness scoring.
 
-| Roadmap Traceability | Data Confidence |
-|---|---|
-| ![Roadmap Traceability](docs/demo/03_roadmap-traceability.png) | ![Data Confidence](docs/demo/04_data-confidence.png) |
+![Platform Snapshot](docs/demo/report-hero.png)
 
-| Causal Risk Analysis | Executive Report |
-|---|---|
-| ![Causal Risk Analysis](docs/demo/05_causal-risk-analysis-networking.png) | ![Executive Report](docs/demo/report-hero.png) |
+---
 
-## Features
+### 2️⃣ Enterprise Readiness Blockers
 
-| Capability | Description |
-|---|---|
-| **Live ALZ Checklist** | Always fetches the latest checklist from the `Azure/review-checklists` GitHub repo — never stale |
-| **Automated Evaluators** | Azure Resource Graph, Defender, Policy, and Management Group queries score controls as Pass / Fail / Partial |
-| **Weighted Scoring** | Domain-weighted maturity model with severity multipliers |
-| **7-Pass AI Advisory Pipeline** | Generates enterprise readiness, top risks, 30-60-90 roadmap, initiatives, backlog, and target architecture |
-| **Microsoft Learn MCP Grounding** | Official MCP SDK retrieves real guidance, code samples, and full documentation |
-| **CSA Workbook (Excel)** | Executive Summary, traceable 30-60-90 roadmap, and full Control Details sheet |
-| **Executive HTML Report** | Visual maturity score, risk heatmap, and gap analysis |
-| **Delta Tracking** | Shows control-level progress between runs |
-| **Preflight Probes** | Validates RBAC access before a full scan |
-| **Intent-Based Assessment** | Evaluates only relevant controls based on user intent |
-| **Pluggable AI Provider** | Swap AOAI for another model in one line |
+Foundation gaps that prevent enterprise-scale adoption — derived from failed controls and dependency graph impact.
+
+![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
+
+---
+
+### 3️⃣ Top Business Risks
+
+Deterministically ranked business risks with root cause and score drivers.
+
+![Top Business Risks](docs/demo/02_top-business-risks.png)
+
+---
+
+### 4️⃣ 30-60-90 Transformation Roadmap
+
+Dependency-ordered remediation initiatives with maturity trajectory projections.
+
+![Roadmap Traceability](docs/demo/03_roadmap-traceability.png)
+
+---
+
+### 5️⃣ Design Area Breakdown
+
+ALZ design area maturity breakdown with automation %, critical failures, and control status distribution.
+
+![Design Area Breakdown](docs/demo/04_design_area_breakdown.png)
+
+---
+
+### 6️⃣ Workshop Decision Funnel
+
+CSA decision framing — blockers → risks → remediation path.
+
+![Workshop Decision Funnel](docs/demo/04_workshop_decision_funnel.png)
+
+---
+
+### 7️⃣ CSA Workbook – 30-60-90 Plan
+
+Customer-ready Excel roadmap aligned to checklist IDs and owners.
+
+![Excel 30-60-90 Roadmap](docs/demo/05_excel_30_60_90_roadmap.png)
+
+---
+
+### 8️⃣ CSA Workbook – Executive Summary
+
+Executive framing with top risks, maturity metrics, and engagement summary.
+
+![Excel Executive Summary](docs/demo/05_excel_executive_summary.png)
+
+---
+
+### 9️⃣ Full Checklist Control Details
+
+Control-level scoring mapped directly to Azure Review Checklist IDs.
+
+![Excel Control Details](docs/demo/05_excel_landing_zone_checklist_control_details.png)
+
+---
+
+### 🔎 Execution Context
+
+Assessment scope, subscriptions evaluated, and API access confirmation.
+
+![Execution Context](docs/demo/00a_execution-context.png)
+
+## Architectural Characteristics
+
+| Principle | Implementation |
+|------------|----------------|
+| **Deterministic First** | All scoring, risk tiers, and control verdicts are computed from live Azure signals before AI executes |
+| **Checklist-Grounded** | Every remediation item maps to an official Azure Review Checklist ID — no synthetic identifiers |
+| **One-Way Data Flow** | AI consumes scored results but cannot modify deterministic outputs |
+| **Schema-Enforced Output** | All AI responses are validated against JSON schemas before acceptance |
+| **Documentation-Grounded** | Microsoft Learn MCP integration enriches outputs with official implementation guidance |
+| **Traceable Deliverables** | CSA Workbook, HTML Report, and Run JSON preserve referential integrity end-to-end |
 
 
 ---
 
 ## End-to-End Reasoning Architecture
+
+> **Architecture Principle — One-Way Data Flow**
+>
+> Deterministic assessment **always feeds** the AI reasoning layer. The AI layer **never** feeds back into deterministic scoring. All control verdicts, risk scores, and maturity calculations are computed from live Azure signals before AI sees them. AI enriches and narrates — it does not influence evaluation outcomes.
+>
+> AI output is advisory only.
+> Control status, maturity scoring, and risk classification are immutable once computed.
 
 ### 1. Input
 
@@ -78,13 +149,13 @@ This agent:
 
 ### 🤖 4. AI Reasoning Engine
 
-Builds advisor payload from scored controls, then runs a **7-pass reasoning pipeline**:
+Builds advisor payload from scored controls, then runs a **multi-stage reasoning pipeline**:
 
 | Pass | Name | Output |
 |------|------|--------|
 | 1 | **Roadmap & Initiatives** | 30-60-90 plan + initiative dependency graph |
 | 2 | **Executive Briefing** | Top risks + maturity narrative |
-| 3 | **Enterprise-Scale Readiness** | Readiness assessment against ALZ design areas |
+| 3 | **Enterprise-Scale Landing Zone Technical Readiness** | Readiness assessment against ALZ design areas |
 | 4 | **Smart Questions** | Targeted discovery questions for the customer |
 | 5 | **Implementation Backlog** | Per-initiative execution plans |
 | 6 | **Microsoft Learn Grounding** | MCP SDK retrieval + AI contextualisation |
@@ -104,31 +175,33 @@ Builds advisor payload from scored controls, then runs a **7-pass reasoning pipe
 | 📊 CSA Workbook (Excel) | 3-sheet deliverable: Executive Summary (with Top Risks), 30-60-90 Roadmap, Control Details |
 | 🌐 Executive HTML Report | Browser-based assessment report |
 | 🧾 Run JSON | Full traceable assessment data |
-| 🏗 Target Architecture JSON | AI-generated target architecture |
+| 🏗 Target Architecture JSON | Target architecture recommendation (derived from scored controls and checklist alignment) |
 | ❓ Why-Analysis JSON | Causal reasoning output per risk domain |
 
 ```
 Azure Tenant / Demo
         │
         ▼
-Deterministic ALZ Assessment
-(Resource Graph + Policy + Defender)
+Deterministic ALZ Assessment          ┐
+(Resource Graph + Policy + Defender)   │  Deterministic layer:
+        │                              │  scores, verdicts, risk tiers
+        ▼                              │  are FINAL before AI runs.
+Control Scoring Engine                 ┘
         │
-        ▼
-Control Scoring Engine
-        │
-        ├────────► CSA Workbook
-        │
-        ▼
-AI Reasoning Engine
-(Roadmap + Exec Brief + Target Architecture)
-        │
-        ▼
-WHY Reasoning Layer
-(Knowledge Graph + Dependency Impact)
-        │
-        ▼
-Traceable Business Risk Explanation
+        │─────── one-way feed ──────┐
+        │                           ▼
+        ├────────► CSA Workbook    AI Reasoning Engine
+        │                         (Roadmap + Exec Brief + Target Arch)
+        │                           │
+        │                           ▼
+        │                         WHY Reasoning Layer
+        │                         (Knowledge Graph + Dependency Impact)
+        │                           │
+        └───────────────────────────┘
+                    │
+                    ▼
+          Traceable Deliverables
+     (HTML Report, Workbook, Run JSON)
 ```
 
 ---
@@ -149,7 +222,7 @@ lz-assessor/
 │   └── demo/                    #   Demo screenshots for README
 │
 ├── alz/                         # ALZ checklist loader
-│   └── loader.py                #   Fetches live from GitHub main branch
+│   └── loader.py                #   Fetches the Azure Review Checklist at runtime from the official GitHub repository
 │
 ├── collectors/                  # Azure data collectors
 │   ├── resource_graph.py        #   Resource Graph queries (VNets, firewalls, IPs, NSGs, …)
@@ -197,12 +270,26 @@ lz-assessor/
 │
 ├── engine/                      # Core assessment engine
 │   ├── adapter.py               #   Bridges evaluators to scoring
+│   ├── aggregation.py           #   Enterprise enrichment + scope summaries
 │   ├── assessment_runtime.py    #   Deterministic assessment runner
 │   ├── context.py               #   Azure execution context discovery
-│   ├── scoring.py               #   Weighted scoring model + automation coverage
+│   ├── cost_simulation.py       #   Cost simulation for remediation items
+│   ├── decision_impact.py       #   Decision impact model (blocker → item mapping)
 │   ├── delta.py                 #   Run-over-run delta computation
+│   ├── dependency_engine.py     #   Initiative dependency graph builder
+│   ├── drift_model.py           #   Drift detection between runs
+│   ├── guardrails.py            #   Structural guardrails + validation rules
+│   ├── id_rewriter.py           #   Blocker patching + checklist_id validation
+│   ├── maturity_trajectory.py   #   Maturity projection (30-60-90 day)
+│   ├── relationship_integrity.py#   Compiler-grade structural validation
+│   ├── risk_impact.py           #   Risk impact scoring per item
+│   ├── risk_scoring.py          #   Deterministic risk tier classification
 │   ├── rollup.py                #   Section-level result rollups
-│   └── run_store.py             #   Persists/retrieves historical runs
+│   ├── run_store.py             #   Persists/retrieves historical runs
+│   ├── scaling_rules.py         #   Enterprise-scale scaling heuristics
+│   ├── scoring.py               #   Weighted scoring model + automation coverage
+│   ├── taxonomy_validator.py    #   Validates control taxonomy alignment
+│   └── transform_optimizer.py   #   Transform optimization model
 │
 ├── graph/                       # Knowledge graph
 │   ├── controls.json            #   Control → CAF discipline → dependency mappings
@@ -213,25 +300,36 @@ lz-assessor/
 │   ├── build_advisor_payload.py #   Prepares scoring data for AI consumption
 │   ├── engine/
 │   │   ├── aoai_client.py       #   Azure OpenAI JSON client (retry, repair, lint)
-│   │   ├── reasoning_engine.py  #   7-pass AI pipeline orchestrator
+│   │   ├── reasoning_engine.py  #   Multi-stage AI pipeline orchestrator
 │   │   └── reasoning_provider.py#   ReasoningProvider protocol + AOAI implementation
 │   ├── prompts/                 #   Prompt templates (Jinja-style .txt files)
 │   │   ├── system.txt           #     System persona
 │   │   ├── roadmap.txt          #     30-60-90 roadmap + initiatives
 │   │   ├── exec.txt             #     Executive briefing
-│   │   ├── readiness.txt        #     Enterprise-scale readiness
+│   │   ├── readiness.txt        #     Enterprise-scale landing zone technical readiness
 │   │   ├── smart_questions.txt  #     Customer discovery questions
 │   │   ├── implementation.txt   #     Implementation backlog items
 │   │   ├── target_architecture.txt # Target architecture design
 │   │   └── grounding.txt        #     MCP grounding enrichment
 │   └── schemas/                 #   JSON schemas for AI output validation
-│       └── domain.py            #     Domain model types
+│       ├── copilot_output.schema.json # Schema for AI copilot output
+│       └── target_architecture.schema.json # Schema for target architecture
 │
 ├── schemas/                     # Shared domain schemas
-│   └── domain.py                #   Assessment domain types
+│   ├── domain.py                #   Assessment domain types
+│   ├── taxonomy.py              #   Canonical taxonomy definitions
+│   ├── assessment_run.schema.json # JSON Schema for assessment run output
+│   └── control_definition.schema.json # JSON Schema for control definitions
+│
+├── discovery/                   # Discovery tree framework
+│   ├── loader.py                #   Loads discovery tree definitions
+│   ├── resolver.py              #   Resolves discovery trees against Azure data
+│   └── trees/                   #   Discovery tree JSON definitions
 │
 ├── agent/                       # Agent / workshop mode
 │   ├── intent_orchestrator.py   #   Routes user intents to evaluators
+│   ├── run_loader.py            #   Assessment run loader for agent sessions
+│   ├── why_ai.py                #   AI-powered why-risk explanations
 │   ├── why_reasoning.py         #   "Why is X the top risk?" causal reasoning agent
 │   ├── workshop.py              #   Workshop agent loop
 │   └── session.py               #   Session state management
@@ -242,14 +340,16 @@ lz-assessor/
 ├── reporting/                   # Output generation
 │   ├── render.py                #   Jinja2 HTML report generator
 │   ├── report_template.html     #   HTML template for executive report
-│   └── csa_workbook.py          #   CSA workbook builder (3-sheet Excel)
+│   ├── csa_workbook.py          #   CSA workbook builder (3-sheet Excel)
+│   ├── enrich.py                #   Control enrichment (ALZ source tagging)
+│   └── Landing_Zone_Assessment.xlsm # Excel template (macro-enabled)
 │
-└── out/                         # Output directory (git-ignored)
+└── output/                      # Output directory (git-ignored)
     ├── run-YYYYMMDD-HHMM.json   #   Raw assessment data
     ├── why-{domain}.json         #   Causal reasoning output (--why mode)
     ├── report.html               #   Executive HTML report
-    ├── CSA_Workbook_v1.xlsx      #   CSA deliverable workbook
-    └── target_architecture.json  #   AI-generated target architecture
+    ├── CSA_Workbook_v1.xlsm      #   CSA deliverable workbook (macro-enabled)
+    └── target_architecture.json  #   Target architecture recommendation (derived from scored controls and checklist alignment)
 ```
 
 ---
@@ -364,9 +464,9 @@ That's it. The tool will:
 2. Fetch the latest ALZ checklist from GitHub
 3. Run all evaluators against your environment
 4. Score every control with weighted domain scoring
-5. Generate a 7-pass AI advisory pipeline (if OpenAI is configured)
+5. Run the multi-stage AI reasoning pipeline (if OpenAI is configured)
 6. Ground recommendations in Microsoft Learn documentation
-7. Output all artifacts to the `out/` directory
+7. Output all artifacts to the `output/` directory
 
 ---
 
@@ -434,14 +534,14 @@ python scan.py --why Networking --demo --no-ai
 
 ## Output Artifacts
 
-All outputs are written to the `out/` directory:
+All outputs are written to the `output/` directory:
 
 | File | Description |
 |---|---|
 | `run-YYYYMMDD-HHMM.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
 | `report.html` | Interactive executive HTML report with score breakdowns and gap analysis |
-| `CSA_Workbook_v1.xlsx` | 3-sheet CSA deliverable workbook (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
-| `target_architecture.json` | AI-generated target architecture with component recommendations and Learn references |
+| `CSA_Workbook_v1.xlsm` | 3-sheet CSA deliverable workbook — macro-enabled (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
+| `target_architecture.json` | Target architecture recommendation — derived from scored controls and checklist alignment, with component recommendations and Learn references |
 | `preflight.json` | *(preflight mode only)* Access probe results |
 
 Additionally, `assessment.json` is written to the project root as a convenience copy.
@@ -473,13 +573,15 @@ The **Signal Bus** architecture routes collected data through registered evaluat
 
 ### 3. AI Reasoning Engine
 
-When AI is enabled, a **7-pass pipeline** runs against Azure OpenAI:
+The AI layer is a **consumer** of the deterministic scoring output — it receives the scored controls, risk tiers, and evidence via `build_advisor_payload()` and produces advisory content. It never modifies or feeds back into deterministic verdicts.
+
+When AI is enabled, a **multi-stage reasoning pipeline** runs against Azure OpenAI:
 
 | Pass | Prompt | Output | max_tokens |
 |---|---|---|---|
 | 1 | `roadmap.txt` | 30-60-90 transformation roadmap + named initiatives | 8000 |
 | 2 | `exec.txt` | Executive briefing with business risk narrative | 4000 |
-| 3 | `readiness.txt` | Enterprise-scale readiness assessment | 4000 |
+| 3 | `readiness.txt` | Enterprise-scale landing zone technical readiness | 4000 |
 | 4 | `smart_questions.txt` | Customer discovery questions per domain | 4000 |
 | 5 | `implementation.txt` × N | Implementation backlog (one item per initiative) | 4000 |
 | 6 | *(MCP grounding)* | Learn doc refs, code samples, full-page enrichment | — |
@@ -510,7 +612,7 @@ Grounding runs for:
 ### 5. Report Generation
 
 **HTML Report** (`report.html`):
-- **Platform Readiness Snapshot** — tenant maturity score, automation coverage, enterprise-scale readiness
+- **Platform Readiness Snapshot** — tenant maturity score, automation coverage, enterprise-scale landing zone technical readiness
 - **Landing Zone Adoption Blockers** — AI-identified barriers to ALZ adoption
 - **Platform Risk Prioritization** — 5-tier risk classification (Critical → Hygiene) with confidence indicators
 - **Highest-Impact Remediation Sequence** — prioritised initiative roadmap
@@ -522,7 +624,7 @@ Grounding runs for:
 - **ALZ Design Area References** — links to official ALZ design area documentation
 - **Data Collection Provenance** — collector execution metadata and timestamps
 
-**CSA Workbook** (`CSA_Workbook_v1.xlsx`):
+**CSA Workbook** (`CSA_Workbook_v1.xlsm`):
 - See [CSA Workbook Deep Dive](#csa-workbook-deep-dive) below
 
 ---
@@ -544,11 +646,11 @@ The workbook is the primary **customer-facing deliverable** — a 3-sheet Excel 
 A phased transformation plan where each action item includes:
 
 - **Phase** (30 / 60 / 90 day)
-- **Action** and **Initiative ID**
+- **Action** and **Checklist ID** (canonical ALZ checklist ID, e.g. `A01.01`)
 - **CAF Discipline** alignment
 - **Owner** and **Success Criteria**
 - **Dependencies**
-- **Related Controls** — mapped from `initiative_id` → initiative controls (GUIDs) → checklist IDs
+- **Related Controls** — mapped from `checklist_id` → item controls (GUIDs) → checklist IDs
 - **Related Risks** — reverse-mapped through `top_business_risks[].affected_controls`
 
 ### Sheet 2: `2_Control_Details`
@@ -573,7 +675,7 @@ All ~243 controls in a flat table with 19 columns:
 | N: Grounded URL | Learn documentation URL from MCP |
 | O: Grounded Code | Bicep/Terraform code sample from MCP |
 | P: Grounded Fetch | Full-page markdown excerpt |
-| Q: Related Initiatives | Initiative IDs related to this control |
+| Q: Related Items | Checklist IDs of related remediation items |
 | R: Category | ALZ category |
 | S: Discussion Points | Customer discovery items mapped by control (224/243 populated) |
 
@@ -592,7 +694,7 @@ This runs the **IntentOrchestrator** which:
 2. Routes the intent to relevant evaluators
 3. Runs the assessment runtime against the targeted scope
 4. Optionally generates an AI explanation of the results
-5. Saves output to `out/run-*-on-demand.json`
+5. Saves output to `output/run-*-on-demand.json`
 
 ---
 
@@ -621,7 +723,7 @@ The AI output includes:
 - **Fix sequence** — ordered remediation steps with dependency rationale and Learn URLs
 - **Cascade effect** — which downstream controls will automatically improve
 
-Output is saved to `out/why-{domain}.json`. Use `--no-ai` to get the raw evidence payload without the AI narration.
+Output is saved to `output/why-{domain}.json`. Use `--no-ai` to get the raw evidence payload without the AI narration.
 
 ---
 
@@ -640,7 +742,7 @@ Preflight probes check:
 - Defender API access
 - Policy read access
 
-Results are saved to `out/preflight.json` and printed to the console with pass/fail indicators.
+Results are saved to `output/preflight.json` and printed to the console with pass/fail indicators.
 
 ---
 

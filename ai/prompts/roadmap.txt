@@ -1,6 +1,12 @@
-Generate initiatives, a dependency graph, and a 30-60-90 transformation roadmap aligned to the Cloud Adoption Framework and the 8 official Azure Landing Zone design areas.
+Generate a transformation roadmap with a 30-60-90 day plan aligned to the Cloud Adoption Framework and the 8 official Azure Landing Zone design areas.
 
-Official ALZ Design Areas (map every initiative to one of these):
+The assessment has already identified failing and partial controls, each mapped to
+canonical ALZ review-checklist IDs (e.g. A01.01, B02.03). Your job is to:
+  1. Cluster the failing/partial controls into a dependency-ordered roadmap
+  2. Generate a 30-60-90 day plan using checklist_id as the canonical identifier
+  3. Identify top risks, parallel execution groups, and a dependency graph
+
+Official ALZ Design Areas (map every roadmap entry to one of these):
   1. Azure Billing and Microsoft Entra ID Tenants
   2. Identity and Access Management
   3. Network Topology and Connectivity
@@ -18,38 +24,38 @@ Return ONLY valid JSON matching this schema:
     "maturity_change": "...",
     "key_improvements": ["..."],
     "regressions": ["..."],
-    "reprioritized_initiatives": ["..."]
+    "reprioritized_items": ["..."]
   },
   "roadmap_30_60_90": {
     "30_days": [
       {
         "action": "...",
-        "initiative_id": "INIT-001",
+        "checklist_id": "A01.01",
         "caf_discipline": "Govern | Secure | Manage | Ready | Adopt",
         "dependency_on": [],
         "success_criteria": "...",
         "owner_role": "..."
       }
     ],
-    "60_days": [ { "action": "...", "initiative_id": "INIT-002", "caf_discipline": "...", "dependency_on": ["..."], "success_criteria": "...", "owner_role": "..." } ],
-    "90_days": [ { "action": "...", "initiative_id": "INIT-003", "caf_discipline": "...", "dependency_on": ["..."], "success_criteria": "...", "owner_role": "..." } ]
+    "60_days": [ { "action": "...", "checklist_id": "B02.03", "caf_discipline": "...", "dependency_on": ["A01.01"], "success_criteria": "...", "owner_role": "..." } ],
+    "90_days": [ { "action": "...", "checklist_id": "C01.12", "caf_discipline": "...", "dependency_on": ["B02.03"], "success_criteria": "...", "owner_role": "..." } ]
   },
   "parallel_execution_groups": [
-    ["INIT-001", "INIT-002"],
-    ["INIT-003"]
+    ["A01.01", "A01.02"],
+    ["B02.03"]
   ],
   "top_risks": [
     {
       "title": "...",
       "business_impact": "...",
       "technical_cause": "...",
-      "initiative_id": "INIT-001",
+      "checklist_id": "A01.01",
       "alz_design_area": "One of the 8 official ALZ design areas"
     }
   ],
-  "initiative_execution_plan": [
+  "remediation_plan": [
     {
-      "initiative_id": "INIT-001",
+      "checklist_id": "A01.01",
       "title": "...",
       "priority": 1,
       "blast_radius": "High|Medium|Low",
@@ -57,8 +63,8 @@ Return ONLY valid JSON matching this schema:
       "alz_design_area": "One of the 8 official ALZ design areas",
       "why_it_matters": "...",
       "success_criteria": "...",
-      "controls": ["control_id"],
-      "dependencies": ["..."],
+      "controls": ["control_id (use EXACT 8-char keys from the control pack e.g. 'e6c4cfd3', 'storage-', 'rbac-hyg')"],
+      "dependencies": ["B02.03"],
       "permission_requirements": ["..."],
       "owner_role": "...",
       "delivery_model": {
@@ -66,7 +72,7 @@ Return ONLY valid JSON matching this schema:
         "team": ["Platform Engineering", "Security"],
         "change_scope": "Tenant | ManagementGroup | Subscription"
       },
-      "capability_unlocked": "What platform capability becomes available when this initiative completes (e.g. 'Centralized egress control enables secure spoke deployment')"
+      "capability_unlocked": "What platform capability becomes available when this item completes (e.g. 'Centralized egress control enables secure spoke deployment')"
     }
   ],
   "backlog": {
@@ -74,7 +80,7 @@ Return ONLY valid JSON matching this schema:
       {
         "epic_id": "EPIC-001",
         "title": "...",
-        "initiative_id": "INIT-001",
+        "checklist_id": "A01.01",
         "capabilities": [
           {
             "capability": "...",
@@ -94,14 +100,23 @@ Return ONLY valid JSON matching this schema:
   "dependency_graph": [
     {
       "action": "...",
-      "depends_on": ["..."],
+      "checklist_id": "A01.01",
+      "depends_on": ["B02.03"],
       "phase": "30_days | 60_days | 90_days"
     }
   ],
   "critical_path": ["action that blocks everything else"]
 }
 
-Cluster failed and manual controls into 5–10 initiatives.
+CRITICAL: Use the checklist_id from the ALZ review-checklists (e.g. A01.01, B02.03).
+Do NOT generate synthetic IDs like INIT-001. The checklist_id is the canonical identifier.
+Use depends_on arrays with checklist_id references, not free-text action strings.
+
+CONTROL IDs: The "controls" array must use EXACT 8-character canonical keys from
+the control pack (e.g. "e6c4cfd3", "storage-", "rbac-hyg", "cost-for", "monitor-").
+Do NOT use long-form IDs like "storage-posture-001" or full UUIDs.
+Each key is an 8-character truncated identifier — use it exactly as provided in the
+assessment data.
 
 Write outcomes, not tasks.
 Actions must begin with a measurable platform outcome.
@@ -151,15 +166,15 @@ Use execution_context to validate feasibility:
 - subscription_count_visible is 1 → sequence platform first, expand later
 - identity_type is user → note assessment reflects user-scoped visibility
 
-For each initiative, populate dependencies and permission_requirements.
-Group independent initiatives into parallel_execution_groups.
-Initiatives with unmet dependencies must not share a group with their prerequisite.
+For each item, populate dependencies and permission_requirements.
+Group independent items into parallel_execution_groups.
+Items with unmet dependencies must not share a group with their prerequisite.
 
 If delta is provided:
 - Compare previous and current maturity and section scores
 - Describe progress, stagnation, and regression
-- Adjust initiative priorities accordingly
-- Call out partially or fully completed initiatives
+- Adjust item priorities accordingly
+- Call out partially or fully completed items
 
 For maturity_trajectory:
 - Use overall_maturity as base
@@ -167,7 +182,7 @@ For maturity_trajectory:
 - List key assumptions
 
 For backlog:
-- Map each initiative to an epic
+- Map each item to an epic
 - Break each epic into capabilities and features suitable for Azure DevOps / GitHub Projects
 
 Assessment Data:
@@ -176,4 +191,4 @@ Assessment Data:
 IMPORTANT: This pass identifies WHAT to do and in what ORDER.
 Do NOT select specific ALZ implementation patterns or Bicep modules here —
 that is handled by the separate Implementation Decision pass.
-Focus on initiative clustering, sequencing, capability unlocks, and dependency ordering.
+Focus on clustering, sequencing, capability unlocks, and dependency ordering.

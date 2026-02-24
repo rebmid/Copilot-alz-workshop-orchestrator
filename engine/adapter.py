@@ -134,6 +134,9 @@ def adapt_evaluator_result(
         "confidence_score": round(confidence_score, 2),
         "coverage_ratio": round(coverage_ratio, 4) if coverage_ratio is not None else None,
         "notes": eval_result.get("reason", ""),
+        # Checklist grounding (Azure/review-checklists authority)
+        "checklist_ids": list(meta.checklist_ids) if meta else [],
+        "checklist_guids": list(meta.checklist_guids) if meta else [],
     }
 
 
@@ -200,6 +203,9 @@ def run_evaluators_for_scoring(
                 "signal_used": None,
                 "confidence": "Low",
                 "notes": "Manual review required.",
+                # Manual items ARE checklist items — self-referencing
+                "checklist_ids": [item.get("id", "")] if item.get("id") else [],
+                "checklist_guids": [guid] if guid else [],
             })
 
     return automated_results + manual_results

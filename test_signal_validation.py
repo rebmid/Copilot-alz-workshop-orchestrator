@@ -585,4 +585,13 @@ if failures == 0:
     print(f"  ✔ All checks passed")
 else:
     print(f"  ✗ {failures} check(s) FAILED")
-sys.exit(failures)
+
+
+# ── pytest-compatible wrapper ─────────────────────────────────────
+def test_signal_validation_all_checks():
+    """Pytest entry-point: fails if any self-test check above failed."""
+    assert failures == 0, f"{failures} signal-validation check(s) FAILED"
+
+
+if __name__ == "__main__":
+    sys.exit(failures)

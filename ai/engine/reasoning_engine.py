@@ -21,6 +21,16 @@ from alz.loader import (
     build_prompt_checklist_context,
     get_design_area_learn_urls,
 )
+from engine.guardrails import validate_anti_drift
+from engine.scaling_rules import build_scaling_simulation
+from engine.drift_model import build_drift_model
+from engine.cost_simulation import build_cost_simulation
+from engine.decision_impact import build_decision_impact_model, resolve_blockers_to_items
+from engine.dependency_engine import build_initiative_dependency_graph, reorder_roadmap_phases
+from engine.risk_impact import build_risk_impact_model
+from engine.transform_optimizer import build_transformation_optimization
+from engine.maturity_trajectory import compute_maturity_trajectory
+from graph.knowledge_graph import ControlKnowledgeGraph
 
 
 class ReasoningEngine:
@@ -108,8 +118,8 @@ class ReasoningEngine:
         except Exception as e:
             print(f"  ⚠ ALZ checklist grounding skipped: {e}")
 
-        # ── 1. Roadmap + Initiatives ──────────────────────────────
-        print(f"  [1/{total_passes}] Generating roadmap & initiatives …")
+        # ── 1. Roadmap + Remediation Items ────────────────────
+        print(f"  [1/{total_passes}] Generating roadmap & remediation items …")
         roadmap_raw = self._safe_run(
             system,
             self.prompts.roadmap(assessment),
@@ -117,8 +127,20 @@ class ReasoningEngine:
             max_tokens=8000,
         )
 
-        initiatives = roadmap_raw.get("initiative_execution_plan", [])
-        print(f"        → {len(initiatives)} initiative(s)")
+        # Accept new key (remediation_plan) with fallback to legacy key
+        items = roadmap_raw.get("remediation_plan",
+                                roadmap_raw.get("initiative_execution_plan", []))
+        print(f"        → {len(items)} remediation item(s)")
+
+        # ── 1b. Canonical control ID normalization ────────────────
+        # AI may emit full-length control IDs (e.g. "storage-posture-001",
+        # "e6c4cfd3-e504-4547-...").  Normalize to canonical 8-char keys
+        # from controls.json BEFORE any downstream processing.
+        from engine.id_rewriter import normalize_control_ids
+        _control_id_violations: list[str] = []
+        if items:
+            print("        Normalizing control IDs to canonical keys …")
+            _control_id_violations = normalize_control_ids(items)
 
         # ── 2. Executive briefing ─────────────────────────────────
         print(f"  [2/{total_passes}] Generating executive briefing …")
@@ -133,17 +155,17 @@ class ReasoningEngine:
         # For each initiative, retrieve ALZ implementation options via MCP
         # then ask the LLM to select and justify the right pattern.
         implementation_decisions: list[dict] = []
-        if initiatives:
-            print(f"  [3/{total_passes}] Selecting ALZ implementation patterns ({len(initiatives)} initiatives) …")
-            initiatives_with_options = []
-            for init in initiatives:
+        if items:
+            print(f"  [3/{total_passes}] Selecting ALZ implementation patterns ({len(items)} items) …")
+            items_with_options = []
+            for item in items:
                 try:
-                    options = get_alz_implementation_options(init, assessment)
+                    options = get_alz_implementation_options(item, assessment)
                 except Exception as e:
-                    print(f"        ⚠ MCP pattern retrieval failed for '{init.get('title', '?')[:40]}': {e}")
+                    print(f"        ⚠ MCP pattern retrieval failed for '{item.get('title', '?')[:40]}': {e}")
                     options = []
-                initiatives_with_options.append({
-                    **init,
+                items_with_options.append({
+                    **item,
                     "available_patterns": options,
                 })
 
@@ -159,7 +181,7 @@ class ReasoningEngine:
             decision_raw = self._safe_run(
                 system,
                 self.prompts.implementation_decision(
-                    initiatives_with_options, decision_context
+                    items_with_options, decision_context
                 ),
                 label="Implementation Decision",
                 max_tokens=8000,
@@ -167,26 +189,27 @@ class ReasoningEngine:
             implementation_decisions = decision_raw.get("implementation_decisions", [])
             print(f"        → {len(implementation_decisions)} pattern decision(s)")
 
-            # Merge decisions back into initiatives for downstream passes
+            # Merge decisions back into items for downstream passes
             decision_map = {
-                d["initiative_id"]: d for d in implementation_decisions
-                if "initiative_id" in d
+                d.get("checklist_id", d.get("initiative_id", "")): d
+                for d in implementation_decisions
+                if d.get("checklist_id") or d.get("initiative_id")
             }
-            for init in initiatives:
-                iid = init.get("initiative_id", "")
-                if iid in decision_map:
-                    init["selected_pattern"] = decision_map[iid].get("recommended_pattern", "")
-                    init["alz_module"] = decision_map[iid].get("alz_module", "")
-                    init["capability_unlocked"] = decision_map[iid].get("capability_unlocked", "")
-                    init["prerequisites_missing"] = decision_map[iid].get("prerequisites_missing", [])
+            for item in items:
+                cid = item.get("checklist_id", item.get("initiative_id", ""))
+                if cid in decision_map:
+                    item["selected_pattern"] = decision_map[cid].get("recommended_pattern", "")
+                    item["alz_module"] = decision_map[cid].get("alz_module", "")
+                    item["capability_unlocked"] = decision_map[cid].get("capability_unlocked", "")
+                    item["prerequisites_missing"] = decision_map[cid].get("prerequisites_missing", [])
         else:
-            print(f"  [3/{total_passes}] Implementation Decision skipped (no initiatives).")
+            print(f"  [3/{total_passes}] Implementation Decision skipped (no items).")
 
         # ── 4. Sequence Justification (NEW) ───────────────────────
         # Explain WHY initiatives are ordered this way in platform terms.
         sequence_justification: dict = {}
         engagement_recommendations: list[dict] = []
-        if initiatives and implementation_decisions:
+        if items and implementation_decisions:
             print(f"  [4/{total_passes}] Generating sequence justification …")
             seq_context = {
                 "design_area_maturity": assessment.get("design_area_maturity", []),
@@ -211,14 +234,21 @@ class ReasoningEngine:
 
         # ── 5. Enterprise-scale readiness ─────────────────────────
         print(f"  [5/{total_passes}] Evaluating enterprise-scale readiness …")
-        # Enrich assessment with initiative IDs so readiness can reference them
-        readiness_input = {**assessment, "initiative_ids": [i["initiative_id"] for i in initiatives]}
+        # Enrich assessment with checklist IDs so readiness can reference them
+        readiness_input = {
+            **assessment,
+            "checklist_ids": [i.get("checklist_id", i.get("initiative_id", "")) for i in items],
+        }
         readiness = self._safe_run(
             system,
             self.prompts.readiness(readiness_input),
             label="Readiness",
             max_tokens=8000,
         )
+
+        # Clamp readiness_score to valid range
+        from engine.id_rewriter import clamp_readiness_score
+        clamp_readiness_score(readiness)
 
         # ── 6. Smart questions ────────────────────────────────────
         print(f"  [6/{total_passes}] Generating smart questions …")
@@ -233,21 +263,21 @@ class ReasoningEngine:
 
         # ── 7. Implementation backlog ─────────────────────────────
         implementation_backlog: list[dict] = []
-        if not skip_implementation and initiatives:
-            print(f"  [7/{total_passes}] Generating implementation for {len(initiatives)} initiative(s) …")
-            for init in initiatives:
+        if not skip_implementation and items:
+            print(f"  [7/{total_passes}] Generating implementation for {len(items)} item(s) …")
+            for item in items:
                 impl = self._safe_run(
                     system,
-                    self.prompts.implementation(init),
-                    label=f"Impl:{init.get('initiative_id', '?')}",
+                    self.prompts.implementation(item),
+                    label=f"Impl:{item.get('checklist_id', item.get('initiative_id', '?'))}",
                 )
                 implementation_backlog.append(impl)
         else:
             print(f"  [7/{total_passes}] Implementation backlog skipped.")
 
         # ── 8. Learn reference grounding (ALZ-design-area-aware) ──
-        print(f"  [8/{total_passes}] Grounding initiatives with Microsoft Learn (ALZ-aware) …")
-        enriched_initiatives = ground_initiatives(initiatives)
+        print(f"  [8/{total_passes}] Grounding items with Microsoft Learn (ALZ-aware) …")
+        enriched_items = ground_initiatives(items)
 
         # Also ground the top gaps used in executive — scoped to ALZ areas
         top_gaps = assessment.get("most_impactful_gaps", [])[:10]
@@ -260,6 +290,28 @@ class ReasoningEngine:
         except Exception as e:
             print(f"  ⚠ ALZ design area grounding skipped: {e}")
             design_area_refs = {}
+
+        # ── 8b. Checklist grounding (authority: Azure/review-checklists) ──
+        # Derive checklist references for each item from its controls'
+        # checklist_ids.  This is deterministic — no AI involved.
+        from alz.checklist_grounding import (
+            ground_initiatives_to_checklist,
+            validate_checklist_coverage,
+        )
+        try:
+            ground_initiatives_to_checklist(enriched_items)
+            _checklist_violations = validate_checklist_coverage(enriched_items)
+            _grounded_count = sum(
+                1 for i in enriched_items
+                if i.get("derived_from_checklist")
+            )
+            print(f"        → checklist grounding: {_grounded_count}/{len(enriched_items)} items grounded")
+            if _checklist_violations:
+                for v in _checklist_violations:
+                    print(f"        ⚠ {v}")
+        except Exception as e:
+            print(f"  ⚠ Checklist grounding failed: {e}")
+            _checklist_violations = []
 
         # ── 9. Target architecture ─────────────────────────────────
         print(f"  [9/{total_passes}] Generating target architecture …")
@@ -282,7 +334,7 @@ class ReasoningEngine:
 
         # ── AI-enriched grounding (contextualise refs via LLM) ────
         grounding_ctx = build_grounding_context(
-            enriched_initiatives, grounded_refs, target_arch,
+            enriched_items, grounded_refs, target_arch,
         )
         if any(grounding_ctx.get(k) for k in grounding_ctx):
             print("        Enriching grounding with AI contextualisation …")
@@ -298,13 +350,159 @@ class ReasoningEngine:
         # ── Progress analysis (derived, no AOAI call) ─────────────
         progress = self._derive_progress(assessment)
 
+        # ── Anti-drift derived models (deterministic, no AOAI) ────
+        # Extract signals and results from the assessment payload
+        # so the derived-model builders can work from factual data.
+        _signals = assessment.get("signals", {})
+        _results = assessment.get("results", [])
+        _exec_ctx = assessment.get("execution_context", {})
+        _section_scores = assessment.get("design_area_maturity", [])
+        _top_risks = (executive or {}).get("top_business_risks", [])
+        _blockers = (readiness or {}).get("blockers", [])
+
+        print("  [derived] Building anti-drift models …")
+
+        try:
+            scaling_sim = build_scaling_simulation(_results, _signals, _exec_ctx)
+            print(f"        → scaling_simulation: {sum(len(s.get('derived_impacts', [])) for s in scaling_sim.get('scenarios', []))} impacts across {len(scaling_sim.get('scenarios', []))} scenarios")
+        except Exception as e:
+            print(f"  ⚠ scaling_simulation failed: {e}")
+            scaling_sim = {"scenarios": []}
+
+        try:
+            drift = build_drift_model(_results, _signals, _signals.get("activity_log"))
+            print(f"        → drift_model: {drift.get('drift_likelihood', '?')} likelihood (score={drift.get('drift_score', '?')})")
+        except Exception as e:
+            print(f"  ⚠ drift_model failed: {e}")
+            drift = {}
+
+        try:
+            cost_sim = build_cost_simulation(items, _results, mcp_pricing_available=False)
+            print(f"        → cost_simulation: {len(cost_sim.get('drivers', []))} drivers ({cost_sim.get('mode', '?')})")
+        except Exception as e:
+            print(f"  ⚠ cost_simulation failed: {e}")
+            cost_sim = {"mode": "category_only", "drivers": []}
+
+        try:
+            decision_impact = build_decision_impact_model(
+                items, _results, _top_risks, _blockers, _section_scores, _signals,
+            )
+            print(f"        → decision_impact_model: {len(decision_impact.get('items', []))} items")
+        except Exception as e:
+            print(f"  ⚠ decision_impact_model failed: {e}")
+            decision_impact = {"items": []}
+
+        # ── 3-Layer Deterministic Decision Engine ─────────────────
+        # Layer 1: Dependency Engine — strict architectural ordering
+        # Layer 2: Risk Impact — executive framing (NO sequencing influence)
+        # Layer 3: Transformation Optimizer — parallelization within dep boundaries
+        # Plus: deterministic maturity trajectory & blocker resolution
+
+        # Extract control-level dependencies from the knowledge graph
+        # (full_id → [prerequisite full_ids]) for the dependency engine
+        _control_deps: dict[str, list[str]] = {}
+        try:
+            _kg = ControlKnowledgeGraph()
+            for _sid, _node in _kg.controls.items():
+                _full_id = _node.full_id
+                _prereq_full_ids = [
+                    _kg.controls[p].full_id
+                    for p in _node.depends_on
+                    if p in _kg.controls
+                ]
+                if _prereq_full_ids:
+                    _control_deps[_full_id] = _prereq_full_ids
+        except Exception as e:
+            print(f"  ⚠ Could not load control dependencies from KG: {e}")
+
+        print("  [derived] Building 3-layer deterministic decision engine …")
+
+        # Layer 1: Dependency Engine
+        try:
+            dep_graph = build_initiative_dependency_graph(
+                items, control_dependencies=_control_deps or None,
+            )
+            print(f"        → dependency_engine: {len(dep_graph.get('item_order', dep_graph.get('initiative_order', [])))} items ordered, "
+                  f"{len(dep_graph.get('dependency_violations', []))} violations detected")
+        except Exception as e:
+            print(f"  ⚠ dependency_engine failed: {e}")
+            dep_graph = {"item_order": [], "item_deps": {}, "phase_assignment": {}, "parallel_groups": [], "dependency_violations": []}
+
+        # Layer 2: Risk Impact (narrative only — NOT for sequencing)
+        try:
+            risk_impact = build_risk_impact_model(
+                items, _results, _top_risks, _section_scores,
+            )
+            print(f"        → risk_impact: {len(risk_impact.get('items', []))} items, "
+                  f"total maturity lift {risk_impact.get('summary', {}).get('total_maturity_lift_percent', 0):.1f}%")
+        except Exception as e:
+            print(f"  ⚠ risk_impact failed: {e}")
+            risk_impact = {"items": [], "summary": {}}
+
+        # Layer 3: Transformation Optimizer
+        try:
+            transform_opt = build_transformation_optimization(
+                items, dep_graph, risk_impact, _results,
+            )
+            print(f"        → transform_optimizer: {len(transform_opt.get('quick_wins', []))} quick wins, "
+                  f"{len(transform_opt.get('parallel_tracks', []))} parallel tracks")
+        except Exception as e:
+            print(f"  ⚠ transform_optimizer failed: {e}")
+            transform_opt = {"quick_wins": [], "parallel_tracks": [], "optimization_notes": [], "effort_matrix": []}
+
+        # Deterministic maturity trajectory
+        _current_maturity = assessment.get("scoring", {}).get("overall_maturity_percent", 0.0)
+        _total_controls = assessment.get("scoring", {}).get(
+            "automation_coverage", {}
+        ).get("total_controls", len(assessment.get("results", [])))
+        try:
+            det_trajectory = compute_maturity_trajectory(
+                items, _results,
+                phase_assignment=dep_graph.get("phase_assignment", {}),
+                current_maturity_percent=_current_maturity,
+                total_controls=_total_controls,
+            )
+            print(f"        → maturity_trajectory: {det_trajectory.get('current_percent', 0):.1f}% → "
+                  f"{det_trajectory.get('post_90_day_percent', 0):.1f}% (90d)")
+        except Exception as e:
+            print(f"  ⚠ maturity_trajectory failed: {e}")
+            det_trajectory = {}
+
+        # Deterministic blocker → item resolution
+        try:
+            blocker_item_mapping = resolve_blockers_to_items(
+                _blockers, items, _results,
+            )
+            print(f"        → blocker_mapping: {len(blocker_item_mapping)} blockers resolved")
+        except Exception as e:
+            print(f"  ⚠ blocker_mapping failed: {e}")
+            blocker_item_mapping = {}
+
+        # Patch readiness blockers with deterministic resolving_checklist_ids
+        if blocker_item_mapping and readiness:
+            from engine.id_rewriter import patch_blocker_items
+            patch_blocker_items(readiness, blocker_item_mapping)
+
+        # ── Pipeline integrity validation ──────────────────────────
+        from engine.id_rewriter import validate_pipeline_integrity
+        _pipeline_violations = validate_pipeline_integrity(
+            readiness, enriched_items,
+            blocker_item_mapping, decision_impact,
+        )
+        # Merge checklist grounding violations
+        if _checklist_violations:
+            _pipeline_violations.extend(_checklist_violations)
+        # Merge control ID normalization violations
+        if _control_id_violations:
+            _pipeline_violations.extend(_control_id_violations)
+
         # ── Assemble unified output ───────────────────────────────
         output: dict[str, Any] = {
             "meta": {
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "assessment_run_id": run_id,
                 "tenant_id": tenant_id,
-                "pipeline_version": "2.0-architectural-decision-support",
+                "pipeline_version": "3.0-checklist-canonical",
             },
             "executive": executive,
             "enterprise_scale_readiness": readiness,
@@ -315,7 +513,7 @@ class ReasoningEngine:
                 "parallel_execution_groups": roadmap_raw.get("parallel_execution_groups", []),
                 "maturity_trajectory": roadmap_raw.get("maturity_trajectory", {}),
             },
-            "initiatives": enriched_initiatives,
+            "remediation_items": enriched_items,
             "implementation_decisions": implementation_decisions,
             "sequence_justification": sequence_justification,
             "engagement_recommendations": engagement_recommendations,
@@ -326,6 +524,19 @@ class ReasoningEngine:
             "alz_design_area_references": design_area_refs,
             "alz_design_area_urls": get_design_area_learn_urls(),
             "progress_analysis": progress,
+            # Anti-drift derived models (deterministic)
+            "scaling_simulation": scaling_sim,
+            "drift_model": drift,
+            "cost_simulation": cost_sim,
+            "decision_impact_model": decision_impact,
+            # 3-Layer Deterministic Decision Engine
+            "dependency_graph_model": dep_graph,
+            "risk_impact_model": risk_impact,
+            "transform_optimization": transform_opt,
+            "deterministic_trajectory": det_trajectory,
+            "blocker_item_mapping": blocker_item_mapping,
+            # Pipeline structural integrity violations
+            "_pipeline_violations": _pipeline_violations,
             # Keep raw blocks for backwards compatibility
             "_raw": {
                 "roadmap": roadmap_raw,
@@ -334,7 +545,30 @@ class ReasoningEngine:
             },
         }
 
-        print(f"\n  ✓ Reasoning engine complete — {len(enriched_initiatives)} initiatives, "
+        # ── Anti-drift validation ─────────────────────────────────
+        drift_violations = validate_anti_drift(output)
+        if drift_violations:
+            print(f"\n  ⚠ Anti-drift guardrail violations ({len(drift_violations)}):")
+            for v in drift_violations[:20]:
+                print(f"    • {v}")
+            output["_anti_drift_violations"] = drift_violations
+        else:
+            print("  ✓ Anti-drift validation passed — no violations")
+
+        # ── Relationship integrity validation (Rule F) ────────────
+        # Compiler-grade check: all blocker→item, item→controls,
+        # roadmap→item, and derived_from_checklist references must be
+        # structurally valid.  If not, violations are recorded.
+        from engine.relationship_integrity import validate_relationship_integrity
+        _ri_ok, _ri_violations = validate_relationship_integrity(output)
+        if _ri_violations:
+            _pipeline_violations.extend(_ri_violations)
+            output["_pipeline_violations"] = _pipeline_violations
+            output["_relationship_integrity"] = False
+        else:
+            output["_relationship_integrity"] = True
+
+        print(f"\n  ✓ Reasoning engine complete — {len(enriched_items)} items, "
               f"{len(implementation_decisions)} pattern decisions, "
               f"{len(engagement_recommendations)} engagement recs, "
               f"{len(smart_questions)} questions, "

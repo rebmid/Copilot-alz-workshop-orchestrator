@@ -7,16 +7,16 @@
 <style>
 /* ── CSS Variables ─────────────────────────────────────────── */
 :root {
-  --bg:       #0d1117;
-  --card-bg:  #161b22;
-  --border:   #30363d;
-  --accent:   #58a6ff;
-  --danger:   #f85149;
-  --warn:     #d29922;
-  --success:  #3fb950;
-  --muted:    #8b949e;
-  --text:     #e6edf3;
-  --surface:  #21262d;
+  --bg:       #ffffff;
+  --card-bg:  #f6f8fa;
+  --border:   #d0d7de;
+  --accent:   #0969da;
+  --danger:   #cf222e;
+  --warn:     #9a6700;
+  --success:  #1a7f37;
+  --muted:    #656d76;
+  --text:     #1f2328;
+  --surface:  #eaeef2;
   --font:     -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -276,7 +276,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <div class="kpi-label">Overall Maturity</div>
     </div>
     <div class="kpi">
-      <div class="kpi-value" style="color:var(--accent)">{{ foundation_gate.readiness_score|default('--') }}{% if foundation_gate.readiness_score %}/10{% endif %}</div>
+      <div class="kpi-value" style="color:var(--accent)">{{ foundation_gate.readiness_score|default('--') }}{% if foundation_gate.readiness_score is not none %}/100{% endif %}</div>
       <div class="kpi-label">Readiness Score</div>
     </div>
     <div class="kpi">
@@ -300,7 +300,16 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     </div>
     <p>{{ b.description }}</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving initiative: <strong>{{ b.resolving_initiative_title }}</strong>
+      Resolving controls: <strong>{{ b.resolving_initiative_title }}</strong>
+      {% if b.resolving_checklist_ids %}
+        ({{ b.resolving_checklist_ids|join(", ") }})
+      {% endif %}
+      {% if b.controls_resolved %}
+        &middot; {{ b.controls_resolved }} control(s) resolved
+      {% endif %}
+      {% if b.risks_reduced %}
+        &middot; {{ b.risks_reduced }} risk(s) reduced
+      {% endif %}
       {% if b.dependencies %}
         &middot; Dependencies: {{ b.dependencies|join(", ") }}
       {% endif %}
@@ -378,25 +387,46 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   <h2>&sect; 3 &mdash; 30 / 60 / 90 Day Roadmap</h2>
 
   {% if trajectory %}
+  {% set traj_current = trajectory.current_percent | default(trajectory.current_maturity_percent, true) %}
+  {% set traj_30 = trajectory.post_30_day_percent | default(trajectory.projected_30_day_percent, true) %}
+  {% set traj_60 = trajectory.post_60_day_percent | default(trajectory.projected_60_day_percent, true) %}
+  {% set traj_90 = trajectory.post_90_day_percent | default(trajectory.projected_90_day_percent, true) %}
   <div style="margin-bottom:1rem">
     <h4>Maturity Trajectory</h4>
     <div class="trajectory-bar">
-      {% if trajectory.current_percent is defined %}
-      <div class="traj-segment" style="width:{{ trajectory.current_percent }}%;background:var(--warn)">
-        {{ trajectory.current_percent }}% now
+      {% if traj_current is defined and traj_current is not none %}
+      <div class="traj-segment" style="width:{{ traj_current }}%;background:var(--warn)">
+        {{ traj_current }}% now
       </div>
       {% endif %}
-      {% if trajectory.post_30_day_percent is defined and trajectory.current_percent is defined %}
-      <div class="traj-segment" style="width:{{ trajectory.post_30_day_percent - trajectory.current_percent }}%;background:var(--accent)">
-        {{ trajectory.post_30_day_percent }}% @ 30d
+      {% if traj_30 is defined and traj_30 is not none and traj_current is defined and traj_current is not none %}
+      <div class="traj-segment" style="width:{{ traj_30 - traj_current }}%;background:var(--accent)">
+        {{ traj_30 }}% @ 30d
       </div>
       {% endif %}
-      {% if trajectory.post_90_day_percent is defined and trajectory.post_30_day_percent is defined %}
-      <div class="traj-segment" style="width:{{ trajectory.post_90_day_percent - trajectory.post_30_day_percent }}%;background:var(--success)">
-        {{ trajectory.post_90_day_percent }}% @ 90d
+      {% if traj_60 is defined and traj_60 is not none and traj_30 is defined and traj_30 is not none %}
+      <div class="traj-segment" style="width:{{ traj_60 - traj_30 }}%;background:#5b9bd5">
+        {{ traj_60 }}% @ 60d
+      </div>
+      {% endif %}
+      {% if traj_90 is defined and traj_90 is not none and traj_60 is defined and traj_60 is not none %}
+      <div class="traj-segment" style="width:{{ traj_90 - traj_60 }}%;background:var(--success)">
+        {{ traj_90 }}% @ 90d
+      </div>
+      {% elif traj_90 is defined and traj_90 is not none and traj_30 is defined and traj_30 is not none %}
+      <div class="traj-segment" style="width:{{ traj_90 - traj_30 }}%;background:var(--success)">
+        {{ traj_90 }}% @ 90d
       </div>
       {% endif %}
     </div>
+    {% if trajectory.controls_resolved_by_phase is defined %}
+    <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+      Controls resolved: {{ trajectory.controls_resolved_by_phase.get('30_days', 0) }} (30d)
+      + {{ trajectory.controls_resolved_by_phase.get('60_days', 0) }} (60d)
+      + {{ trajectory.controls_resolved_by_phase.get('90_days', 0) }} (90d)
+      = {{ trajectory.controls_resolved_by_phase.get('cumulative_90', 0) }} total
+    </div>
+    {% endif %}
   </div>
   {% endif %}
 
@@ -416,6 +446,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
             {% if item.controls_count %}
             <span>&#x1F4CB; {{ item.controls_count }} controls</span>
+            {% endif %}
+            {% if item.controls_resolved %}
+            <span>&#x2705; {{ item.controls_resolved }} resolved</span>
             {% endif %}
             {% if item.risks_reduced %}
             <span>&#x1F6E1;&#xFE0F; Reduces {{ item.risks_reduced }} risk(s)</span>
