@@ -129,6 +129,34 @@ Assessment scope, subscriptions evaluated, and API access confirmation.
 > AI output is advisory only.
 > Control status, maturity scoring, and risk classification are immutable once computed.
 
+```
+Azure Tenant / Demo
+        │
+        ▼
+Deterministic ALZ Assessment
+(Resource Graph + Policy + Defender)
+        │
+        ▼
+Control Scoring Engine
+        │
+        │─────── one-way feed ──────┐
+        │                           ▼
+        ├────────► CSA Workbook    AI Reasoning Engine
+        │                         (Roadmap + Exec Brief + Target Arch)
+        │                           │
+        │                           ▼
+        │                     MCP Grounding Layer
+        │            (Microsoft Learn retrieval + patterns)
+        │                           │
+        │                           ▼
+        │                         WHY Reasoning Layer
+        │
+        └───────────────────────────┘
+                    │
+                    ▼
+          Traceable Deliverables
+```
+
 ### 1. Input
 
 - Live Azure tenant via `az login` or sanitized demo fixture
