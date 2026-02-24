@@ -174,6 +174,10 @@ class ControlDefinition:
     caf_guidance: str
     caf_url: str
 
+    # ── Checklist grounding (Azure/review-checklists authority) ───
+    checklist_ids: tuple[str, ...] = ()     # e.g. ("D07.01",)
+    checklist_guids: tuple[str, ...] = ()   # matching GUIDs from ALZ checklist
+
     # ── Computed / derived (set in __post_init__) ─────────────────
     weight: float = field(init=False)
     remediation_group: str = field(init=False)
@@ -248,6 +252,8 @@ class ControlDefinition:
             required_signals=tuple(raw["required_signals"]),
             caf_guidance=raw.get("caf_guidance", ""),
             caf_url=raw.get("caf_url", ""),
+            checklist_ids=tuple(raw.get("checklist_ids", ())),
+            checklist_guids=tuple(raw.get("checklist_guids", ())),
             signal_category=raw.get("signal_category"),
         )
 

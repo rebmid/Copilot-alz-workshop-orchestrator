@@ -288,6 +288,28 @@ class ReasoningEngine:
             print(f"  ⚠ ALZ design area grounding skipped: {e}")
             design_area_refs = {}
 
+        # ── 8b. Checklist grounding (authority: Azure/review-checklists) ──
+        # Derive checklist references for each initiative from its controls'
+        # checklist_ids.  This is deterministic — no AI involved.
+        from alz.checklist_grounding import (
+            ground_initiatives_to_checklist,
+            validate_checklist_coverage,
+        )
+        try:
+            ground_initiatives_to_checklist(enriched_initiatives)
+            _checklist_violations = validate_checklist_coverage(enriched_initiatives)
+            _grounded_count = sum(
+                1 for i in enriched_initiatives
+                if i.get("derived_from_checklist")
+            )
+            print(f"        → checklist grounding: {_grounded_count}/{len(enriched_initiatives)} initiatives grounded")
+            if _checklist_violations:
+                for v in _checklist_violations:
+                    print(f"        ⚠ {v}")
+        except Exception as e:
+            print(f"  ⚠ Checklist grounding failed: {e}")
+            _checklist_violations = []
+
         # ── 9. Target architecture ─────────────────────────────────
         print(f"  [9/{total_passes}] Generating target architecture …")
         # Enrich assessment with selected patterns so target arch derives from decisions
@@ -427,11 +449,15 @@ class ReasoningEngine:
 
         # Deterministic maturity trajectory
         _current_maturity = assessment.get("scoring", {}).get("overall_maturity_percent", 0.0)
+        _total_controls = assessment.get("scoring", {}).get(
+            "automation_coverage", {}
+        ).get("total_controls", len(assessment.get("results", [])))
         try:
             det_trajectory = compute_maturity_trajectory(
                 initiatives, _results,
                 phase_assignment=dep_graph.get("phase_assignment", {}),
                 current_maturity_percent=_current_maturity,
+                total_controls=_total_controls,
             )
             print(f"        → maturity_trajectory: {det_trajectory.get('current_percent', 0):.1f}% → "
                   f"{det_trajectory.get('post_90_day_percent', 0):.1f}% (90d)")
@@ -460,6 +486,9 @@ class ReasoningEngine:
             readiness, enriched_initiatives,
             blocker_init_mapping, decision_impact,
         )
+        # Merge checklist grounding violations
+        if _checklist_violations:
+            _pipeline_violations.extend(_checklist_violations)
 
         # ── Normalize LLM dependency graph ────────────────────────
         # Add initiative_id to each entry and convert text depends_on
@@ -480,7 +509,7 @@ class ReasoningEngine:
                 "generated_at": datetime.now(timezone.utc).isoformat(),
                 "assessment_run_id": run_id,
                 "tenant_id": tenant_id,
-                "pipeline_version": "2.1-structural-consistency",
+                "pipeline_version": "2.3-relationship-integrity",
             },
             "executive": executive,
             "enterprise_scale_readiness": readiness,
@@ -534,6 +563,19 @@ class ReasoningEngine:
             output["_anti_drift_violations"] = drift_violations
         else:
             print("  ✓ Anti-drift validation passed — no violations")
+
+        # ── Relationship integrity validation (Rule F) ────────────
+        # Compiler-grade check: all blocker→initiative, initiative→controls,
+        # roadmap→initiative, and derived_from_checklist references must be
+        # structurally valid.  If not, violations are recorded.
+        from engine.relationship_integrity import validate_relationship_integrity
+        _ri_ok, _ri_violations = validate_relationship_integrity(output)
+        if _ri_violations:
+            _pipeline_violations.extend(_ri_violations)
+            output["_pipeline_violations"] = _pipeline_violations
+            output["_relationship_integrity"] = False
+        else:
+            output["_relationship_integrity"] = True
 
         print(f"\n  ✓ Reasoning engine complete — {len(enriched_initiatives)} initiatives, "
               f"{len(implementation_decisions)} pattern decisions, "

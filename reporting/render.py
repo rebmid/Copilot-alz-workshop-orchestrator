@@ -119,14 +119,23 @@ def _build_report_context(output: dict) -> dict:
     min_inits = esr.get("minimum_initiatives_required", [])
 
     # Deterministic blocker→initiative mapping (from decision_impact)
-    # Falls back to LLM resolving_initiative if deterministic model unavailable
+    # Rule A: blockers must reference initiative_id only (never title strings)
     blocker_mapping = ai.get("blocker_initiative_mapping", {})
 
     gate_blockers = []
     for b in blockers_raw:
         blocker_key = b.get("category", "") or b.get("description", "")
-        # Prefer deterministic mapping, fall back to LLM
-        resolving_id = blocker_mapping.get(blocker_key, b.get("resolving_initiative", ""))
+        # Prefer deterministic mapping, fall back to raw resolving_initiative
+        raw_ref = b.get("resolving_initiative", "")
+        resolving_id = blocker_mapping.get(blocker_key, raw_ref)
+
+        # Rule A enforcement: if the reference looks like a title, try to
+        # resolve it through init_by_id; if not found, use the ID as-is.
+        if resolving_id and resolving_id not in init_by_id:
+            # Try lowercase lookup of blocker_key in mapping
+            resolving_id = blocker_mapping.get(blocker_key.lower(), resolving_id)
+
+        # Rule B: title comes ONLY from init_by_id lookup
         resolving_init = init_by_id.get(resolving_id, {})
         # Derive confidence from controls in that initiative
         init_controls = resolving_init.get("controls", [])
@@ -310,7 +319,7 @@ def _build_report_context(output: dict) -> dict:
 
             phase_items.append({
                 "initiative_id": iid,
-                "title": entry.get("action", init.get("title", "")),
+                "title": init.get("title", iid) if init else iid,
                 "caf_discipline": entry.get("caf_discipline", init.get("caf_discipline", "")),
                 "controls_count": len(controls),
                 "controls_resolved": controls_resolved,
@@ -471,6 +480,22 @@ def _build_report_context(output: dict) -> dict:
 
 
 def generate_report(output: dict, template_name: str = "report_template.html", out_path: str = None):
+    # ── Relationship integrity gate (Rule F) ──────────────────
+    # Abort rendering if structural violations exist.
+    from engine.relationship_integrity import validate_relationship_integrity
+    ri_ok, ri_violations = validate_relationship_integrity(output)
+    if not ri_ok:
+        msg = (f"Rendering aborted: {len(ri_violations)} relationship integrity "
+               f"violation(s) detected.  Fix violations before generating report.")
+        print(f"  \u2717 {msg}")
+        for v in ri_violations:
+            print(f"    \u2022 {v}")
+        # Write a minimal error HTML instead of crashing
+        if out_path is None:
+            out_path = os.path.join(os.getcwd(), "report.html")
+        _write_integrity_error_html(out_path, ri_violations)
+        return ri_violations
+
     base_dir = os.path.dirname(__file__)
     env = Environment(
         loader=FileSystemLoader(base_dir),
@@ -486,5 +511,23 @@ def generate_report(output: dict, template_name: str = "report_template.html", o
 
     if out_path is None:
         out_path = os.path.join(os.getcwd(), "report.html")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+
+def _write_integrity_error_html(out_path: str, violations: list[str]) -> None:
+    """Write a minimal HTML page listing relationship integrity violations."""
+    items = "\n".join(f"<li><code>{v}</code></li>" for v in violations)
+    html = f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/>
+<title>Integrity Error</title>
+<style>body{{font-family:sans-serif;max-width:900px;margin:2rem auto;color:#1f2328}}
+h1{{color:#cf222e}}code{{background:#f6f8fa;padding:2px 6px;border-radius:3px;font-size:.85rem}}
+li{{margin:.4rem 0}}</style></head><body>
+<h1>Relationship Integrity Failed</h1>
+<p>The report cannot be generated because <strong>{len(violations)}</strong>
+structural violation(s) were detected.  Fix these before re-running.</p>
+<ol>{items}</ol>
+</body></html>"""
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)

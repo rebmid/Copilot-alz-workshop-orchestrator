@@ -1,8 +1,10 @@
 """Maturity Trajectory — deterministic maturity projections per phase.
 
-Replaces LLM-generated trajectory with math:
-  current = overall_maturity_percent (from scoring)
-  post_N_day = current + (controls resolved in phases up to N / total assessed) × 100
+Strict formula (Rule C):
+  new_maturity = (current_passing_controls + controls_resolved_by_phase)
+                 / total_controls
+
+  If controls_resolved_by_phase == 0, maturity projection remains unchanged.
 
 Separate track for critical controls.
 """
@@ -16,9 +18,16 @@ def compute_maturity_trajectory(
     results: list[dict],
     phase_assignment: dict[str, str],
     current_maturity_percent: float,
+    total_controls: int | None = None,
 ) -> dict[str, Any]:
     """
     Compute deterministic maturity trajectory from control resolution counts.
+
+    Formula (strict):
+        new_maturity = (current_passing + controls_resolved_by_phase) / total_controls
+
+    If ``controls_resolved_by_phase == 0`` for a given phase, the maturity
+    projection for that phase equals the preceding phase's value (unchanged).
 
     Parameters
     ----------
@@ -30,6 +39,9 @@ def compute_maturity_trajectory(
         initiative_id → "30_days" | "60_days" | "90_days" from dependency engine.
     current_maturity_percent : float
         Current overall maturity (from scoring.py).
+    total_controls : int | None
+        Total control count from the assessment.  If None, falls back
+        to len(results).
 
     Returns
     -------
@@ -38,7 +50,10 @@ def compute_maturity_trajectory(
     """
     results_by_id = {r.get("control_id", ""): r for r in results if r.get("control_id")}
 
-    # Count total assessed controls (Pass + Fail + Partial)
+    # Total controls — use explicit count or fall back to all results
+    _total_controls = total_controls if total_controls else len(results)
+
+    # Count total assessed controls (Pass + Fail + Partial) for info
     assessed = [
         r for r in results
         if r.get("status") in ("Pass", "Fail", "Partial")
@@ -75,12 +90,28 @@ def compute_maturity_trajectory(
     resolved_by_90 = resolved_by_60 + len(phase_controls["90_days"])
 
     # Compute projected maturity at each checkpoint
-    if total_assessed > 0:
-        post_30 = round(((total_pass + resolved_by_30) / total_assessed) * 100, 1)
-        post_60 = round(((total_pass + resolved_by_60) / total_assessed) * 100, 1)
-        post_90 = round(((total_pass + resolved_by_90) / total_assessed) * 100, 1)
+    # Rule C: new_maturity = (current_passing + controls_resolved) / total_controls
+    # If controls_resolved_by_phase == 0, projection remains unchanged.
+    if _total_controls > 0:
+        # 30-day: only changes if new controls are resolved
+        if resolved_by_30 > 0:
+            post_30 = round(((total_pass + resolved_by_30) / _total_controls) * 100, 1)
+        else:
+            post_30 = round(current_maturity_percent, 1)
+
+        # 60-day: only changes if additional controls resolved in 60d phase
+        if len(phase_controls["60_days"]) > 0:
+            post_60 = round(((total_pass + resolved_by_60) / _total_controls) * 100, 1)
+        else:
+            post_60 = post_30  # unchanged from prior phase
+
+        # 90-day: only changes if additional controls resolved in 90d phase
+        if len(phase_controls["90_days"]) > 0:
+            post_90 = round(((total_pass + resolved_by_90) / _total_controls) * 100, 1)
+        else:
+            post_90 = post_60  # unchanged from prior phase
     else:
-        post_30 = post_60 = post_90 = current_maturity_percent
+        post_30 = post_60 = post_90 = round(current_maturity_percent, 1)
 
     # Critical controls track
     critical_resolved_by_phase: dict[str, int] = {"30_days": 0, "60_days": 0, "90_days": 0}
@@ -117,9 +148,13 @@ def compute_maturity_trajectory(
             f"{len(phase_controls['90_days'])} additional control(s) resolved in 90-day phase"
         )
     assumptions.append(
-        f"Based on {total_assessed} assessed controls ({total_pass} currently passing)"
+        f"Based on {_total_controls} total controls ({total_pass} currently passing, "
+        f"{total_assessed} assessed)"
     )
     assumptions.append("Assumes all initiative controls resolve to Pass upon implementation")
+    assumptions.append(
+        f"Formula: (current_passing + controls_resolved) / {_total_controls}"
+    )
 
     return {
         "current_percent": round(current_maturity_percent, 1),
@@ -132,6 +167,9 @@ def compute_maturity_trajectory(
             "90_days": len(phase_controls["90_days"]),
             "cumulative_90": resolved_by_90,
         },
+        # Audit fields for integrity validation
+        "_total_controls": _total_controls,
+        "_current_passing": total_pass,
         "critical_track": {
             "current_percent": crit_current,
             "post_30_day_percent": crit_post_30,

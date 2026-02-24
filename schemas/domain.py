@@ -66,6 +66,8 @@ class ScoringResult(TypedDict, total=False):
     signal_used: Optional[str]
     confidence: str
     notes: str
+    checklist_ids: Optional[List[str]]       # ALZ review-checklist item IDs
+    checklist_guids: Optional[List[str]]     # ALZ review-checklist GUIDs
 
     # ── Optional: subscription distribution (set by aggregation) ──
     subscription_count_total: Optional[int]

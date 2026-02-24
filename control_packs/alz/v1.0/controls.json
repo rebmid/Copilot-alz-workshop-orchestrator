@@ -1,44 +1,98 @@
 {
   "pack_id": "alz-v1.0",
-  "name": "Azure Landing Zone — V1 Starter",
+  "name": "Azure Landing Zone â€” V1 Starter",
   "version": "1.3.0",
   "description": "52+ automated control evaluators covering Networking, Governance, Security, Data Protection, Resilience, Identity, Management, and Cost design areas.",
-
   "design_areas": {
     "network": {
       "label": "Network Topology & Connectivity",
-      "controls": ["e6c4cfd3", "e8bbac75", "3c5a808d", "0c47f486", "088137f5", "nsg-cove", "aks-post", "netwatch"]
+      "controls": [
+        "e6c4cfd3",
+        "e8bbac75",
+        "3c5a808d",
+        "0c47f486",
+        "088137f5",
+        "nsg-cove",
+        "aks-post",
+        "netwatch"
+      ]
     },
     "governance": {
       "label": "Governance & Policy",
-      "controls": ["2df27ee4", "61623a76", "92481607", "8bbac757", "5c986cb2", "3829e7e3", "d8a2adb1", "49b82111", "resource"]
+      "controls": [
+        "2df27ee4",
+        "61623a76",
+        "92481607",
+        "8bbac757",
+        "5c986cb2",
+        "3829e7e3",
+        "d8a2adb1",
+        "49b82111",
+        "resource"
+      ]
     },
     "security": {
       "label": "Security & Compliance",
-      "controls": ["09945bda", "77425f48", "36a72a48", "15833ee7", "a56888b2", "67e7a8ed", "1cf0b8da"]
+      "controls": [
+        "09945bda",
+        "77425f48",
+        "36a72a48",
+        "15833ee7",
+        "a56888b2",
+        "67e7a8ed",
+        "1cf0b8da"
+      ]
     },
     "data_protection": {
       "label": "Data & PaaS Protection",
-      "controls": ["storage-", "keyvault", "sql-post", "appservi", "private-", "acr-post"]
+      "controls": [
+        "storage-",
+        "keyvault",
+        "sql-post",
+        "appservi",
+        "private-",
+        "acr-post"
+      ]
     },
     "resilience": {
       "label": "Resilience & Business Continuity",
-      "controls": ["backup-c"]
+      "controls": [
+        "backup-c"
+      ]
     },
     "identity": {
       "label": "Identity & Access Management",
-      "controls": ["rbac-hyg", "entra-lo", "pim-usag", "pim-matu", "breakgla", "sp-owner", "admin-ca"]
+      "controls": [
+        "rbac-hyg",
+        "entra-lo",
+        "pim-usag",
+        "pim-matu",
+        "breakgla",
+        "sp-owner",
+        "admin-ca"
+      ]
     },
     "management": {
       "label": "Management & Monitoring",
-      "controls": ["monitor-", "activity", "update-m", "alert-ac", "action-g", "availabi", "change-t"]
+      "controls": [
+        "monitor-",
+        "activity",
+        "update-m",
+        "alert-ac",
+        "action-g",
+        "availabi",
+        "change-t"
+      ]
     },
     "cost": {
       "label": "Cost Governance",
-      "controls": ["cost-mgm", "cost-for", "idle-res"]
+      "controls": [
+        "cost-mgm",
+        "cost-for",
+        "idle-res"
+      ]
     }
   },
-
   "controls": {
     "e6c4cfd3": {
       "name": "Azure Firewall Presence",
@@ -50,9 +104,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.networking",
-      "required_signals": ["azure_firewalls"],
+      "required_signals": [
+        "azure_firewalls"
+      ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D07.01"
+      ],
+      "checklist_guids": [
+        "e6c4cfd3-e504-4547-a244-7ec66138a720"
+      ]
     },
     "e8bbac75": {
       "name": "Hub-Spoke Topology",
@@ -64,9 +126,18 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.networking",
-      "required_signals": ["vnets", "azure_firewalls"],
+      "required_signals": [
+        "vnets",
+        "azure_firewalls"
+      ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D01.02"
+      ],
+      "checklist_guids": [
+        "e8bbac75-7155-49ab-a153-e8908ae28c84"
+      ]
     },
     "3c5a808d": {
       "name": "Public IP Governance",
@@ -78,9 +149,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.networking",
-      "required_signals": ["public_ips"],
+      "required_signals": [
+        "public_ips"
+      ],
       "caf_guidance": "Plan for inbound and outbound internet connectivity",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity",
+      "checklist_ids": [
+        "D05.08"
+      ],
+      "checklist_guids": [
+        "3c5a808d-c695-4c14-a63c-c7ab7a510e41"
+      ]
     },
     "0c47f486": {
       "name": "Public IP SKU Standard",
@@ -92,9 +171,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.networking",
-      "required_signals": ["public_ips"],
+      "required_signals": [
+        "public_ips"
+      ],
       "caf_guidance": null,
-      "caf_url": null
+      "caf_url": null,
+      "checklist_ids": [
+        "D03.05"
+      ],
+      "checklist_guids": [
+        "0c47f486-656d-4699-8c30-edef5b8a93c4"
+      ]
     },
     "088137f5": {
       "name": "DDoS Protection",
@@ -106,9 +193,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.networking",
-      "required_signals": ["vnets"],
+      "required_signals": [
+        "vnets"
+      ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D05.06"
+      ],
+      "checklist_guids": [
+        "088137f5-e6c4-4cfd-9e50-4547c2447ec6"
+      ]
     },
     "2df27ee4": {
       "name": "MG Hierarchy Depth",
@@ -120,9 +215,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["mg_hierarchy"],
-      "caf_guidance": "Resource organization — Management groups",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+      "required_signals": [
+        "mg_hierarchy"
+      ],
+      "caf_guidance": "Resource organization â€” Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "checklist_ids": [
+        "C02.01"
+      ],
+      "checklist_guids": [
+        "2df27ee4-12e7-4f98-9f63-04722dd69c5b"
+      ]
     },
     "61623a76": {
       "name": "Platform Management Group",
@@ -134,9 +237,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["mg_hierarchy"],
-      "caf_guidance": "Resource organization — Management groups",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+      "required_signals": [
+        "mg_hierarchy"
+      ],
+      "caf_guidance": "Resource organization â€” Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "checklist_ids": [
+        "C02.03"
+      ],
+      "checklist_guids": [
+        "61623a76-5a91-47e1-b348-ef254c27d42e"
+      ]
     },
     "92481607": {
       "name": "Landing Zones Management Group",
@@ -148,9 +259,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["mg_hierarchy"],
-      "caf_guidance": "Resource organization — Management groups",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+      "required_signals": [
+        "mg_hierarchy"
+      ],
+      "caf_guidance": "Resource organization â€” Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "checklist_ids": [
+        "C02.07"
+      ],
+      "checklist_guids": [
+        "92481607-d5d1-4e4e-9146-58d3558fd772"
+      ]
     },
     "8bbac757": {
       "name": "Connectivity Management Group",
@@ -162,9 +281,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["mg_hierarchy"],
-      "caf_guidance": "Resource organization — Management groups",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups"
+      "required_signals": [
+        "mg_hierarchy"
+      ],
+      "caf_guidance": "Resource organization â€” Management groups",
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups",
+      "checklist_ids": [
+        "C02.04"
+      ],
+      "checklist_guids": [
+        "8bbac757-1559-4ab9-853e-8908ae28c84c"
+      ]
     },
     "5c986cb2": {
       "name": "Policy Initiatives Assigned",
@@ -176,9 +303,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["policy_assignments"],
+      "required_signals": [
+        "policy_assignments"
+      ],
       "caf_guidance": "Governance design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+      "checklist_ids": [
+        "E01.01"
+      ],
+      "checklist_guids": [
+        "5c986cb2-9131-456a-8247-6e49f541acdc"
+      ]
     },
     "3829e7e3": {
       "name": "Policy Assignment Count",
@@ -190,9 +325,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["policy_assignments"],
+      "required_signals": [
+        "policy_assignments"
+      ],
       "caf_guidance": "Governance design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+      "checklist_ids": [
+        "E01.05"
+      ],
+      "checklist_guids": [
+        "3829e7e3-1618-4368-9a04-77a209945bda"
+      ]
     },
     "d8a2adb1": {
       "name": "Policy Compliance Percentage",
@@ -204,9 +347,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["policy_compliance_summary"],
+      "required_signals": [
+        "policy_compliance_summary"
+      ],
       "caf_guidance": "Governance design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
+      "checklist_ids": [
+        "E01.03"
+      ],
+      "checklist_guids": [
+        "d8a2adb1-17d6-4326-af62-5ca44e5695f2"
+      ]
     },
     "49b82111": {
       "name": "Noncompliant Resource Count",
@@ -218,9 +369,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.governance",
-      "required_signals": ["policy_compliance_summary"],
+      "required_signals": [
+        "policy_compliance_summary"
+      ],
       "caf_guidance": null,
-      "caf_url": null
+      "caf_url": null,
+      "checklist_ids": [
+        "C02.08"
+      ],
+      "checklist_guids": [
+        "49b82111-2df2-47ee-912e-7f983f630472"
+      ]
     },
     "09945bda": {
       "name": "Defender CSPM Enabled",
@@ -232,9 +391,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["defender_pricings"],
+      "required_signals": [
+        "defender_pricings"
+      ],
       "caf_guidance": "Security design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security",
+      "checklist_ids": [
+        "G03.03"
+      ],
+      "checklist_guids": [
+        "09945bda-4333-44f2-9911-634182ba5275"
+      ]
     },
     "77425f48": {
       "name": "Defender CWP Coverage",
@@ -246,9 +413,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["defender_pricings"],
+      "required_signals": [
+        "defender_pricings"
+      ],
       "caf_guidance": "Security design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/security",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ]
     },
     "36a72a48": {
       "name": "Defender for Servers",
@@ -260,9 +435,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["defender_pricings"],
+      "required_signals": [
+        "defender_pricings"
+      ],
       "caf_guidance": null,
-      "caf_url": null
+      "caf_url": null,
+      "checklist_ids": [
+        "G03.04"
+      ],
+      "checklist_guids": [
+        "36a72a48-fffe-4c40-9747-0ab5064355ba"
+      ]
     },
     "15833ee7": {
       "name": "Secure Score Threshold",
@@ -274,9 +457,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["defender_secure_score"],
+      "required_signals": [
+        "defender_secure_score"
+      ],
       "caf_guidance": null,
-      "caf_url": null
+      "caf_url": null,
+      "checklist_ids": [
+        "G03.07"
+      ],
+      "checklist_guids": [
+        "15833ee7-ad6c-46d3-9331-65c7acbe44ab"
+      ]
     },
     "a56888b2": {
       "name": "Centralized Security Visibility",
@@ -288,9 +479,18 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["defender_secure_score", "diagnostic_settings_sample"],
+      "required_signals": [
+        "defender_secure_score",
+        "diagnostic_settings_sample"
+      ],
       "caf_guidance": null,
-      "caf_url": null
+      "caf_url": null,
+      "checklist_ids": [
+        "G03.09"
+      ],
+      "checklist_guids": [
+        "a56888b2-7e83-4404-bd31-b886528502d1"
+      ]
     },
     "67e7a8ed": {
       "name": "Diagnostics Coverage",
@@ -302,9 +502,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["diagnostic_settings_sample"],
+      "required_signals": [
+        "diagnostic_settings_sample"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F01.01"
+      ],
+      "checklist_guids": [
+        "67e7a8ed-4b30-4e38-a3f2-9812b2363cef"
+      ]
     },
     "1cf0b8da": {
       "name": "Diagnostics for Identity (Entra ID)",
@@ -316,11 +524,18 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.security",
-      "required_signals": ["diagnostic_settings_sample"],
+      "required_signals": [
+        "diagnostic_settings_sample"
+      ],
       "caf_guidance": null,
-      "caf_url": null
+      "caf_url": null,
+      "checklist_ids": [
+        "B03.14"
+      ],
+      "checklist_guids": [
+        "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1"
+      ]
     },
-
     "storage-": {
       "name": "Storage Account Posture",
       "full_id": "storage-posture-001",
@@ -331,9 +546,19 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.data_protection",
-      "required_signals": ["storage_posture"],
+      "required_signals": [
+        "storage_posture"
+      ],
       "caf_guidance": "Secure storage accounts",
-      "caf_url": "https://learn.microsoft.com/azure/storage/common/storage-security-guide"
+      "caf_url": "https://learn.microsoft.com/azure/storage/common/storage-security-guide",
+      "checklist_ids": [
+        "G04.01",
+        "G04.02"
+      ],
+      "checklist_guids": [
+        "b03ed428-4617-4067-a787-85468b9ccf3f",
+        "159aac9f-863f-4f48-82cf-00c28fa97a0e"
+      ]
     },
     "keyvault": {
       "name": "Key Vault Posture",
@@ -345,9 +570,19 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.data_protection",
-      "required_signals": ["keyvault_posture"],
+      "required_signals": [
+        "keyvault_posture"
+      ],
       "caf_guidance": "Key Vault best practices",
-      "caf_url": "https://learn.microsoft.com/azure/key-vault/general/best-practices"
+      "caf_url": "https://learn.microsoft.com/azure/key-vault/general/best-practices",
+      "checklist_ids": [
+        "G02.01",
+        "G02.03"
+      ],
+      "checklist_guids": [
+        "5017f154-e3ab-4369-9829-e7e316183687",
+        "2ba52752-6944-4008-ae7d-7e4843276d8b"
+      ]
     },
     "sql-post": {
       "name": "SQL Server Posture",
@@ -359,9 +594,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.data_protection",
-      "required_signals": ["sql_posture"],
+      "required_signals": [
+        "sql_posture"
+      ],
       "caf_guidance": "SQL security best practices",
-      "caf_url": "https://learn.microsoft.com/azure/azure-sql/database/security-best-practice"
+      "caf_url": "https://learn.microsoft.com/azure/azure-sql/database/security-best-practice",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ]
     },
     "appservi": {
       "name": "App Service Posture",
@@ -373,9 +616,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.data_protection",
-      "required_signals": ["app_service_posture"],
+      "required_signals": [
+        "app_service_posture"
+      ],
       "caf_guidance": "App Service security",
-      "caf_url": "https://learn.microsoft.com/azure/app-service/overview-security"
+      "caf_url": "https://learn.microsoft.com/azure/app-service/overview-security",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ]
     },
     "private-": {
       "name": "Private Endpoint Coverage",
@@ -387,9 +638,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.data_protection",
-      "required_signals": ["private_endpoints"],
+      "required_signals": [
+        "private_endpoints"
+      ],
       "caf_guidance": "Private Link and DNS integration",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale",
+      "checklist_ids": [
+        "D08.02"
+      ],
+      "checklist_guids": [
+        "e43a58a9-c229-49c4-b7b5-7d0c655562f2"
+      ]
     },
     "acr-post": {
       "name": "Container Registry Posture",
@@ -401,9 +660,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.data_protection",
-      "required_signals": ["acr_posture"],
+      "required_signals": [
+        "acr_posture"
+      ],
       "caf_guidance": "Container Registry best practices",
-      "caf_url": "https://learn.microsoft.com/azure/container-registry/container-registry-best-practices"
+      "caf_url": "https://learn.microsoft.com/azure/container-registry/container-registry-best-practices",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ]
     },
     "nsg-cove": {
       "name": "NSG Subnet Coverage",
@@ -415,9 +682,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.network_coverage",
-      "required_signals": ["nsg_coverage"],
+      "required_signals": [
+        "nsg_coverage"
+      ],
       "caf_guidance": "Network security groups",
-      "caf_url": "https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview"
+      "caf_url": "https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview",
+      "checklist_ids": [
+        "D09.04"
+      ],
+      "checklist_guids": [
+        "872e52e3-611c-4c58-a5a4-b1511e43a58a"
+      ]
     },
     "aks-post": {
       "name": "AKS Cluster Posture",
@@ -429,9 +704,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.network_coverage",
-      "required_signals": ["aks_posture"],
+      "required_signals": [
+        "aks_posture"
+      ],
       "caf_guidance": "AKS baseline architecture",
-      "caf_url": "https://learn.microsoft.com/azure/architecture/reference-architectures/containers/aks/baseline-aks"
+      "caf_url": "https://learn.microsoft.com/azure/architecture/reference-architectures/containers/aks/baseline-aks",
+      "checklist_ids": [
+        "D09.05"
+      ],
+      "checklist_guids": [
+        "a4d87397-48b6-462d-9d15-f512a65498f6"
+      ]
     },
     "backup-c": {
       "name": "VM Backup Coverage",
@@ -443,9 +726,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.resilience",
-      "required_signals": ["backup_coverage"],
+      "required_signals": [
+        "backup_coverage"
+      ],
       "caf_guidance": "Business continuity and disaster recovery",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-business-continuity-disaster-recovery"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management-business-continuity-disaster-recovery",
+      "checklist_ids": [
+        "F04.02"
+      ],
+      "checklist_guids": [
+        "f625ca44-e569-45f2-823a-ce8cb12308ca"
+      ]
     },
     "resource": {
       "name": "Resource Lock Coverage",
@@ -457,9 +748,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.resilience",
-      "required_signals": ["resource_locks"],
+      "required_signals": [
+        "resource_locks"
+      ],
       "caf_guidance": "Resource locking strategy",
-      "caf_url": "https://learn.microsoft.com/azure/azure-resource-manager/management/lock-resources"
+      "caf_url": "https://learn.microsoft.com/azure/azure-resource-manager/management/lock-resources",
+      "checklist_ids": [
+        "F01.08"
+      ],
+      "checklist_guids": [
+        "541acdce-9793-477b-adb3-751ab2ab13ad"
+      ]
     },
     "rbac-hyg": {
       "name": "RBAC Hygiene",
@@ -471,11 +770,18 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["rbac_hygiene"],
+      "required_signals": [
+        "rbac_hygiene"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.01"
+      ],
+      "checklist_guids": [
+        "348ef254-c27d-442e-abba-c7571559ab91"
+      ]
     },
-
     "entra-lo": {
       "name": "Entra ID Log Availability",
       "full_id": "entra-log-availability-001",
@@ -486,9 +792,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["entra_log_availability"],
+      "required_signals": [
+        "entra_log_availability"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.14"
+      ],
+      "checklist_guids": [
+        "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1"
+      ]
     },
     "pim-usag": {
       "name": "PIM Usage",
@@ -500,11 +814,18 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["pim_usage"],
+      "required_signals": [
+        "pim_usage"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.07"
+      ],
+      "checklist_guids": [
+        "14658d35-58fd-4772-99b8-21112df27ee4"
+      ]
     },
-
     "monitor-": {
       "name": "SOC Workspace Topology",
       "full_id": "monitor-workspace-topology-001",
@@ -515,9 +836,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["workspace_topology"],
+      "required_signals": [
+        "workspace_topology"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F01.01"
+      ],
+      "checklist_guids": [
+        "67e7a8ed-4b30-4e38-a3f2-9812b2363cef"
+      ]
     },
     "activity": {
       "name": "Platform Automation Maturity",
@@ -529,9 +858,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["activity_log_analysis"],
+      "required_signals": [
+        "activity_log_analysis"
+      ],
       "caf_guidance": "Platform automation and DevOps",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops",
+      "checklist_ids": [
+        "H01.01"
+      ],
+      "checklist_guids": [
+        "e85f4226-bf06-4e35-8a8b-7aee4d2d633a"
+      ]
     },
     "update-m": {
       "name": "Update Manager Posture",
@@ -543,11 +880,18 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["update_manager"],
+      "required_signals": [
+        "update_manager"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F01.05"
+      ],
+      "checklist_guids": [
+        "f9887952-5d62-4688-9d70-ba6c97be9951"
+      ]
     },
-
     "cost-mgm": {
       "name": "Cost Management Posture",
       "full_id": "cost-management-001",
@@ -558,11 +902,18 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.cost",
-      "required_signals": ["cost_management_posture"],
+      "required_signals": [
+        "cost_management_posture"
+      ],
       "caf_guidance": "Cost management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management",
+      "checklist_ids": [
+        "A02.03"
+      ],
+      "checklist_guids": [
+        "32952499-58c8-4e6f-ada5-972e67893d55"
+      ]
     },
-
     "netwatch": {
       "name": "Network Watcher Observability",
       "full_id": "network-watcher-001",
@@ -573,11 +924,18 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.network_coverage",
-      "required_signals": ["network_watcher_posture"],
+      "required_signals": [
+        "network_watcher_posture"
+      ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "F01.07"
+      ],
+      "checklist_guids": [
+        "90483845-c986-4cb2-a131-56a12476e49f"
+      ]
     },
-
     "pim-matu": {
       "name": "PIM Maturity for Privileged Roles",
       "full_id": "pim-maturity-001",
@@ -588,9 +946,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["pim_maturity"],
+      "required_signals": [
+        "pim_maturity"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.07"
+      ],
+      "checklist_guids": [
+        "14658d35-58fd-4772-99b8-21112df27ee4"
+      ]
     },
     "breakgla": {
       "name": "Break-Glass Account Validation",
@@ -602,9 +968,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["breakglass_validation"],
+      "required_signals": [
+        "breakglass_validation"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/entra/identity/role-based-access-control/security-emergency-access"
+      "caf_url": "https://learn.microsoft.com/entra/identity/role-based-access-control/security-emergency-access",
+      "checklist_ids": [
+        "B03.15"
+      ],
+      "checklist_guids": [
+        "984a859c-773e-47d2-9162-3a765a917e1f"
+      ]
     },
     "sp-owner": {
       "name": "Service Principal Owner Risk",
@@ -616,9 +990,17 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["sp_owner_risk"],
+      "required_signals": [
+        "sp_owner_risk"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.02"
+      ],
+      "checklist_guids": [
+        "12e7f983-f630-4472-8dd6-9c5b5c2622f5"
+      ]
     },
     "admin-ca": {
       "name": "Admin Conditional Access Coverage",
@@ -630,11 +1012,18 @@
       "severity": "High",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.identity",
-      "required_signals": ["admin_ca_coverage"],
+      "required_signals": [
+        "admin_ca_coverage"
+      ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/entra/identity/conditional-access/howto-conditional-access-policy-admin-mfa"
+      "caf_url": "https://learn.microsoft.com/entra/identity/conditional-access/howto-conditional-access-policy-admin-mfa",
+      "checklist_ids": [
+        "B03.04"
+      ],
+      "checklist_guids": [
+        "53e8908a-e28c-484c-93b6-b7808b9fe5c4"
+      ]
     },
-
     "alert-ac": {
       "name": "Alert to Action Group Mapping",
       "full_id": "alert-action-mapping-001",
@@ -645,9 +1034,19 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["alert_action_mapping"],
+      "required_signals": [
+        "alert_action_mapping"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F01.11",
+        "F01.15"
+      ],
+      "checklist_guids": [
+        "d5f345bf-97ab-41a7-819c-6104baa7d48c",
+        "97be9951-9048-4384-9c98-6cb2913156a1"
+      ]
     },
     "action-g": {
       "name": "Action Group Coverage",
@@ -659,9 +1058,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["action_group_coverage"],
+      "required_signals": [
+        "action_group_coverage"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F01.11"
+      ],
+      "checklist_guids": [
+        "d5f345bf-97ab-41a7-819c-6104baa7d48c"
+      ]
     },
     "availabi": {
       "name": "SLO & Availability Signals",
@@ -673,9 +1080,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["availability_signals"],
+      "required_signals": [
+        "availability_signals"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F01.10"
+      ],
+      "checklist_guids": [
+        "e5695f22-23ac-4e8c-a123-08ca5017f154"
+      ]
     },
     "change-t": {
       "name": "Change Tracking Enabled",
@@ -687,11 +1102,18 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.management",
-      "required_signals": ["change_tracking"],
+      "required_signals": [
+        "change_tracking"
+      ],
       "caf_guidance": "Management design area",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/management",
+      "checklist_ids": [
+        "F03.02"
+      ],
+      "checklist_guids": [
+        "da6e55d7-d8a2-4adb-817d-6326af625ca4"
+      ]
     },
-
     "cost-for": {
       "name": "Cost Forecast Accuracy",
       "full_id": "cost-forecast-001",
@@ -702,9 +1124,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.cost",
-      "required_signals": ["cost_forecast_accuracy"],
+      "required_signals": [
+        "cost_forecast_accuracy"
+      ],
       "caf_guidance": "Cost management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management",
+      "checklist_ids": [
+        "E02.02"
+      ],
+      "checklist_guids": [
+        "29fd366b-a180-452b-9bd7-954b7700c667"
+      ]
     },
     "idle-res": {
       "name": "Idle Resource Detection",
@@ -716,9 +1146,17 @@
       "severity": "Medium",
       "evaluation_logic": "automated",
       "evaluator_module": "evaluators.cost",
-      "required_signals": ["idle_resources"],
+      "required_signals": [
+        "idle_resources"
+      ],
       "caf_guidance": "Cost management",
-      "caf_url": "https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-opt-recommendations"
+      "caf_url": "https://learn.microsoft.com/azure/cost-management-billing/costs/tutorial-acm-opt-recommendations",
+      "checklist_ids": [
+        "A03.05"
+      ],
+      "checklist_guids": [
+        "5cf9f485-2784-49b3-9824-75d9b8bdb57b"
+      ]
     }
   }
 }
