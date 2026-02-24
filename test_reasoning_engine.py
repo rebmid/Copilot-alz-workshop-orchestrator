@@ -160,7 +160,7 @@ def main():
     impl = ai_output.get("implementation_backlog", [])
     print(f"\n\U0001f527 Implementation plans: {len(impl)}")
     for item in impl:
-        iid = item.get("initiative_id", "?")
+        iid = item.get("checklist_id", item.get("initiative_id", "?"))
         imp = item.get("implementation", {})
         print(f"   {iid}: {len(imp.get('bicep_modules', []))} bicep, "
               f"{len(imp.get('policy_assignments', []))} policy, "

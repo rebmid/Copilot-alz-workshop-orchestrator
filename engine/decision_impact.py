@@ -1,8 +1,8 @@
-"""Decision Impact Model — per-initiative "what breaks if not implemented".
+"""Decision Impact Model — per-item "what breaks if not implemented".
 
 Computes enterprise_scale_blocked, critical_risks_remaining,
-fail_controls_remaining, blocked_initiatives, and maturity_ceiling
-from deterministic joins of initiatives, results, risks, and blockers.
+fail_controls_remaining, blocked_items, and maturity_ceiling
+from deterministic joins of remediation items, results, risks, and blockers.
 
 Layer: Derived models (deterministic joins only — no creative logic).
 """
@@ -17,109 +17,108 @@ from engine.guardrails import (
 from schemas.taxonomy import BLOCKER_CATEGORY_TO_SECTIONS
 
 
-def _build_initiative_index(initiatives: list[dict]) -> dict:
-    """Map initiative_id → initiative dict."""
+def _build_item_index(items: list[dict]) -> dict:
+    """Map checklist_id → remediation item dict."""
     return {
-        init.get("initiative_id", ""): init
-        for init in initiatives
-        if init.get("initiative_id")
+        item.get("checklist_id", ""): item
+        for item in items
+        if item.get("checklist_id")
     }
 
 
-def _build_dependency_reverse_map(initiatives: list[dict]) -> dict[str, list[str]]:
-    """Map initiative_id → list of initiative_ids that depend on it."""
+def _build_dependency_reverse_map(items: list[dict]) -> dict[str, list[str]]:
+    """Map checklist_id → list of checklist_ids that depend on it."""
     reverse: dict[str, list[str]] = {}
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        for dep in init.get("dependencies", []):
-            reverse.setdefault(dep, []).append(iid)
+    for item in items:
+        cid = item.get("checklist_id", "")
+        for dep in item.get("dependencies", []):
+            reverse.setdefault(dep, []).append(cid)
     return reverse
 
 
-def _controls_for_initiative(initiative: dict) -> set[str]:
-    """Extract control_id set from an initiative."""
-    return set(initiative.get("controls", []))
+def _controls_for_item(item: dict) -> set[str]:
+    """Extract control_id set from a remediation item."""
+    return set(item.get("controls", []))
 
 
 # Use canonical mapping from schemas.taxonomy
 _BLOCKER_CATEGORY_TO_SECTIONS = BLOCKER_CATEGORY_TO_SECTIONS
 
 
-def resolve_blockers_to_initiatives(
+def resolve_blockers_to_items(
     blockers: list[dict],
-    initiatives: list[dict],
+    items: list[dict],
     results: list[dict],
-) -> dict[str, str | None]:
+) -> dict[str, list[str]]:
     """
-    Deterministically resolve blockers to initiatives via control overlap.
+    Deterministically resolve blockers to remediation items via control overlap.
 
     For each blocker:
-      1. If the blocker has affected_controls, find the initiative whose
-         controls overlap most with those affected controls.
-      2. If no affected_controls, match by category → section → initiative
+      1. If the blocker has affected_controls, find all items whose
+         controls overlap with those affected controls, ranked by overlap.
+      2. If no affected_controls, match by category → section → items
          with the most failing controls in that section.
-      3. Falls back to LLM-declared resolving_initiative only if no
-         deterministic match is found AND the LLM reference is valid.
+      3. Falls back to existing resolving_checklist_ids / resolving_item
+         only if no deterministic match is found AND the references are valid.
 
-    Returns: dict of blocker_key → initiative_id (or None if unmappable)
+    Returns: dict of blocker_key → list of checklist_ids (empty list if unmappable)
     """
     results_by_id = {r.get("control_id", ""): r for r in results if r.get("control_id")}
 
-    # Build initiative → controls set index
-    init_controls_map: dict[str, set[str]] = {}
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        if iid:
-            init_controls_map[iid] = set(init.get("controls", []))
+    # Build item → controls set index
+    item_controls_map: dict[str, set[str]] = {}
+    for item in items:
+        cid = item.get("checklist_id", "")
+        if cid:
+            item_controls_map[cid] = set(item.get("controls", []))
 
-    # Build initiative → sections covered
-    init_sections: dict[str, set[str]] = {}
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        if not iid:
+    # Build item → sections covered
+    item_sections: dict[str, set[str]] = {}
+    for item in items:
+        cid = item.get("checklist_id", "")
+        if not cid:
             continue
         sections = set()
-        for ctrl_id in init.get("controls", []):
+        for ctrl_id in item.get("controls", []):
             ctrl = results_by_id.get(ctrl_id, {})
             sec = ctrl.get("section", "")
             if sec:
                 sections.add(sec)
-        init_sections[iid] = sections
+        item_sections[cid] = sections
 
-    valid_init_ids = set(init_controls_map.keys())
+    valid_item_ids = set(item_controls_map.keys())
 
-    blocker_init_map: dict[str, str | None] = {}
+    blocker_item_map: dict[str, list[str]] = {}
 
     for b in blockers:
         raw_key = b.get("category", "") or b.get("description", "")
         if not raw_key:
             continue
-        # Normalize key to lowercase — patch_blocker_initiatives also
+        # Normalize key to lowercase — patch_blocker_items also
         # lowercases the category at lookup time.
         blocker_key = raw_key.lower()
 
         # Strategy 1: Match by affected_controls overlap
         affected = set(b.get("affected_controls", []))
         if affected:
-            best_init = None
-            best_overlap = 0
-            for iid, ctrl_set in init_controls_map.items():
+            # Collect all items with non-zero overlap, sorted by overlap desc
+            scored = []
+            for cid, ctrl_set in item_controls_map.items():
                 overlap = len(affected & ctrl_set)
-                if overlap > best_overlap:
-                    best_overlap = overlap
-                    best_init = iid
-            if best_init:
-                blocker_init_map[blocker_key] = best_init
+                if overlap > 0:
+                    scored.append((overlap, cid))
+            if scored:
+                scored.sort(key=lambda x: x[0], reverse=True)
+                blocker_item_map[blocker_key] = [cid for _, cid in scored]
                 continue
 
-        # Strategy 2: Match by category → section → initiative with most
+        # Strategy 2: Match by category → section → items with
         # failing controls in that section
         category = blocker_key  # already lowercase
         target_sections = _BLOCKER_CATEGORY_TO_SECTIONS.get(category, [])
         if target_sections:
-            best_init = None
-            best_fail_count = 0
-            for iid, ctrl_set in init_controls_map.items():
+            scored = []
+            for cid, ctrl_set in item_controls_map.items():
                 # Count failing controls in target sections
                 fail_count = 0
                 for ctrl_id in ctrl_set:
@@ -127,32 +126,39 @@ def resolve_blockers_to_initiatives(
                     if (ctrl.get("section", "") in target_sections
                             and ctrl.get("status") in ("Fail", "Partial")):
                         fail_count += 1
-                if fail_count > best_fail_count:
-                    best_fail_count = fail_count
-                    best_init = iid
-            if best_init:
-                blocker_init_map[blocker_key] = best_init
+                if fail_count > 0:
+                    scored.append((fail_count, cid))
+            if scored:
+                scored.sort(key=lambda x: x[0], reverse=True)
+                blocker_item_map[blocker_key] = [cid for _, cid in scored]
                 continue
 
-            # Also try matching by initiative section coverage
-            for iid, sections in init_sections.items():
+            # Also try matching by item section coverage
+            matched = []
+            for cid, sections in item_sections.items():
                 if any(ts in sections for ts in target_sections):
-                    blocker_init_map[blocker_key] = iid
-                    break
-            if blocker_key in blocker_init_map:
+                    matched.append(cid)
+            if matched:
+                blocker_item_map[blocker_key] = matched
                 continue
 
-        # Strategy 3: Fallback to LLM-declared resolving_initiative
-        # (only if the referenced initiative actually exists)
-        llm_ref = b.get("resolving_initiative", "")
-        if llm_ref and llm_ref in valid_init_ids:
-            blocker_init_map[blocker_key] = llm_ref
+        # Strategy 3: Fallback to existing resolving_checklist_ids / resolving_item
+        # (only if the referenced items actually exist)
+        llm_refs = b.get("resolving_checklist_ids", [])
+        if not llm_refs:
+            # Legacy fallback: singular resolving_item or resolving_initiative
+            single_ref = b.get("resolving_item", b.get("resolving_initiative", ""))
+            if single_ref:
+                llm_refs = [single_ref]
+        valid_refs = [r for r in llm_refs if r in valid_item_ids]
+        if valid_refs:
+            blocker_item_map[blocker_key] = valid_refs
             continue
 
-        # No deterministic match — set null
-        blocker_init_map[blocker_key] = None
+        # No deterministic match — empty list
+        blocker_item_map[blocker_key] = []
 
-    return blocker_init_map
+    return blocker_item_map
 
 
 def _count_risks_for_controls(
@@ -182,17 +188,17 @@ def _affected_risk_titles(
 
 
 def _maturity_ceiling_if_skipped(
-    initiative: dict,
+    item: dict,
     results: list[dict],
     section_scores: list[dict],
 ) -> str:
     """
     Compute a human-readable maturity ceiling statement.
 
-    If we skip this initiative, the affected design area(s) cannot
+    If we skip this remediation item, the affected design area(s) cannot
     improve beyond their current maturity.
     """
-    init_controls = set(initiative.get("controls", []))
+    init_controls = set(item.get("controls", []))
     if not init_controls:
         return insufficient_evidence_marker()
 
@@ -204,7 +210,7 @@ def _maturity_ceiling_if_skipped(
             affected_sections[section] = affected_sections.get(section, 0) + 1
 
     if not affected_sections:
-        return "No failing controls in this initiative — maturity ceiling not impacted."
+        return "No failing controls in this item — maturity ceiling not impacted."
 
     # Map to current maturity
     section_maturity = {
@@ -229,14 +235,14 @@ def build_decision_impact_model(
     signals: dict | None = None,
 ) -> dict:
     """
-    Build the decision impact model: per-initiative "if not implemented" analysis.
+    Build the decision impact model: per-item "if not implemented" analysis.
 
-    Every item includes evidence_refs and assumptions. No freeform inference.
+    Every output item includes evidence_refs and assumptions. No freeform inference.
 
     Parameters
     ----------
     initiatives : list[dict]
-        Initiative list from roadmap pass.
+        Remediation items (keyed by checklist_id).
     results : list[dict]
         Assessment control results.
     top_risks : list[dict]
@@ -252,20 +258,19 @@ def build_decision_impact_model(
     -------
     dict conforming to decision_impact_model schema.
     """
-    init_index = _build_initiative_index(initiatives)
+    item_index = _build_item_index(initiatives)
     dep_reverse = _build_dependency_reverse_map(initiatives)
 
-    # Build blocker → initiative mapping (DETERMINISTIC)
-    # Instead of trusting LLM-generated resolving_initiative,
-    # we derive the mapping from control overlap:
-    # A blocker maps to an initiative whose controls include any of
+    # Build blocker → item mapping (DETERMINISTIC)
+    # Derive the mapping from control overlap:
+    # A blocker maps to an item whose controls include any of
     # the blocker's affected controls, or whose section/category matches.
-    blocker_init_map = resolve_blockers_to_initiatives(blockers, initiatives, results)
+    blocker_item_map = resolve_blockers_to_items(blockers, initiatives, results)
 
     items = []
     for init in initiatives:
-        iid = init.get("initiative_id", "")
-        init_controls = _controls_for_initiative(init)
+        cid = init.get("checklist_id", "")
+        init_controls = _controls_for_item(init)
 
         # Controls that remain failing
         fail_controls = [
@@ -278,18 +283,19 @@ def build_decision_impact_model(
         # Risks that remain
         risk_titles = _affected_risk_titles(init_controls, top_risks)
 
-        # Blocked downstream initiatives
-        blocked = dep_reverse.get(iid, [])
+        # Blocked downstream items
+        blocked = dep_reverse.get(cid, [])
 
-        # Enterprise-scale blocked: if this initiative resolves a blocker
+        # Enterprise-scale blocked: if this item resolves a blocker
         resolves_blockers = [
-            cat for cat, res_init in blocker_init_map.items()
-            if res_init == iid and res_init is not None
+            cat for cat, res_ids in blocker_item_map.items()
+            if cid in res_ids
         ]
         enterprise_blocked = len(resolves_blockers) > 0
 
         # Maturity ceiling
         ceiling = _maturity_ceiling_if_skipped(init, results, section_scores)
+
 
         # Confidence: average of underlying control confidences.
         # Only include controls that actually have a confidence_score.
@@ -312,13 +318,13 @@ def build_decision_impact_model(
 
         confidence = compute_derived_confidence(list(map(float, ctrl_confidences)), signal_pct)
 
-        item = {
-            "initiative_id": iid,
+        di_item = {
+            "checklist_id": cid,
             "if_not_implemented": {
                 "enterprise_scale_blocked": enterprise_blocked,
                 "critical_risks_remaining": len(risk_titles),
                 "fail_controls_remaining": len(fail_controls),
-                "blocked_initiatives": blocked,
+                "blocked_items": blocked,
                 "maturity_ceiling_notes": ceiling,
             },
             "confidence": confidence,
@@ -335,7 +341,7 @@ def build_decision_impact_model(
             ],
         }
 
-        items.append(item)
+        items.append(di_item)
 
     return {
         "items": items,

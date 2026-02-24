@@ -550,7 +550,7 @@ def build_grounding_context(
         if refs:
             context["initiatives"].append({
                 "title": init.get("title", ""),
-                "initiative_id": init.get("initiative_id", ""),
+                "checklist_id": init.get("checklist_id", init.get("initiative_id", "")),
                 "references": [
                     {"title": r.get("title", ""), "url": r.get("url", "")}
                     for r in refs[:3]

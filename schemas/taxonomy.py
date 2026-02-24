@@ -426,10 +426,18 @@ BLOCKER_CATEGORY_TO_SECTIONS: dict[str, list[str]] = {
     "governance":  ["Resource Organization", "Governance"],
     "security":    ["Security"],
     "networking":  ["Network Topology and Connectivity", "Networking"],
+    "network topology and connectivity": ["Network Topology and Connectivity", "Networking"],
     "identity":    ["Identity and Access Management", "Identity"],
+    "identity and access management": ["Identity and Access Management", "Identity"],
     "management":  ["Management"],
     "automation":  ["Platform Automation and DevOps"],
+    "platform automation and devops": ["Platform Automation and DevOps"],
     "billing":     ["Azure Billing and Microsoft Entra ID Tenants"],
+    "azure billing and microsoft entra id tenants": ["Azure Billing and Microsoft Entra ID Tenants"],
+    "resource organization": ["Resource Organization", "Governance"],
+    "resilience":  ["Resilience"],
+    "data protection": ["Security"],
+    "cost governance": ["Governance", "Azure Billing and Microsoft Entra ID Tenants"],
 }
 
 # ── CAF Lifecycle Phases ──────────────────────────────────────────

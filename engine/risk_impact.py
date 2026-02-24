@@ -1,18 +1,18 @@
-"""Risk Impact Layer — per-initiative risk/impact scoring for executive framing.
+"""Risk Impact Layer — per-item risk/impact scoring for executive framing.
 
 Layer 2 of the 3-layer deterministic decision engine.
 
 This module computes risk reduction, blast radius, and control resolution
-metrics per initiative.  These metrics are for NARRATIVE and EXECUTIVE
+metrics per remediation item.  These metrics are for NARRATIVE and EXECUTIVE
 FRAMING only — they MUST NOT influence sequencing.  Sequencing is owned
 exclusively by the dependency engine (Layer 1).
 
 Outputs:
   - critical_risks_reduced: count of top business risks whose affected
-    controls overlap with the initiative's controls
-  - fail_controls_resolved: count of Fail/Partial controls in the initiative
+    controls overlap with the item's controls
+  - fail_controls_resolved: count of Fail/Partial controls in the item
   - blast_radius_score: deterministic blast radius from control severity + count
-  - maturity_lift: projected maturity improvement if initiative is implemented
+  - maturity_lift: projected maturity improvement if item is implemented
 """
 from __future__ import annotations
 
@@ -21,21 +21,21 @@ from typing import Any
 
 
 def build_risk_impact_model(
-    initiatives: list[dict],
+    items: list[dict],
     results: list[dict],
     top_risks: list[dict],
     section_scores: list[dict],
 ) -> dict[str, Any]:
     """
-    Build the risk impact model: per-initiative risk/impact metrics.
+    Build the risk impact model: per-item risk/impact metrics.
 
     These metrics are for executive reporting ONLY.
-    They MUST NOT be used to influence initiative ordering.
+    They MUST NOT be used to influence item ordering.
 
     Parameters
     ----------
-    initiatives : list[dict]
-        Initiative list from the roadmap pass.
+    items : list[dict]
+        Remediation items (each with checklist_id, controls, etc.).
     results : list[dict]
         Assessment control results.
     top_risks : list[dict]
@@ -46,7 +46,7 @@ def build_risk_impact_model(
     Returns
     -------
     dict with:
-      - items: list[dict]  — per-initiative impact metrics
+      - items: list[dict]  — per-item impact metrics
       - summary: dict  — aggregate stats
     """
     results_by_id = {r.get("control_id", ""): r for r in results if r.get("control_id")}
@@ -61,19 +61,19 @@ def build_risk_impact_model(
         1 for r in results if r.get("status") in ("Pass", "Fail", "Partial")
     )
 
-    items: list[dict] = []
+    items_out: list[dict] = []
 
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        if not iid:
+    for item in items:
+        cid = item.get("checklist_id", "")
+        if not cid:
             continue
 
-        init_controls = set(init.get("controls", []))
+        item_controls = set(item.get("controls", []))
 
-        # 1. Controls resolved (Fail + Partial in this initiative)
+        # 1. Controls resolved (Fail + Partial in this item)
         fail_controls = []
         partial_controls = []
-        for ctrl_id in init_controls:
+        for ctrl_id in item_controls:
             ctrl = results_by_id.get(ctrl_id, {})
             status = ctrl.get("status")
             if status == "Fail":
@@ -84,30 +84,30 @@ def build_risk_impact_model(
         controls_resolved = len(fail_controls) + len(partial_controls)
 
         # 2. Risks reduced: count top_business_risks whose affected_controls
-        #    overlap with this initiative's controls
+        #    overlap with this item's controls
         risks_reduced = 0
         risk_titles: list[str] = []
         for risk in top_risks:
             affected = set(risk.get("affected_controls", []))
-            if affected & init_controls:
+            if affected & item_controls:
                 risks_reduced += 1
                 risk_titles.append(risk.get("title", "unnamed"))
 
         # 3. Blast radius score (deterministic)
-        blast_score = _compute_blast_radius(init_controls, results_by_id)
+        blast_score = _compute_blast_radius(item_controls, results_by_id)
         blast_label = _blast_label(blast_score)
 
         # 4. Maturity lift per affected section
         section_impact = _compute_section_impact(
-            init_controls, results_by_id, section_maturity, total_controls_assessed
+            item_controls, results_by_id, section_maturity, total_controls_assessed
         )
 
         # 5. Aggregate maturity lift (weighted by controls in each section)
         total_lift = sum(s.get("maturity_lift_percent", 0) for s in section_impact)
 
-        items.append({
-            "initiative_id": iid,
-            "title": init.get("title", ""),
+        items_out.append({
+            "checklist_id": cid,
+            "title": item.get("title", item.get("checklist_title", "")),
             "controls_resolved": controls_resolved,
             "fail_controls": fail_controls,
             "partial_controls": partial_controls,
@@ -121,19 +121,19 @@ def build_risk_impact_model(
 
     # Sort by impact (most impactful first) — but this is for display,
     # NOT for sequencing
-    items.sort(key=lambda x: (
+    items_out.sort(key=lambda x: (
         -x["risks_reduced"],
         -x["controls_resolved"],
         -x["blast_radius_score"],
     ))
 
     return {
-        "items": items,
+        "items": items_out,
         "summary": {
-            "total_initiatives": len(items),
-            "total_controls_resolved": sum(i["controls_resolved"] for i in items),
+            "total_items": len(items_out),
+            "total_controls_resolved": sum(i["controls_resolved"] for i in items_out),
             "total_risks_addressed": len(set(
-                t for i in items for t in i["risk_titles"]
+                t for i in items_out for t in i["risk_titles"]
             )),
             "total_fail_controls": total_fail_controls,
         },
@@ -152,7 +152,7 @@ _SEVERITY_WEIGHT = {
 
 
 def _compute_blast_radius(
-    init_controls: set[str],
+    item_controls: set[str],
     results_by_id: dict[str, dict],
 ) -> float:
     """
@@ -161,7 +161,7 @@ def _compute_blast_radius(
     Score = sum of severity weights for all Fail/Partial controls.
     """
     score = 0.0
-    for ctrl_id in init_controls:
+    for ctrl_id in item_controls:
         ctrl = results_by_id.get(ctrl_id, {})
         status = ctrl.get("status")
         if status in ("Fail", "Partial"):
@@ -182,22 +182,22 @@ def _blast_label(score: float) -> str:
 
 
 def _compute_section_impact(
-    init_controls: set[str],
+    item_controls: set[str],
     results_by_id: dict[str, dict],
     section_maturity: dict[str, float | int],
     total_assessed: int,
 ) -> list[dict]:
     """
-    Compute per-section maturity lift if this initiative is implemented.
+    Compute per-section maturity lift if this item is implemented.
 
-    For each section touched by this initiative:
+    For each section touched by this item:
       - Count Fail controls that would become Pass
       - Compute new maturity = (current_pass + resolved) / total_in_section × 100
       - Lift = new_maturity - current_maturity
     """
-    # Group initiative controls by section
+    # Group item controls by section
     by_section: dict[str, list[str]] = defaultdict(list)
-    for ctrl_id in init_controls:
+    for ctrl_id in item_controls:
         ctrl = results_by_id.get(ctrl_id, {})
         section = ctrl.get("section", "Unknown")
         if ctrl.get("status") in ("Fail", "Partial"):

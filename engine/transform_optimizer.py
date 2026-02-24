@@ -4,8 +4,8 @@ Layer 3 of the 3-layer deterministic decision engine.
 
 Within the dependency boundaries set by Layer 1 (Dependency Engine),
 this module identifies:
-  - Quick wins: low-effort, high-impact initiatives that can start immediately
-  - Parallel tracks: initiatives that can execute concurrently
+  - Quick wins: low-effort, high-impact items that can start immediately
+  - Parallel tracks: items that can execute concurrently
   - Cost-control-first opportunities (only if no dependency violation)
 
 This layer CANNOT override sequencing from the Dependency Engine.
@@ -87,9 +87,9 @@ def build_transformation_optimization(
 # ── Internal helpers ──────────────────────────────────────────────
 
 def _identify_quick_wins(
-    initiatives: list[dict],
+    items: list[dict],
     phase_assignment: dict[str, str],
-    init_deps: dict[str, list[str]],
+    item_deps: dict[str, list[str]],
     impact_by_id: dict[str, dict],
 ) -> list[dict]:
     """
@@ -101,21 +101,21 @@ def _identify_quick_wins(
     """
     quick_wins = []
 
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        if not iid:
+    for item in items:
+        cid = item.get("checklist_id", "")
+        if not cid:
             continue
 
-        phase = phase_assignment.get(iid, "90_days")
-        deps = init_deps.get(iid, [])
-        impact = impact_by_id.get(iid, {})
+        phase = phase_assignment.get(cid, "90_days")
+        deps = item_deps.get(cid, [])
+        impact = impact_by_id.get(cid, {})
         controls_resolved = impact.get("controls_resolved", 0)
 
         # Must be in 30_days phase
         if phase != "30_days":
             continue
 
-        # Must have no dependencies (root initiative)
+        # Must have no dependencies (root item)
         if deps:
             continue
 
@@ -124,14 +124,14 @@ def _identify_quick_wins(
             continue
 
         # Effort check: short estimated duration
-        delivery = init.get("delivery_model", {})
+        delivery = item.get("delivery_model", {})
         duration = delivery.get("estimated_duration", "")
         is_quick = _is_short_duration(duration)
 
         if is_quick or not duration:
             quick_wins.append({
-                "initiative_id": iid,
-                "title": init.get("title", ""),
+                "checklist_id": cid,
+                "title": item.get("title", item.get("checklist_title", "")),
                 "controls_resolved": controls_resolved,
                 "risks_reduced": impact.get("risks_reduced", 0),
                 "blast_radius": impact.get("blast_radius_label", "Low"),
@@ -154,30 +154,30 @@ def _is_short_duration(duration: str) -> bool:
 
 def _build_parallel_tracks(
     parallel_groups: list[list[str]],
-    init_index: dict[str, dict],
+    item_index: dict[str, dict],
     impact_by_id: dict[str, dict],
 ) -> list[dict]:
     """Build named parallel tracks from parallel_groups."""
     tracks = []
     for idx, group in enumerate(parallel_groups):
         if len(group) < 2:
-            # Single-initiative groups aren't really parallel
+            # Single-item groups aren't really parallel
             continue
 
-        init_titles = []
+        item_titles = []
         total_controls = 0
         total_risks = 0
-        for iid in group:
-            init = init_index.get(iid, {})
-            impact = impact_by_id.get(iid, {})
-            init_titles.append(init.get("title", iid))
+        for cid in group:
+            item = item_index.get(cid, {})
+            impact = impact_by_id.get(cid, {})
+            item_titles.append(item.get("title", item.get("checklist_title", cid)))
             total_controls += impact.get("controls_resolved", 0)
             total_risks += impact.get("risks_reduced", 0)
 
         tracks.append({
             "track_name": f"Parallel Track {idx + 1}",
-            "initiative_ids": group,
-            "initiative_titles": init_titles,
+            "checklist_ids": group,
+            "item_titles": item_titles,
             "total_controls_resolved": total_controls,
             "total_risks_reduced": total_risks,
         })
@@ -186,19 +186,19 @@ def _build_parallel_tracks(
 
 
 def _build_effort_matrix(
-    initiatives: list[dict],
+    items: list[dict],
     impact_by_id: dict[str, dict],
     phase_assignment: dict[str, str],
 ) -> list[dict]:
-    """Build effort vs impact matrix for each initiative."""
+    """Build effort vs impact matrix for each item."""
     matrix = []
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        if not iid:
+    for item in items:
+        cid = item.get("checklist_id", "")
+        if not cid:
             continue
 
-        impact = impact_by_id.get(iid, {})
-        delivery = init.get("delivery_model", {})
+        impact = impact_by_id.get(cid, {})
+        delivery = item.get("delivery_model", {})
 
         # Effort classification
         duration = delivery.get("estimated_duration", "")
@@ -211,9 +211,9 @@ def _build_effort_matrix(
         impact_score = controls * 2 + risks * 5 + blast
 
         matrix.append({
-            "initiative_id": iid,
-            "title": init.get("title", ""),
-            "phase": phase_assignment.get(iid, "unknown"),
+            "checklist_id": cid,
+            "title": item.get("title", item.get("checklist_title", "")),
+            "phase": phase_assignment.get(cid, "unknown"),
             "effort": effort,
             "estimated_duration": duration,
             "impact_score": round(impact_score, 1),
@@ -252,7 +252,7 @@ def _quadrant(effort: str, impact_score: float) -> str:
 
 
 def _generate_optimization_notes(
-    initiatives: list[dict],
+    items: list[dict],
     dep_graph: dict[str, Any],
     risk_impact: dict[str, Any],
     quick_wins: list[dict],
@@ -264,17 +264,17 @@ def _generate_optimization_notes(
     if violations:
         notes.append(
             f"Dependency engine detected {len(violations)} ordering violation(s) "
-            f"in the LLM-generated roadmap. These have been corrected."
+            f"in the roadmap. These have been corrected."
         )
 
     if quick_wins:
-        qw_ids = [q["initiative_id"] for q in quick_wins]
+        qw_ids = [q["checklist_id"] for q in quick_wins]
         notes.append(
             f"Quick wins identified: {', '.join(qw_ids)} — "
             f"no dependencies, immediate start."
         )
 
-    # Check for initiatives with >3 risks reduced
+    # Check for items with >3 risks reduced
     high_impact = [
         item for item in risk_impact.get("items", [])
         if item.get("risks_reduced", 0) >= 3
@@ -282,7 +282,7 @@ def _generate_optimization_notes(
     if high_impact:
         for item in high_impact:
             notes.append(
-                f"{item['initiative_id']} resolves {item['risks_reduced']} business risks — "
+                f"{item['checklist_id']} resolves {item['risks_reduced']} business risks — "
                 f"prioritize within dependency constraints."
             )
 

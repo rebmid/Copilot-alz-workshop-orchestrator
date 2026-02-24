@@ -3,7 +3,7 @@
   "title": "CSA Copilot Output",
   "description": "Unified AI layer response for the Azure Landing Zone Assessor.",
   "type": "object",
-  "required": ["meta", "executive", "initiatives", "transformation_roadmap"],
+  "required": ["meta", "executive", "remediation_items", "transformation_roadmap"],
   "properties": {
     "meta": {
       "type": "object",
@@ -66,11 +66,14 @@
               "category": { "type": "string" },
               "description": { "type": "string" },
               "severity": { "type": "string" },
-              "resolving_initiative": { "type": "string" }
+              "resolving_checklist_ids": {
+                "type": "array",
+                "items": { "type": "string", "pattern": "^[A-Z]\\d{2}\\.\\d{2}$" }
+              }
             }
           }
         },
-        "minimum_initiatives_required": {
+        "minimum_items_required": {
           "type": "array",
           "items": { "type": "string" }
         },
@@ -106,13 +109,13 @@
         }
       }
     },
-    "initiatives": {
+    "remediation_items": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["initiative_id", "title", "priority", "blast_radius", "caf_discipline"],
+        "required": ["checklist_id", "title", "priority", "blast_radius", "caf_discipline"],
         "properties": {
-          "initiative_id": { "type": "string" },
+          "checklist_id": { "type": "string", "pattern": "^[A-Z]\\d{2}\\.\\d{2}$" },
           "title": { "type": "string" },
           "priority": { "type": "integer" },
           "blast_radius": { "type": "string", "enum": ["High", "Medium", "Low"] },
@@ -147,9 +150,9 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["initiative_id", "implementation"],
+        "required": ["checklist_id", "implementation"],
         "properties": {
-          "initiative_id": { "type": "string" },
+          "checklist_id": { "type": "string" },
           "implementation": {
             "type": "object",
             "properties": {
@@ -183,7 +186,7 @@
       "properties": {
         "velocity": { "type": "string", "enum": ["stalled", "progressing", "regressing"] },
         "maturity_trend": { "type": "string" },
-        "recommended_next_initiative": { "type": "string" }
+        "recommended_next_item": { "type": "string" }
       }
     },
 
@@ -202,16 +205,16 @@
 
     "decision_impact_model": {
       "type": "object",
-      "description": "Per-initiative 'what breaks if not implemented' — deterministic joins only.",
+      "description": "Per-item 'what breaks if not implemented' — deterministic joins only.",
       "required": ["items"],
       "properties": {
         "items": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["initiative_id", "if_not_implemented", "confidence", "evidence_refs", "assumptions"],
+            "required": ["checklist_id", "if_not_implemented", "confidence", "evidence_refs", "assumptions"],
             "properties": {
-              "initiative_id": { "type": "string" },
+              "checklist_id": { "type": "string" },
               "if_not_implemented": {
                 "type": "object",
                 "required": ["enterprise_scale_blocked", "critical_risks_remaining", "fail_controls_remaining", "blocked_initiatives", "maturity_ceiling_notes"],
@@ -219,7 +222,7 @@
                   "enterprise_scale_blocked": { "type": "boolean" },
                   "critical_risks_remaining": { "type": "integer" },
                   "fail_controls_remaining": { "type": "integer" },
-                  "blocked_initiatives": { "type": "array", "items": { "type": "string" } },
+                  "blocked_items": { "type": "array", "items": { "type": "string" } },
                   "maturity_ceiling_notes": { "type": "string" }
                 }
               },
@@ -319,9 +322,9 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["initiative_id", "resources_introduced", "billing_meters", "estimated_monthly_category", "evidence_refs", "assumptions"],
+            "required": ["checklist_id", "resources_introduced", "billing_meters", "estimated_monthly_category", "evidence_refs", "assumptions"],
             "properties": {
-              "initiative_id": { "type": "string" },
+              "checklist_id": { "type": "string" },
               "resources_introduced": { "type": "array", "items": { "type": "string" } },
               "billing_meters": { "type": "array", "items": { "type": "string" } },
               "estimated_monthly_category": { "type": "string", "enum": ["Low", "Medium", "High"] },

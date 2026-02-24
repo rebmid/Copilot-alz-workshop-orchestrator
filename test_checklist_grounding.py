@@ -33,9 +33,9 @@ def controls_json() -> dict[str, dict]:
 
 @pytest.fixture
 def sample_initiative_with_controls() -> dict:
-    """A synthetic initiative referencing multiple controls."""
+    """A synthetic item referencing multiple controls."""
     return {
-        "initiative_id": "INIT-test0001",
+        "checklist_id": "D07.01",
         "title": "Harden Network Perimeter",
         "controls": ["e6c4cfd3", "088137f5", "nsg-cove"],
         "dependencies": [],
@@ -44,10 +44,10 @@ def sample_initiative_with_controls() -> dict:
 
 @pytest.fixture
 def sample_initiative_no_controls() -> dict:
-    """An initiative with no controls → should flag violation."""
+    """An item with no controls → should flag violation."""
     return {
-        "initiative_id": "INIT-orphan01",
-        "title": "Orphaned Initiative",
+        "checklist_id": "Z99.01",
+        "title": "Orphaned Item",
         "controls": [],
         "dependencies": [],
     }
@@ -55,10 +55,10 @@ def sample_initiative_no_controls() -> dict:
 
 @pytest.fixture
 def sample_initiative_with_unmapped_control() -> dict:
-    """An initiative with a control_id that doesn't exist in the pack."""
+    """An item with a control_id that doesn't exist in the pack."""
     return {
-        "initiative_id": "INIT-unknown1",
-        "title": "Initiative With Unknown Control",
+        "checklist_id": "Z99.02",
+        "title": "Item With Unknown Control",
         "controls": ["not-a-real-control"],
         "dependencies": [],
     }
@@ -217,8 +217,8 @@ class TestGroundInitiativesToChecklist:
     def test_all_grounded_initiatives_have_field(self, controls_json):
         from alz.checklist_grounding import ground_initiatives_to_checklist
         initiatives = [
-            {"initiative_id": "i1", "controls": ["e6c4cfd3"]},
-            {"initiative_id": "i2", "controls": ["storage-"]},
+            {"checklist_id": "A01.01", "controls": ["e6c4cfd3"]},
+            {"checklist_id": "A01.02", "controls": ["storage-"]},
         ]
         ground_initiatives_to_checklist(initiatives, controls_json)
         for init in initiatives:
@@ -237,7 +237,7 @@ class TestValidateChecklistCoverage:
             validate_checklist_coverage,
         )
         initiatives = [
-            {"initiative_id": "INIT-ok01", "title": "Good", "controls": ["e6c4cfd3"]},
+            {"checklist_id": "A01.01", "title": "Good", "controls": ["e6c4cfd3"]},
         ]
         ground_initiatives_to_checklist(initiatives, controls_json)
         violations = validate_checklist_coverage(initiatives)
@@ -246,17 +246,17 @@ class TestValidateChecklistCoverage:
     def test_ungrounded_initiative_produces_violation(self):
         from alz.checklist_grounding import validate_checklist_coverage
         initiatives = [
-            {"initiative_id": "INIT-bad01", "title": "Orphan", "derived_from_checklist": []},
+            {"checklist_id": "Z99.03", "title": "Orphan", "derived_from_checklist": []},
         ]
         violations = validate_checklist_coverage(initiatives)
         assert len(violations) == 1
-        assert "INIT-bad01" in violations[0]
+        assert "Z99.03" in violations[0]
         assert "no checklist grounding" in violations[0]
 
     def test_missing_field_produces_violation(self):
         from alz.checklist_grounding import validate_checklist_coverage
         initiatives = [
-            {"initiative_id": "INIT-miss01", "title": "No Field"},
+            {"checklist_id": "Z99.04", "title": "No Field"},
         ]
         violations = validate_checklist_coverage(initiatives)
         assert len(violations) == 1

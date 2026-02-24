@@ -300,7 +300,10 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     </div>
     <p>{{ b.description }}</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving initiative: <strong>{{ b.resolving_initiative_title }}</strong>
+      Resolving controls: <strong>{{ b.resolving_initiative_title }}</strong>
+      {% if b.resolving_checklist_ids %}
+        ({{ b.resolving_checklist_ids|join(", ") }})
+      {% endif %}
       {% if b.controls_resolved %}
         &middot; {{ b.controls_resolved }} control(s) resolved
       {% endif %}

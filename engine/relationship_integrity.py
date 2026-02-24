@@ -1,11 +1,13 @@
 """Relationship Integrity Validator — compiler-grade structural checks.
 
-Enforces deterministic relationships across the entire pipeline output:
-  - Blocker → initiative referential integrity
-  - Initiative → control mapping completeness
-  - Roadmap → initiative existence
-  - derived_from_checklist non-empty enforcement
+Enforces deterministic relationships across the entire pipeline output
+using **checklist_id** as the canonical identifier (no synthetic INIT-xxx):
+
+  - Blocker → remediation item referential integrity
+  - Remediation item → control mapping completeness
+  - Roadmap → remediation item existence
   - Maturity trajectory formula integrity
+  - Every checklist_id must be a valid ALZ review-checklist ID
 
 If any check fails, rendering and downstream processing MUST halt.
 
@@ -15,13 +17,19 @@ Usage::
 
     ok, violations = validate_relationship_integrity(output)
     if not ok:
-        # abort — do not render, do not proceed
         for v in violations:
             print(v)
 """
 from __future__ import annotations
 
+import re
 from typing import Any
+
+from engine.id_rewriter import is_synthetic_id
+
+
+# Valid checklist_id pattern: letter(s) + digits + dot + digits (e.g. A01.01, B02.03)
+_CHECKLIST_ID_RE = re.compile(r"^[A-Z]\d{2}\.\d{2}$")
 
 
 class IntegrityError(Exception):
@@ -60,111 +68,129 @@ def validate_relationship_integrity(output: dict[str, Any]) -> tuple[bool, list[
 
     esr = ai.get("enterprise_scale_readiness") or {}
     blockers = esr.get("blockers", [])
-    initiatives = ai.get("initiatives", [])
-    init_by_id: dict[str, dict] = {
-        i["initiative_id"]: i
-        for i in initiatives
-        if "initiative_id" in i
+
+    # Remediation items — keyed by checklist_id
+    remediation_items = ai.get("remediation_items", ai.get("initiatives", []))
+    item_by_id: dict[str, dict] = {
+        i["checklist_id"]: i
+        for i in remediation_items
+        if "checklist_id" in i
     }
+
     roadmap_src = ai.get("transformation_roadmap") or {}
     roadmap_phases = roadmap_src.get("roadmap_30_60_90") or {}
     results = output.get("results", [])
     results_by_id = {r["control_id"]: r for r in results if "control_id" in r}
     trajectory = ai.get("deterministic_trajectory") or {}
 
-    # ── Table 1: Blocker → Initiative integrity ───────────────────
-    print("\n  ── Relationship Integrity: Blocker → Initiative ──")
-    print(f"  {'Category':<30} {'resolving_initiative':<22} {'exists':<8} {'by_id':<6}")
-    print(f"  {'─'*30} {'─'*22} {'─'*8} {'─'*6}")
+    # ── Table 1: Blocker → Remediation Item integrity ─────────────
+    print("\n  ── Relationship Integrity: Blocker → Remediation Item ──")
+    print(f"  {'Category':<30} {'resolving_checklist_ids':<30} {'all_exist':<10} {'all_valid':<10}")
+    print(f"  {'─'*30} {'─'*30} {'─'*10} {'─'*10}")
 
     for b in blockers:
         category = b.get("category", "?")
-        ref = b.get("resolving_initiative")
-        exists = ref in init_by_id if ref else False
-        by_id = bool(ref and not _looks_like_title(ref))
+        refs = b.get("resolving_checklist_ids", None)
+        # Legacy fallback
+        if refs is None:
+            legacy = b.get("resolving_item", b.get("resolving_initiative"))
+            refs = [legacy] if legacy else []
 
-        flag = "✓" if exists else "✗"
-        id_flag = "✓" if by_id else "✗"
-        print(f"  {category:<30} {str(ref):<22} {flag:<8} {id_flag:<6}")
+        all_exist = all(r in item_by_id for r in refs) if refs else False
+        all_valid = all(_is_valid_checklist_id(r) for r in refs) if refs else False
 
-        if ref and not exists:
-            violations.append(
-                f"BLOCKER_REF: blocker '{category}' references "
-                f"'{ref}' which does not exist in initiatives[]."
-            )
-        if ref and _looks_like_title(ref):
-            violations.append(
-                f"BLOCKER_TITLE_REF: blocker '{category}' references "
-                f"a title string '{ref}' instead of initiative_id."
-            )
-        if ref is None:
+        flag = "✓" if all_exist else "✗"
+        id_flag = "✓" if all_valid else "✗"
+        refs_str = ", ".join(refs) if refs else "(none)"
+        print(f"  {category:<30} {refs_str:<30} {flag:<10} {id_flag:<10}")
+
+        if not refs:
             violations.append(
                 f"BLOCKER_NULL_REF: blocker '{category}' has no "
-                f"resolving_initiative."
+                f"resolving_checklist_ids."
             )
+        else:
+            for ref in refs:
+                if ref not in item_by_id:
+                    violations.append(
+                        f"BLOCKER_REF: blocker '{category}' references "
+                        f"'{ref}' which does not exist in remediation_items[]."
+                    )
+                if not _is_valid_checklist_id(ref):
+                    violations.append(
+                        f"BLOCKER_INVALID_ID: blocker '{category}' references "
+                        f"'{ref}' which is not a valid checklist_id format."
+                    )
+                if is_synthetic_id(ref):
+                    violations.append(
+                        f"SYNTHETIC_ID: blocker '{category}' uses "
+                        f"synthetic ID '{ref}' in resolving_checklist_ids."
+                    )
 
-    # ── Table 2: Initiative → Control mappings ────────────────────
-    print("\n  ── Relationship Integrity: Initiative → Controls ──")
-    print(f"  {'initiative_id':<22} {'controls':<10} {'failing':<10} {'checklist':<10}")
-    print(f"  {'─'*22} {'─'*10} {'─'*10} {'─'*10}")
+    # ── Table 2: Remediation Item → Control mappings ──────────────
+    print("\n  ── Relationship Integrity: Remediation Item → Controls ──")
+    print(f"  {'checklist_id':<16} {'controls':<10} {'failing':<10} {'valid_id':<10}")
+    print(f"  {'─'*16} {'─'*10} {'─'*10} {'─'*10}")
 
-    for init in initiatives:
-        iid = init.get("initiative_id", "?")
-        controls = init.get("controls", [])
+    for item in remediation_items:
+        cid = item.get("checklist_id", "?")
+        controls = item.get("controls", [])
         failing = sum(
             1 for c in controls
             if results_by_id.get(c, {}).get("status") in ("Fail", "Partial")
         )
-        dfc = init.get("derived_from_checklist", [])
-        dfc_count = len(dfc)
+        valid_id = _is_valid_checklist_id(cid)
 
-        print(f"  {iid:<22} {len(controls):<10} {failing:<10} {dfc_count:<10}")
+        id_flag = "✓" if valid_id else "✗"
+        print(f"  {cid:<16} {len(controls):<10} {failing:<10} {id_flag:<10}")
 
+        if not valid_id:
+            violations.append(
+                f"ITEM_INVALID_ID: remediation item '{cid}' does not "
+                f"match checklist_id format (e.g. A01.01)."
+            )
+        if is_synthetic_id(cid):
+            violations.append(
+                f"SYNTHETIC_ITEM_ID: remediation item '{cid}' uses a "
+                f"synthetic ID — only canonical checklist_ids allowed."
+            )
         if not controls:
             violations.append(
-                f"INIT_NO_CONTROLS: initiative '{iid}' has no controls[]."
-            )
-        if not dfc:
-            violations.append(
-                f"INIT_NO_CHECKLIST: initiative '{iid}' has empty "
-                f"derived_from_checklist — violates Rule D."
+                f"ITEM_NO_CONTROLS: remediation item '{cid}' has no controls[]."
             )
 
-    # ── Table 3: Roadmap → Initiative references ──────────────────
-    print("\n  ── Relationship Integrity: Roadmap → Initiatives ──")
-    print(f"  {'phase':<12} {'initiative_id':<22} {'exists':<8}")
-    print(f"  {'─'*12} {'─'*22} {'─'*8}")
+    # ── Table 3: Roadmap → Remediation Item references ────────────
+    print("\n  ── Relationship Integrity: Roadmap → Remediation Items ──")
+    print(f"  {'phase':<12} {'checklist_id':<16} {'exists':<8}")
+    print(f"  {'─'*12} {'─'*16} {'─'*8}")
 
     for phase_key in ("30_days", "60_days", "90_days"):
         entries = roadmap_phases.get(phase_key, [])
         for entry in entries:
-            eid = entry.get("initiative_id", "")
-            exists = eid in init_by_id
+            eid = entry.get("checklist_id", entry.get("initiative_id", ""))
+            exists = eid in item_by_id
 
             flag = "✓" if exists else "✗"
-            print(f"  {phase_key:<12} {eid:<22} {flag:<8}")
+            print(f"  {phase_key:<12} {eid:<16} {flag:<8}")
 
             if not eid:
                 violations.append(
                     f"ROADMAP_NO_ID: roadmap entry in {phase_key} "
-                    f"has no initiative_id."
+                    f"has no checklist_id."
                 )
             elif not exists:
                 violations.append(
                     f"ROADMAP_REF: roadmap entry '{eid}' in {phase_key} "
-                    f"does not exist in initiatives[]."
+                    f"does not exist in remediation_items[]."
                 )
 
     # ── Maturity trajectory formula check ─────────────────────────
     if trajectory:
-        total_controls = trajectory.get("_total_controls", 0)
-        current_passing = trajectory.get("_current_passing", 0)
         controls_resolved = trajectory.get("controls_resolved_by_phase", {})
 
         for phase_key in ("30_days", "60_days", "90_days"):
             resolved = controls_resolved.get(phase_key, 0)
             if resolved == 0:
-                # Verify that the trajectory didn't change for this phase
                 _check_trajectory_unchanged(
                     trajectory, phase_key, violations
                 )
@@ -204,25 +230,14 @@ def _check_trajectory_unchanged(
             )
 
 
-def _looks_like_title(ref: str) -> bool:
-    """Heuristic: does a resolving_initiative value look like a title
-    rather than a structured ID?
+def _is_valid_checklist_id(ref: str) -> bool:
+    """Check if a string matches the ALZ review-checklist ID format.
 
-    IDs match patterns like INIT-001, INIT-a1b2c3d4.
-    Titles typically contain spaces, are longer, or don't match ID patterns.
+    Valid examples: A01.01, B02.03, C01.12
     """
     if not ref:
         return False
-    # Valid ID patterns
-    import re
-    if re.match(r"^INIT-[0-9a-f]{8}(?:-\d+)?$", ref):
-        return False
-    if re.match(r"^INIT-\d{3,}$", ref):
-        return False
-    # If it contains spaces or is > 30 chars, it's likely a title
-    if " " in ref or len(ref) > 30:
-        return True
-    return False
+    return bool(_CHECKLIST_ID_RE.match(ref))
 
 
 # ── Convenience: raise on failure ─────────────────────────────────

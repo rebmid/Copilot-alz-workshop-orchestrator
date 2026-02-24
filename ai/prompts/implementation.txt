@@ -1,7 +1,10 @@
-For the following initiative, generate deployable Azure implementation components aligned to the official ALZ design areas.
+For the following remediation item, generate deployable Azure implementation components aligned to the official ALZ design areas.
 
-The initiative includes an architectural decision (selected_pattern, alz_module) from the
+The item includes an architectural decision (selected_pattern, alz_module) from the
 Implementation Decision pass. Use that selection — do NOT override it with a different pattern.
+
+CRITICAL: The checklist_id comes from the ALZ review-checklists (e.g. A01.01, B02.03).
+Do NOT generate synthetic IDs like INIT-001.
 
 Official ALZ Design Areas:
   1. Azure Billing and Microsoft Entra ID Tenants
@@ -16,10 +19,10 @@ Official ALZ Design Areas:
 Return ONLY valid JSON matching this schema:
 
 {
-  "initiative_id": "INIT-001",
+  "checklist_id": "A01.01",
   "selected_pattern": "The pattern name from the implementation decision",
   "alz_module": "The ALZ Bicep module from the implementation decision",
-  "prerequisite_initiatives": ["INIT-IDs this depends on from the sequence justification"],
+  "prerequisite_items": ["checklist_ids this depends on from the sequence justification"],
   "implementation": {
     "bicep_modules": [
       {
@@ -69,7 +72,7 @@ Rules:
 - RBAC roles must use official Azure role names
 - Validation queries should be Azure Resource Graph (ARG) or KQL that can verify success
 - Pipelines should be GitHub Actions or Azure DevOps YAML compatible
-- Match implementation scope to the initiative's delivery_model.change_scope
+- Match implementation scope to the item's delivery_model.change_scope
 
-Initiative:
-{{INITIATIVE}}
+Item:
+{{ITEM}}

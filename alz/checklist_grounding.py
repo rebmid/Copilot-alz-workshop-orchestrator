@@ -216,12 +216,12 @@ def validate_checklist_coverage(
     """
     violations: list[str] = []
     for init in initiatives:
-        iid = init.get("initiative_id", "UNKNOWN")
+        iid = init.get("checklist_id", init.get("initiative_id", "UNKNOWN"))
         title = init.get("title", "untitled")
         refs = init.get("derived_from_checklist", [])
         if not refs:
             violations.append(
-                f"Initiative {iid} ('{title}') has no checklist grounding — "
+                f"Item {iid} ('{title}') has no checklist grounding — "
                 f"none of its controls map to ALZ review-checklist items"
             )
     return violations

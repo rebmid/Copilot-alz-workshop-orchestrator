@@ -6,7 +6,6 @@ from engine.relationship_integrity import (
     validate_relationship_integrity,
     require_relationship_integrity,
     IntegrityError,
-    _looks_like_title,
 )
 from engine.maturity_trajectory import compute_maturity_trajectory
 
@@ -18,7 +17,7 @@ from engine.maturity_trajectory import compute_maturity_trajectory
 def _make_output(
     *,
     blockers=None,
-    initiatives=None,
+    items=None,
     roadmap_30=None,
     roadmap_60=None,
     roadmap_90=None,
@@ -27,14 +26,14 @@ def _make_output(
     blocker_mapping=None,
 ):
     """Build a minimal pipeline output dict for testing."""
-    inits = initiatives or []
+    rem = items or []
     return {
         "results": results or [],
         "ai": {
             "enterprise_scale_readiness": {
                 "blockers": blockers or [],
             },
-            "initiatives": inits,
+            "remediation_items": rem,
             "transformation_roadmap": {
                 "roadmap_30_60_90": {
                     "30_days": roadmap_30 or [],
@@ -43,7 +42,7 @@ def _make_output(
                 },
             },
             "deterministic_trajectory": trajectory or {},
-            "blocker_initiative_mapping": blocker_mapping or {},
+            "blocker_item_mapping": blocker_mapping or {},
         },
     }
 
@@ -61,21 +60,21 @@ class TestRelationshipIntegrityPass:
         assert ok is True
         assert violations == []
 
-    def test_valid_blocker_initiative_link(self):
+    def test_valid_blocker_item_link(self):
         output = _make_output(
             blockers=[{
                 "category": "Networking",
-                "resolving_initiative": "INIT-aabbccdd",
+                "resolving_checklist_ids": ["D07.01"],
                 "severity": "Critical",
             }],
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "D07.01",
                 "title": "Fix networking",
                 "controls": ["ctrl-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
             roadmap_30=[{
-                "initiative_id": "INIT-aabbccdd",
+                "checklist_id": "D07.01",
                 "action": "Fix networking",
             }],
         )
@@ -83,29 +82,29 @@ class TestRelationshipIntegrityPass:
         assert ok is True
         assert violations == []
 
-    def test_multiple_initiatives_all_valid(self):
+    def test_multiple_items_all_valid(self):
         output = _make_output(
             blockers=[
-                {"category": "Security", "resolving_initiative": "INIT-11111111"},
-                {"category": "Identity", "resolving_initiative": "INIT-22222222"},
+                {"category": "Security", "resolving_checklist_ids": ["G01.01"]},
+                {"category": "Identity", "resolving_checklist_ids": ["B01.01"]},
             ],
-            initiatives=[
+            items=[
                 {
-                    "initiative_id": "INIT-11111111",
+                    "checklist_id": "G01.01",
                     "title": "Security baseline",
                     "controls": ["sec-1"],
                     "derived_from_checklist": [{"checklist_id": "G01.01"}],
                 },
                 {
-                    "initiative_id": "INIT-22222222",
+                    "checklist_id": "B01.01",
                     "title": "Identity hygiene",
                     "controls": ["iam-1"],
                     "derived_from_checklist": [{"checklist_id": "B01.01"}],
                 },
             ],
             roadmap_30=[
-                {"initiative_id": "INIT-11111111"},
-                {"initiative_id": "INIT-22222222"},
+                {"checklist_id": "G01.01"},
+                {"checklist_id": "B01.01"},
             ],
         )
         ok, violations = validate_relationship_integrity(output)
@@ -115,15 +114,15 @@ class TestRelationshipIntegrityPass:
 class TestRelationshipIntegrityFail:
     """Cases where integrity should detect violations."""
 
-    def test_blocker_references_nonexistent_initiative(self):
+    def test_blocker_references_nonexistent_item(self):
         output = _make_output(
             blockers=[{
                 "category": "Governance",
-                "resolving_initiative": "INIT-deadbeef",
+                "resolving_checklist_ids": ["Z99.99"],
                 "severity": "Critical",
             }],
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "A01.01",
                 "title": "Something else",
                 "controls": ["ctrl-1"],
                 "derived_from_checklist": [{"checklist_id": "E01.01"}],
@@ -134,14 +133,15 @@ class TestRelationshipIntegrityFail:
         assert any("BLOCKER_REF" in v for v in violations)
 
     def test_blocker_references_title_string(self):
+        """Title strings are invalid checklist_id format."""
         output = _make_output(
             blockers=[{
                 "category": "Networking",
-                "resolving_initiative": "Implement hub-spoke network topology",
+                "resolving_checklist_ids": ["Implement hub-spoke network topology"],
                 "severity": "Critical",
             }],
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "D07.01",
                 "title": "Implement hub-spoke network topology",
                 "controls": ["net-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
@@ -149,17 +149,17 @@ class TestRelationshipIntegrityFail:
         )
         ok, violations = validate_relationship_integrity(output)
         assert ok is False
-        assert any("BLOCKER_TITLE_REF" in v for v in violations)
+        assert any("BLOCKER_INVALID_ID" in v for v in violations)
 
-    def test_blocker_null_resolving_initiative(self):
+    def test_blocker_null_resolving_item(self):
         output = _make_output(
             blockers=[{
                 "category": "Identity",
-                "resolving_initiative": None,
+                "resolving_checklist_ids": [],
                 "severity": "High",
             }],
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "B01.01",
                 "controls": ["ctrl-1"],
                 "derived_from_checklist": [{"checklist_id": "B01.01"}],
             }],
@@ -168,55 +168,41 @@ class TestRelationshipIntegrityFail:
         assert ok is False
         assert any("BLOCKER_NULL_REF" in v for v in violations)
 
-    def test_initiative_no_controls(self):
+    def test_item_no_controls(self):
         output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
-                "title": "Empty init",
+            items=[{
+                "checklist_id": "A01.01",
+                "title": "Empty item",
                 "controls": [],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
         )
         ok, violations = validate_relationship_integrity(output)
         assert ok is False
-        assert any("INIT_NO_CONTROLS" in v for v in violations)
+        assert any("ITEM_NO_CONTROLS" in v for v in violations)
 
-    def test_initiative_empty_derived_from_checklist(self):
-        """Rule D: derived_from_checklist must not be empty."""
+    def test_item_invalid_id_format(self):
+        """Items with non-checklist IDs are flagged."""
         output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
-                "title": "Missing checklist",
-                "controls": ["ctrl-1"],
-                "derived_from_checklist": [],
-            }],
-        )
-        ok, violations = validate_relationship_integrity(output)
-        assert ok is False
-        assert any("INIT_NO_CHECKLIST" in v for v in violations)
-
-    def test_initiative_missing_derived_from_checklist_key(self):
-        """Rule D: missing derived_from_checklist key treated as empty."""
-        output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
-                "title": "No checklist key",
+            items=[{
+                "checklist_id": "INIT-deadbeef",
+                "title": "Old format ID",
                 "controls": ["ctrl-1"],
             }],
         )
         ok, violations = validate_relationship_integrity(output)
         assert ok is False
-        assert any("INIT_NO_CHECKLIST" in v for v in violations)
+        assert any("ITEM_INVALID_ID" in v for v in violations)
 
-    def test_roadmap_references_nonexistent_initiative(self):
+    def test_roadmap_references_nonexistent_item(self):
         output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "A01.01",
                 "controls": ["c-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
             roadmap_30=[{
-                "initiative_id": "INIT-nonexist",
+                "checklist_id": "Z99.99",
                 "action": "something",
             }],
         )
@@ -224,10 +210,10 @@ class TestRelationshipIntegrityFail:
         assert ok is False
         assert any("ROADMAP_REF" in v for v in violations)
 
-    def test_roadmap_entry_missing_initiative_id(self):
+    def test_roadmap_entry_missing_checklist_id(self):
         output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "A01.01",
                 "controls": ["c-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
@@ -245,7 +231,7 @@ class TestRequireRelationshipIntegrity:
         output = _make_output(
             blockers=[{
                 "category": "Test",
-                "resolving_initiative": None,
+                "resolving_checklist_ids": [],
             }],
         )
         with pytest.raises(IntegrityError) as exc_info:
@@ -256,24 +242,6 @@ class TestRequireRelationshipIntegrity:
         output = _make_output()
         result = require_relationship_integrity(output)
         assert result == []
-
-
-# ═══════════════════════════════════════════════════════════════════
-#  2. _looks_like_title heuristic
-# ═══════════════════════════════════════════════════════════════════
-
-class TestLooksLikeTitle:
-    def test_hash_id_not_title(self):
-        assert _looks_like_title("INIT-aabbccdd") is False
-
-    def test_ordinal_id_not_title(self):
-        assert _looks_like_title("INIT-001") is False
-
-    def test_title_with_spaces(self):
-        assert _looks_like_title("Implement hub-spoke network topology") is True
-
-    def test_empty_string(self):
-        assert _looks_like_title("") is False
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -312,14 +280,14 @@ class TestMaturityTrajectoryRuleC:
     def test_formula_uses_total_controls(self):
         """new_maturity = (passing + resolved) / total_controls * 100"""
         results = self._make_results(pass_count=5, fail_count=5, total=100)
-        initiatives = [{
-            "initiative_id": "INIT-aaaaaaaa",
+        items = [{
+            "checklist_id": "D01.01",
             "controls": ["fail-0", "fail-1"],
         }]
-        phase_assignment = {"INIT-aaaaaaaa": "30_days"}
+        phase_assignment = {"D01.01": "30_days"}
 
         traj = compute_maturity_trajectory(
-            initiatives, results,
+            items, results,
             phase_assignment=phase_assignment,
             current_maturity_percent=5.0,
             total_controls=100,
@@ -331,12 +299,12 @@ class TestMaturityTrajectoryRuleC:
     def test_unchanged_when_zero_resolved(self):
         """Rule C: if controls_resolved_by_phase == 0, unchanged."""
         results = self._make_results(pass_count=5, fail_count=5, total=100)
-        # No initiatives → 0 controls resolved in any phase
-        initiatives = []
+        # No items → 0 controls resolved in any phase
+        items = []
         phase_assignment = {}
 
         traj = compute_maturity_trajectory(
-            initiatives, results,
+            items, results,
             phase_assignment=phase_assignment,
             current_maturity_percent=5.0,
             total_controls=100,
@@ -350,15 +318,15 @@ class TestMaturityTrajectoryRuleC:
     def test_partial_phase_resolution(self):
         """Only the phase with resolutions changes; others hold."""
         results = self._make_results(pass_count=10, fail_count=10, total=100)
-        initiatives = [{
-            "initiative_id": "INIT-aaaaaaaa",
+        items = [{
+            "checklist_id": "D01.01",
             "controls": ["fail-0", "fail-1", "fail-2"],
         }]
         # All resolutions in 60-day phase
-        phase_assignment = {"INIT-aaaaaaaa": "60_days"}
+        phase_assignment = {"D01.01": "60_days"}
 
         traj = compute_maturity_trajectory(
-            initiatives, results,
+            items, results,
             phase_assignment=phase_assignment,
             current_maturity_percent=10.0,
             total_controls=100,
@@ -406,8 +374,8 @@ class TestTrajectoryIntegrityCheck:
     def test_trajectory_drift_detected(self):
         """If 0 controls resolved in a phase but maturity changes → violation."""
         output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "A01.01",
                 "controls": ["c-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
@@ -432,8 +400,8 @@ class TestTrajectoryIntegrityCheck:
     def test_trajectory_no_drift_when_resolved(self):
         """No drift violation when controls are actually resolved."""
         output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "A01.01",
                 "controls": ["c-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
@@ -469,11 +437,11 @@ class TestRenderIntegrityGate:
         bad_output = _make_output(
             blockers=[{
                 "category": "Test",
-                "resolving_initiative": "INIT-nonexist",
+                "resolving_checklist_ids": ["Z99.99"],
                 "severity": "Critical",
             }],
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
+            items=[{
+                "checklist_id": "A01.01",
                 "controls": ["c-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
@@ -494,13 +462,13 @@ class TestRenderIntegrityGate:
         from reporting.render import generate_report
 
         good_output = _make_output(
-            initiatives=[{
-                "initiative_id": "INIT-aabbccdd",
-                "title": "Good initiative",
+            items=[{
+                "checklist_id": "A01.01",
+                "title": "Good item",
                 "controls": ["ctrl-1"],
                 "derived_from_checklist": [{"checklist_id": "D07.01"}],
             }],
-            roadmap_30=[{"initiative_id": "INIT-aabbccdd"}],
+            roadmap_30=[{"checklist_id": "A01.01"}],
         )
         # Add required scoring keys for template rendering
         good_output["scoring"] = {
@@ -526,21 +494,20 @@ class TestMultipleViolations:
     def test_all_violation_types_in_one_pass(self):
         output = _make_output(
             blockers=[
-                {"category": "Bad", "resolving_initiative": "INIT-nonexist"},
-                {"category": "Worse", "resolving_initiative": None},
-                {"category": "Title ref", "resolving_initiative": "Apply policies for compliance"},
+                {"category": "Bad", "resolving_checklist_ids": ["Z99.99"]},
+                {"category": "Worse", "resolving_checklist_ids": []},
+                {"category": "Title ref", "resolving_checklist_ids": ["Apply policies for compliance"]},
             ],
-            initiatives=[
+            items=[
                 {
-                    "initiative_id": "INIT-aabbccdd",
+                    "checklist_id": "A01.01",
                     "title": "Good",
                     "controls": [],  # no controls
-                    "derived_from_checklist": [],  # empty checklist
                 },
             ],
             roadmap_30=[
-                {"initiative_id": ""},  # no id
-                {"initiative_id": "INIT-ffffffff"},  # doesn't exist
+                {"action": "no id here"},  # no id
+                {"checklist_id": "Z98.99"},  # doesn't exist
             ],
         )
         ok, violations = validate_relationship_integrity(output)
@@ -554,8 +521,7 @@ class TestMultipleViolations:
 
         assert "BLOCKER_REF" in violation_types
         assert "BLOCKER_NULL_REF" in violation_types
-        assert "BLOCKER_TITLE_REF" in violation_types
-        assert "INIT_NO_CONTROLS" in violation_types
-        assert "INIT_NO_CHECKLIST" in violation_types
+        assert "BLOCKER_INVALID_ID" in violation_types
+        assert "ITEM_NO_CONTROLS" in violation_types
         assert "ROADMAP_NO_ID" in violation_types
         assert "ROADMAP_REF" in violation_types

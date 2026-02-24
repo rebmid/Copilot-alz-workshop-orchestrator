@@ -21,10 +21,10 @@ Return ONLY valid JSON matching this schema:
       "category": "Governance | Security | Networking | Identity | Management",
       "description": "...",
       "severity": "Critical | High | Medium",
-      "resolving_initiative": "INIT-xxx"
+      "resolving_checklist_ids": ["A01.01"]
     }
   ],
-  "minimum_initiatives_required": ["INIT-001", "INIT-002"],
+  "minimum_checklist_ids_required": ["A01.01", "B02.03"],
   "scaling_recommendations": [
     "Recommendation for moving from current state to enterprise-scale"
   ]
@@ -49,7 +49,7 @@ Rules:
 - max_supported_subscriptions_current_state: estimate based on current governance depth
   (no MG structure = 1-3, basic MG = 5-10, full MG + policy = 50+)
 - readiness_score: 0-100 reflecting how close to enterprise-scale
-- minimum_initiatives_required references initiative IDs from the roadmap
+- minimum_checklist_ids_required references checklist_ids from the roadmap (e.g. A01.01)
 - Be brutally honest — if the tenant is immature, say so
 
 Assessment Data:

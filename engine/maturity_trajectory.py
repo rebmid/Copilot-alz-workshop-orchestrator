@@ -14,7 +14,7 @@ from typing import Any
 
 
 def compute_maturity_trajectory(
-    initiatives: list[dict],
+    items: list[dict],
     results: list[dict],
     phase_assignment: dict[str, str],
     current_maturity_percent: float,
@@ -31,12 +31,12 @@ def compute_maturity_trajectory(
 
     Parameters
     ----------
-    initiatives : list[dict]
-        Initiative list with controls[].
+    items : list[dict]
+        Remediation items with controls[].
     results : list[dict]
         Assessment control results.
     phase_assignment : dict[str, str]
-        initiative_id → "30_days" | "60_days" | "90_days" from dependency engine.
+        checklist_id → "30_days" | "60_days" | "90_days" from dependency engine.
     current_maturity_percent : float
         Current overall maturity (from scoring.py).
     total_controls : int | None
@@ -76,10 +76,10 @@ def compute_maturity_trajectory(
         "90_days": set(),
     }
 
-    for init in initiatives:
-        iid = init.get("initiative_id", "")
-        phase = phase_assignment.get(iid, "90_days")
-        for ctrl_id in init.get("controls", []):
+    for item in items:
+        cid = item.get("checklist_id", "")
+        phase = phase_assignment.get(cid, "90_days")
+        for ctrl_id in item.get("controls", []):
             ctrl = results_by_id.get(ctrl_id, {})
             if ctrl.get("status") in ("Fail", "Partial"):
                 phase_controls[phase].add(ctrl_id)
@@ -151,7 +151,7 @@ def compute_maturity_trajectory(
         f"Based on {_total_controls} total controls ({total_pass} currently passing, "
         f"{total_assessed} assessed)"
     )
-    assumptions.append("Assumes all initiative controls resolve to Pass upon implementation")
+    assumptions.append("Assumes all item controls resolve to Pass upon implementation")
     assumptions.append(
         f"Formula: (current_passing + controls_resolved) / {_total_controls}"
     )

@@ -485,7 +485,7 @@
       ],
       "signal_used": "arm:mg_hierarchy",
       "confidence": "High",
-      "notes": "MG hierarchy depth is 0 (within recommended \u2264 4)."
+      "notes": "MG hierarchy depth is 0 (within recommended ≤ 4)."
     },
     {
       "control_id": "61623a76-5a91-47e1-b348-ef254c27d42e",
@@ -626,7 +626,7 @@
       ],
       "signal_used": "policy:compliance_summary",
       "confidence": "High",
-      "notes": "Policy compliance is 0.0% (3 noncompliant of 3). Target \u2265 70%."
+      "notes": "Policy compliance is 0.0% (3 noncompliant of 3). Target ≥ 70%."
     },
     {
       "control_id": "49b82111-2df2-47ee-912e-7f983f630472",
@@ -1219,8 +1219,8 @@
       "control_id": "984a859c-773e-47d2-9162-3a765a917e1f",
       "category": "Identity and Access Management",
       "section": "Identity and Access Management",
-      "text": "Implement an emergency access or break-glass accounts to prevent tenant-wide account lockout. MFA will be turned on by default for all users in Oct 2024. We recommend updating these accounts to use\u202fpasskey (FIDO2)\u202for\u202fconfigure certificate-based authentication for MFA. ",
-      "question": "Implement an emergency access or break-glass accounts to prevent tenant-wide account lockout. MFA will be turned on by default for all users in Oct 2024. We recommend updating these accounts to use\u202fpasskey (FIDO2)\u202for\u202fconfigure certificate-based authentication for MFA. ",
+      "text": "Implement an emergency access or break-glass accounts to prevent tenant-wide account lockout. MFA will be turned on by default for all users in Oct 2024. We recommend updating these accounts to use passkey (FIDO2) or configure certificate-based authentication for MFA. ",
+      "question": "Implement an emergency access or break-glass accounts to prevent tenant-wide account lockout. MFA will be turned on by default for all users in Oct 2024. We recommend updating these accounts to use passkey (FIDO2) or configure certificate-based authentication for MFA. ",
       "severity": "High",
       "status": "Manual",
       "evidence_count": 0,
@@ -2493,8 +2493,8 @@
       "control_id": "7371dc21-251a-47a3-af14-6e01b9da4757",
       "category": "Network Topology and Connectivity",
       "section": "Network Topology and Connectivity",
-      "text": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it\u2019s a sign that SNAT exhaustion might be imminent.",
-      "question": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it\u2019s a sign that SNAT exhaustion might be imminent.",
+      "text": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it’s a sign that SNAT exhaustion might be imminent.",
+      "question": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it’s a sign that SNAT exhaustion might be imminent.",
       "severity": "Medium",
       "status": "Manual",
       "evidence_count": 0,
@@ -4145,7 +4145,7 @@
     },
     {
       "source": "Manual control",
-      "question": "Implement an emergency access or break-glass accounts to prevent tenant-wide account lockout. MFA will be turned on by default for all users in Oct 2024. We recommend updating these accounts to use\u202fpasskey (FIDO2)\u202for\u202fconfigure certificate-based authentication for MFA. ",
+      "question": "Implement an emergency access or break-glass accounts to prevent tenant-wide account lockout. MFA will be turned on by default for all users in Oct 2024. We recommend updating these accounts to use passkey (FIDO2) or configure certificate-based authentication for MFA. ",
       "related_controls": [
         "984a859c-773e-47d2-9162-3a765a917e1f"
       ]
@@ -4782,7 +4782,7 @@
     },
     {
       "source": "Manual control",
-      "question": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it\u2019s a sign that SNAT exhaustion might be imminent.",
+      "question": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, it’s a sign that SNAT exhaustion might be imminent.",
       "related_controls": [
         "7371dc21-251a-47a3-af14-6e01b9da4757"
       ]
@@ -5588,7 +5588,7 @@
   "transformation_plan": {
     "initiatives": [
       {
-        "initiative_id": "INIT-001",
+        "checklist_id": "A01.01",
         "title": "Establish platform and landing zone management group hierarchy",
         "priority": 1,
         "blast_radius": "High",
@@ -5630,7 +5630,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-002",
+        "checklist_id": "E01.01",
         "title": "Centralize diagnostics and security visibility",
         "priority": 2,
         "blast_radius": "High",
@@ -5674,7 +5674,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-003",
+        "checklist_id": "F01.01",
         "title": "Apply baseline governance policies",
         "priority": 3,
         "blast_radius": "High",
@@ -5685,7 +5685,7 @@
           "3c5a808d-c695-4c14-a63c-c7ab7a510e41"
         ],
         "dependencies": [
-          "INIT-001"
+          "A01.01"
         ],
         "permission_requirements": [
           "Management group policy admin"
@@ -5717,7 +5717,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-004",
+        "checklist_id": "D07.01",
         "title": "Implement hub-spoke network topology with centralized egress and DDoS protection",
         "priority": 4,
         "blast_radius": "High",
@@ -5730,8 +5730,8 @@
           "088137f5-e6c4-4cfd-9e50-4547c2447ec6"
         ],
         "dependencies": [
-          "INIT-001",
-          "INIT-002"
+          "A01.01",
+          "E01.01"
         ],
         "permission_requirements": [
           "Network contributor",
@@ -5765,7 +5765,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-005",
+        "checklist_id": "G01.01",
         "title": "Expand Defender coverage and enforce security baseline",
         "priority": 5,
         "blast_radius": "High",
@@ -5776,8 +5776,8 @@
           "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
         ],
         "dependencies": [
-          "INIT-002",
-          "INIT-003"
+          "E01.01",
+          "F01.01"
         ],
         "permission_requirements": [
           "Security admin",
@@ -5811,7 +5811,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-006",
+        "checklist_id": "B01.01",
         "title": "Integrate centralized identity logging and Entra ID diagnostics",
         "priority": 6,
         "blast_radius": "High",
@@ -5822,8 +5822,8 @@
           "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1"
         ],
         "dependencies": [
-          "INIT-002",
-          "INIT-005"
+          "E01.01",
+          "G01.01"
         ],
         "permission_requirements": [
           "Entra ID admin",
@@ -5862,7 +5862,7 @@
         "30_days": [
           {
             "action": "Establish platform and landing zone management group hierarchy to enable policy inheritance and subscription organization",
-            "initiative_id": "INIT-001",
+            "checklist_id": "A01.01",
             "caf_discipline": "Govern",
             "dependency_on": [],
             "success_criteria": "Platform and landing zone management groups created and visible subscriptions placed correctly",
@@ -5870,7 +5870,7 @@
           },
           {
             "action": "Achieve centralized diagnostics and security visibility across all visible resources",
-            "initiative_id": "INIT-002",
+            "checklist_id": "E01.01",
             "caf_discipline": "Manage",
             "dependency_on": [],
             "success_criteria": "Diagnostics coverage exceeds 30% and logs are centralized",
@@ -5878,10 +5878,10 @@
           },
           {
             "action": "Apply baseline governance policies for public IP, resource compliance, and platform standards",
-            "initiative_id": "INIT-003",
+            "checklist_id": "F01.01",
             "caf_discipline": "Govern",
             "dependency_on": [
-              "INIT-001"
+              "A01.01"
             ],
             "success_criteria": "Policy compliance exceeds 50% and public IP governance enforced",
             "owner_role": "Cloud Governance Lead"
@@ -5890,22 +5890,22 @@
         "60_days": [
           {
             "action": "Implement hub-spoke network topology with centralized egress, DDoS protection, and east-west traffic inspection",
-            "initiative_id": "INIT-004",
+            "checklist_id": "D07.01",
             "caf_discipline": "Ready",
             "dependency_on": [
-              "INIT-001",
-              "INIT-002"
+              "A01.01",
+              "E01.01"
             ],
             "success_criteria": "Hub VNet, Azure Firewall, and DDoS Protection deployed; network segmentation achieved",
             "owner_role": "Network Architect"
           },
           {
             "action": "Expand Defender coverage to all supported resource types and enforce security baseline policies",
-            "initiative_id": "INIT-005",
+            "checklist_id": "G01.01",
             "caf_discipline": "Secure",
             "dependency_on": [
-              "INIT-002",
-              "INIT-003"
+              "E01.01",
+              "F01.01"
             ],
             "success_criteria": "Defender plans enabled for all eligible resources; security baseline policies enforced",
             "owner_role": "Security Architect"
@@ -5914,11 +5914,11 @@
         "90_days": [
           {
             "action": "Integrate centralized identity logging and Entra ID diagnostics for enhanced access visibility",
-            "initiative_id": "INIT-006",
+            "checklist_id": "B01.01",
             "caf_discipline": "Secure",
             "dependency_on": [
-              "INIT-002",
-              "INIT-005"
+              "E01.01",
+              "G01.01"
             ],
             "success_criteria": "Identity logs centralized and diagnostics coverage for Entra ID exceeds 50%",
             "owner_role": "Identity Architect"
@@ -5973,18 +5973,18 @@
       ],
       "parallel_execution_groups": [
         [
-          "INIT-001",
-          "INIT-002"
+          "A01.01",
+          "E01.01"
         ],
         [
-          "INIT-003"
+          "F01.01"
         ],
         [
-          "INIT-004",
-          "INIT-005"
+          "D07.01",
+          "G01.01"
         ],
         [
-          "INIT-006"
+          "B01.01"
         ]
       ],
       "maturity_trajectory": {
@@ -6007,7 +6007,7 @@
       "30_days": [
         {
           "action": "Establish platform and landing zone management group hierarchy to enable policy inheritance and subscription organization",
-          "initiative_id": "INIT-001",
+          "checklist_id": "A01.01",
           "caf_discipline": "Govern",
           "dependency_on": [],
           "success_criteria": "Platform and landing zone management groups created and visible subscriptions placed correctly",
@@ -6015,7 +6015,7 @@
         },
         {
           "action": "Achieve centralized diagnostics and security visibility across all visible resources",
-          "initiative_id": "INIT-002",
+          "checklist_id": "E01.01",
           "caf_discipline": "Manage",
           "dependency_on": [],
           "success_criteria": "Diagnostics coverage exceeds 30% and logs are centralized",
@@ -6023,10 +6023,10 @@
         },
         {
           "action": "Apply baseline governance policies for public IP, resource compliance, and platform standards",
-          "initiative_id": "INIT-003",
+          "checklist_id": "F01.01",
           "caf_discipline": "Govern",
           "dependency_on": [
-            "INIT-001"
+            "A01.01"
           ],
           "success_criteria": "Policy compliance exceeds 50% and public IP governance enforced",
           "owner_role": "Cloud Governance Lead"
@@ -6035,22 +6035,22 @@
       "60_days": [
         {
           "action": "Implement hub-spoke network topology with centralized egress, DDoS protection, and east-west traffic inspection",
-          "initiative_id": "INIT-004",
+          "checklist_id": "D07.01",
           "caf_discipline": "Ready",
           "dependency_on": [
-            "INIT-001",
-            "INIT-002"
+            "A01.01",
+            "E01.01"
           ],
           "success_criteria": "Hub VNet, Azure Firewall, and DDoS Protection deployed; network segmentation achieved",
           "owner_role": "Network Architect"
         },
         {
           "action": "Expand Defender coverage to all supported resource types and enforce security baseline policies",
-          "initiative_id": "INIT-005",
+          "checklist_id": "G01.01",
           "caf_discipline": "Secure",
           "dependency_on": [
-            "INIT-002",
-            "INIT-003"
+            "E01.01",
+            "F01.01"
           ],
           "success_criteria": "Defender plans enabled for all eligible resources; security baseline policies enforced",
           "owner_role": "Security Architect"
@@ -6059,11 +6059,11 @@
       "90_days": [
         {
           "action": "Integrate centralized identity logging and Entra ID diagnostics for enhanced access visibility",
-          "initiative_id": "INIT-006",
+          "checklist_id": "B01.01",
           "caf_discipline": "Secure",
           "dependency_on": [
-            "INIT-002",
-            "INIT-005"
+            "E01.01",
+            "G01.01"
           ],
           "success_criteria": "Identity logs centralized and diagnostics coverage for Entra ID exceeds 50%",
           "owner_role": "Identity Architect"
@@ -6118,18 +6118,18 @@
     ],
     "parallel_execution_groups": [
       [
-        "INIT-001",
-        "INIT-002"
+        "A01.01",
+        "E01.01"
       ],
       [
-        "INIT-003"
+        "F01.01"
       ],
       [
-        "INIT-004",
-        "INIT-005"
+        "D07.01",
+        "G01.01"
       ],
       [
-        "INIT-006"
+        "B01.01"
       ]
     ],
     "maturity_trajectory": {
@@ -6224,39 +6224,49 @@
           "category": "Governance",
           "description": "No Platform or Landing Zones management groups detected. Management group hierarchy is missing, preventing scalable governance and policy assignment.",
           "severity": "Critical",
-          "resolving_initiative": "INIT-001"
+          "resolving_checklist_ids": [
+            "F01.01"
+          ]
         },
         {
           "category": "Networking",
           "description": "No hub-spoke topology or Azure Firewall detected. This platform cannot support delegated landing zone connectivity or centralized egress policy.",
           "severity": "Critical",
-          "resolving_initiative": "INIT-002"
+          "resolving_checklist_ids": [
+            "D07.01"
+          ]
         },
         {
           "category": "Security",
           "description": "Platform diagnostics baseline missing. Diagnostics coverage is only 2.1%, and Defender for Cloud coverage is incomplete — operations teams cannot monitor workloads across landing zones.",
           "severity": "Critical",
-          "resolving_initiative": "INIT-003"
+          "resolving_checklist_ids": [
+            "G01.01"
+          ]
         },
         {
           "category": "Identity",
           "description": "Platform identity baseline missing. Entra ID logs are not centralized; PIM and break-glass accounts are not evidenced — blocks delegated identity governance for landing zones.",
           "severity": "Critical",
-          "resolving_initiative": "INIT-004"
+          "resolving_checklist_ids": [
+            "B01.01"
+          ]
         },
         {
           "category": "Management",
           "description": "No evidence of automated or documented subscription vending process. Scaling to 50+ subscriptions is infeasible without standardized provisioning.",
           "severity": "Critical",
-          "resolving_initiative": "INIT-005"
+          "resolving_checklist_ids": [
+            "E01.01"
+          ]
         }
       ],
-      "minimum_initiatives_required": [
-        "INIT-001",
-        "INIT-002",
-        "INIT-003",
-        "INIT-004",
-        "INIT-005"
+      "minimum_checklist_ids_required": [
+        "F01.01",
+        "D07.01",
+        "G01.01",
+        "B01.01",
+        "E01.01"
       ],
       "scaling_recommendations": [
         "Establish a management group hierarchy with dedicated Platform, Connectivity, Identity, and Landing Zones management groups to enable scalable governance.",
@@ -6271,7 +6281,7 @@
         "30_days": [
           {
             "action": "Establish platform and landing zone management group hierarchy to enable policy inheritance and subscription organization",
-            "initiative_id": "INIT-001",
+            "checklist_id": "A01.01",
             "caf_discipline": "Govern",
             "dependency_on": [],
             "success_criteria": "Platform and landing zone management groups created and visible subscriptions placed correctly",
@@ -6279,7 +6289,7 @@
           },
           {
             "action": "Achieve centralized diagnostics and security visibility across all visible resources",
-            "initiative_id": "INIT-002",
+            "checklist_id": "E01.01",
             "caf_discipline": "Manage",
             "dependency_on": [],
             "success_criteria": "Diagnostics coverage exceeds 30% and logs are centralized",
@@ -6287,10 +6297,10 @@
           },
           {
             "action": "Apply baseline governance policies for public IP, resource compliance, and platform standards",
-            "initiative_id": "INIT-003",
+            "checklist_id": "F01.01",
             "caf_discipline": "Govern",
             "dependency_on": [
-              "INIT-001"
+              "A01.01"
             ],
             "success_criteria": "Policy compliance exceeds 50% and public IP governance enforced",
             "owner_role": "Cloud Governance Lead"
@@ -6299,22 +6309,22 @@
         "60_days": [
           {
             "action": "Implement hub-spoke network topology with centralized egress, DDoS protection, and east-west traffic inspection",
-            "initiative_id": "INIT-004",
+            "checklist_id": "D07.01",
             "caf_discipline": "Ready",
             "dependency_on": [
-              "INIT-001",
-              "INIT-002"
+              "A01.01",
+              "E01.01"
             ],
             "success_criteria": "Hub VNet, Azure Firewall, and DDoS Protection deployed; network segmentation achieved",
             "owner_role": "Network Architect"
           },
           {
             "action": "Expand Defender coverage to all supported resource types and enforce security baseline policies",
-            "initiative_id": "INIT-005",
+            "checklist_id": "G01.01",
             "caf_discipline": "Secure",
             "dependency_on": [
-              "INIT-002",
-              "INIT-003"
+              "E01.01",
+              "F01.01"
             ],
             "success_criteria": "Defender plans enabled for all eligible resources; security baseline policies enforced",
             "owner_role": "Security Architect"
@@ -6323,11 +6333,11 @@
         "90_days": [
           {
             "action": "Integrate centralized identity logging and Entra ID diagnostics for enhanced access visibility",
-            "initiative_id": "INIT-006",
+            "checklist_id": "B01.01",
             "caf_discipline": "Secure",
             "dependency_on": [
-              "INIT-002",
-              "INIT-005"
+              "E01.01",
+              "G01.01"
             ],
             "success_criteria": "Identity logs centralized and diagnostics coverage for Entra ID exceeds 50%",
             "owner_role": "Identity Architect"
@@ -6382,18 +6392,18 @@
       ],
       "parallel_execution_groups": [
         [
-          "INIT-001",
-          "INIT-002"
+          "A01.01",
+          "E01.01"
         ],
         [
-          "INIT-003"
+          "F01.01"
         ],
         [
-          "INIT-004",
-          "INIT-005"
+          "D07.01",
+          "G01.01"
         ],
         [
-          "INIT-006"
+          "B01.01"
         ]
       ],
       "maturity_trajectory": {
@@ -6412,7 +6422,7 @@
     },
     "initiatives": [
       {
-        "initiative_id": "INIT-001",
+        "checklist_id": "A01.01",
         "title": "Establish platform and landing zone management group hierarchy",
         "priority": 1,
         "blast_radius": "High",
@@ -6454,7 +6464,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-002",
+        "checklist_id": "E01.01",
         "title": "Centralize diagnostics and security visibility",
         "priority": 2,
         "blast_radius": "High",
@@ -6498,7 +6508,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-003",
+        "checklist_id": "F01.01",
         "title": "Apply baseline governance policies",
         "priority": 3,
         "blast_radius": "High",
@@ -6509,7 +6519,7 @@
           "3c5a808d-c695-4c14-a63c-c7ab7a510e41"
         ],
         "dependencies": [
-          "INIT-001"
+          "A01.01"
         ],
         "permission_requirements": [
           "Management group policy admin"
@@ -6541,7 +6551,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-004",
+        "checklist_id": "D07.01",
         "title": "Implement hub-spoke network topology with centralized egress and DDoS protection",
         "priority": 4,
         "blast_radius": "High",
@@ -6554,8 +6564,8 @@
           "088137f5-e6c4-4cfd-9e50-4547c2447ec6"
         ],
         "dependencies": [
-          "INIT-001",
-          "INIT-002"
+          "A01.01",
+          "E01.01"
         ],
         "permission_requirements": [
           "Network contributor",
@@ -6589,7 +6599,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-005",
+        "checklist_id": "G01.01",
         "title": "Expand Defender coverage and enforce security baseline",
         "priority": 5,
         "blast_radius": "High",
@@ -6600,8 +6610,8 @@
           "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
         ],
         "dependencies": [
-          "INIT-002",
-          "INIT-003"
+          "E01.01",
+          "F01.01"
         ],
         "permission_requirements": [
           "Security admin",
@@ -6635,7 +6645,7 @@
         ]
       },
       {
-        "initiative_id": "INIT-006",
+        "checklist_id": "B01.01",
         "title": "Integrate centralized identity logging and Entra ID diagnostics",
         "priority": 6,
         "blast_radius": "High",
@@ -6646,8 +6656,8 @@
           "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1"
         ],
         "dependencies": [
-          "INIT-002",
-          "INIT-005"
+          "E01.01",
+          "G01.01"
         ],
         "permission_requirements": [
           "Entra ID admin",
@@ -6683,7 +6693,7 @@
     ],
     "implementation_backlog": [
       {
-        "initiative_id": "INIT-001",
+        "checklist_id": "A01.01",
         "implementation": {
           "bicep_modules": [
             {
@@ -6753,7 +6763,7 @@
         }
       },
       {
-        "initiative_id": "INIT-002",
+        "checklist_id": "E01.01",
         "implementation": {
           "bicep_modules": [
             {
@@ -6837,7 +6847,7 @@
         }
       },
       {
-        "initiative_id": "INIT-003",
+        "checklist_id": "F01.01",
         "implementation": {
           "bicep_modules": [
             {
@@ -6895,7 +6905,7 @@
         }
       },
       {
-        "initiative_id": "INIT-004",
+        "checklist_id": "D07.01",
         "implementation": {
           "bicep_modules": [
             {
@@ -7014,7 +7024,7 @@
         }
       },
       {
-        "initiative_id": "INIT-005",
+        "checklist_id": "G01.01",
         "implementation": {
           "bicep_modules": [
             {
@@ -7097,7 +7107,7 @@
         }
       },
       {
-        "initiative_id": "INIT-006",
+        "checklist_id": "B01.01",
         "implementation": {
           "bicep_modules": [
             {
@@ -8093,7 +8103,7 @@
     },
     "progress_analysis": {
       "velocity": "stalled",
-      "maturity_trend": "No previous run \u2014 baseline established.",
+      "maturity_trend": "No previous run — baseline established.",
       "recommended_next_initiative": ""
     },
     "_raw": {
@@ -8117,7 +8127,7 @@
           "30_days": [
             {
               "action": "Establish platform and landing zone management group hierarchy to enable policy inheritance and subscription organization",
-              "initiative_id": "INIT-001",
+              "checklist_id": "A01.01",
               "caf_discipline": "Govern",
               "dependency_on": [],
               "success_criteria": "Platform and landing zone management groups created and visible subscriptions placed correctly",
@@ -8125,7 +8135,7 @@
             },
             {
               "action": "Achieve centralized diagnostics and security visibility across all visible resources",
-              "initiative_id": "INIT-002",
+              "checklist_id": "E01.01",
               "caf_discipline": "Manage",
               "dependency_on": [],
               "success_criteria": "Diagnostics coverage exceeds 30% and logs are centralized",
@@ -8133,10 +8143,10 @@
             },
             {
               "action": "Apply baseline governance policies for public IP, resource compliance, and platform standards",
-              "initiative_id": "INIT-003",
+              "checklist_id": "F01.01",
               "caf_discipline": "Govern",
               "dependency_on": [
-                "INIT-001"
+                "A01.01"
               ],
               "success_criteria": "Policy compliance exceeds 50% and public IP governance enforced",
               "owner_role": "Cloud Governance Lead"
@@ -8145,22 +8155,22 @@
           "60_days": [
             {
               "action": "Implement hub-spoke network topology with centralized egress, DDoS protection, and east-west traffic inspection",
-              "initiative_id": "INIT-004",
+              "checklist_id": "D07.01",
               "caf_discipline": "Ready",
               "dependency_on": [
-                "INIT-001",
-                "INIT-002"
+                "A01.01",
+                "E01.01"
               ],
               "success_criteria": "Hub VNet, Azure Firewall, and DDoS Protection deployed; network segmentation achieved",
               "owner_role": "Network Architect"
             },
             {
               "action": "Expand Defender coverage to all supported resource types and enforce security baseline policies",
-              "initiative_id": "INIT-005",
+              "checklist_id": "G01.01",
               "caf_discipline": "Secure",
               "dependency_on": [
-                "INIT-002",
-                "INIT-003"
+                "E01.01",
+                "F01.01"
               ],
               "success_criteria": "Defender plans enabled for all eligible resources; security baseline policies enforced",
               "owner_role": "Security Architect"
@@ -8169,11 +8179,11 @@
           "90_days": [
             {
               "action": "Integrate centralized identity logging and Entra ID diagnostics for enhanced access visibility",
-              "initiative_id": "INIT-006",
+              "checklist_id": "B01.01",
               "caf_discipline": "Secure",
               "dependency_on": [
-                "INIT-002",
-                "INIT-005"
+                "E01.01",
+                "G01.01"
               ],
               "success_criteria": "Identity logs centralized and diagnostics coverage for Entra ID exceeds 50%",
               "owner_role": "Identity Architect"
@@ -8182,18 +8192,18 @@
         },
         "parallel_execution_groups": [
           [
-            "INIT-001",
-            "INIT-002"
+            "A01.01",
+            "E01.01"
           ],
           [
-            "INIT-003"
+            "F01.01"
           ],
           [
-            "INIT-004",
-            "INIT-005"
+            "D07.01",
+            "G01.01"
           ],
           [
-            "INIT-006"
+            "B01.01"
           ]
         ],
         "top_risks": [
@@ -8201,24 +8211,24 @@
             "title": "Absence of platform and landing zone management groups",
             "business_impact": "Inability to enforce governance, policy inheritance, and structured resource organization increases risk of uncontrolled cloud sprawl",
             "technical_cause": "No management group hierarchy detected under tenant root",
-            "initiative_id": "INIT-001"
+            "checklist_id": "A01.01"
           },
           {
             "title": "Low diagnostics and security visibility",
             "business_impact": "Limited operational insight and delayed threat detection increase risk of undetected incidents",
             "technical_cause": "Diagnostics coverage at 2.1%; logs not centralized",
-            "initiative_id": "INIT-002"
+            "checklist_id": "E01.01"
           },
           {
             "title": "Lack of hub-spoke topology and egress control",
             "business_impact": "Flat network increases exposure to lateral movement and external threats",
             "technical_cause": "No hub VNet or Azure Firewall detected; DDoS protection missing",
-            "initiative_id": "INIT-004"
+            "checklist_id": "D07.01"
           }
         ],
         "initiative_execution_plan": [
           {
-            "initiative_id": "INIT-001",
+            "checklist_id": "A01.01",
             "title": "Establish platform and landing zone management group hierarchy",
             "priority": 1,
             "blast_radius": "High",
@@ -8260,7 +8270,7 @@
             ]
           },
           {
-            "initiative_id": "INIT-002",
+            "checklist_id": "E01.01",
             "title": "Centralize diagnostics and security visibility",
             "priority": 2,
             "blast_radius": "High",
@@ -8304,7 +8314,7 @@
             ]
           },
           {
-            "initiative_id": "INIT-003",
+            "checklist_id": "F01.01",
             "title": "Apply baseline governance policies",
             "priority": 3,
             "blast_radius": "High",
@@ -8315,7 +8325,7 @@
               "3c5a808d-c695-4c14-a63c-c7ab7a510e41"
             ],
             "dependencies": [
-              "INIT-001"
+              "A01.01"
             ],
             "permission_requirements": [
               "Management group policy admin"
@@ -8347,7 +8357,7 @@
             ]
           },
           {
-            "initiative_id": "INIT-004",
+            "checklist_id": "D07.01",
             "title": "Implement hub-spoke network topology with centralized egress and DDoS protection",
             "priority": 4,
             "blast_radius": "High",
@@ -8360,8 +8370,8 @@
               "088137f5-e6c4-4cfd-9e50-4547c2447ec6"
             ],
             "dependencies": [
-              "INIT-001",
-              "INIT-002"
+              "A01.01",
+              "E01.01"
             ],
             "permission_requirements": [
               "Network contributor",
@@ -8395,7 +8405,7 @@
             ]
           },
           {
-            "initiative_id": "INIT-005",
+            "checklist_id": "G01.01",
             "title": "Expand Defender coverage and enforce security baseline",
             "priority": 5,
             "blast_radius": "High",
@@ -8406,8 +8416,8 @@
               "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
             ],
             "dependencies": [
-              "INIT-002",
-              "INIT-003"
+              "E01.01",
+              "F01.01"
             ],
             "permission_requirements": [
               "Security admin",
@@ -8441,7 +8451,7 @@
             ]
           },
           {
-            "initiative_id": "INIT-006",
+            "checklist_id": "B01.01",
             "title": "Integrate centralized identity logging and Entra ID diagnostics",
             "priority": 6,
             "blast_radius": "High",
@@ -8452,8 +8462,8 @@
               "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1"
             ],
             "dependencies": [
-              "INIT-002",
-              "INIT-005"
+              "E01.01",
+              "G01.01"
             ],
             "permission_requirements": [
               "Entra ID admin",
@@ -8492,7 +8502,7 @@
             {
               "epic_id": "EPIC-001",
               "title": "Platform and Landing Zone Governance",
-              "initiative_id": "INIT-001",
+              "checklist_id": "A01.01",
               "capabilities": [
                 {
                   "capability": "Management group structure",
@@ -8507,7 +8517,7 @@
             {
               "epic_id": "EPIC-002",
               "title": "Centralized Diagnostics and Security Visibility",
-              "initiative_id": "INIT-002",
+              "checklist_id": "E01.01",
               "capabilities": [
                 {
                   "capability": "Diagnostics onboarding",
@@ -8522,7 +8532,7 @@
             {
               "epic_id": "EPIC-003",
               "title": "Baseline Governance Policy Enforcement",
-              "initiative_id": "INIT-003",
+              "checklist_id": "F01.01",
               "capabilities": [
                 {
                   "capability": "Policy baseline",
@@ -8537,7 +8547,7 @@
             {
               "epic_id": "EPIC-004",
               "title": "Hub-Spoke Network Topology and Egress Control",
-              "initiative_id": "INIT-004",
+              "checklist_id": "D07.01",
               "capabilities": [
                 {
                   "capability": "Network architecture",
@@ -8553,7 +8563,7 @@
             {
               "epic_id": "EPIC-005",
               "title": "Defender Coverage and Security Baseline",
-              "initiative_id": "INIT-005",
+              "checklist_id": "G01.01",
               "capabilities": [
                 {
                   "capability": "Security baseline",
@@ -8568,7 +8578,7 @@
             {
               "epic_id": "EPIC-006",
               "title": "Centralized Identity Logging and Diagnostics",
-              "initiative_id": "INIT-006",
+              "checklist_id": "B01.01",
               "capabilities": [
                 {
                   "capability": "Identity diagnostics",
@@ -8810,12 +8820,12 @@
             {
               "title": "Implement controls and principles in SLZ",
               "url": "",
-              "excerpt": "# Implement controls and principles in SLZ\n## Management Group hierarchy in SLZ\n| Management Group | Parent Management Group | Data classification most suited | Networking model | Controls| \n|  --- | --- | --- | --- | ---  |\n| `Public` | `Landing Zones` | Public/General | Internet only, no Layer 3 connectivity to other application landing zone subscriptions | ALZ defaults + Organization specific |\n| `Online` | `Landing Zones` | General/Confidential | Internet, with controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults + L1 + L2 + Organization specific |\n| `Corp` | `Landing Zones` | General/Confidential | Internal only, controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults + L1 + L2 + Organization specific |\n| `Confidential Online` | `Landing Zones` | Highly Confidential/Secret | Internet, controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults + L1 + L2 + L3 + Organization specific |\n| `Confidential Corp` | `Landing Zones` | Highly Confidential/Secret | Internal only, controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults+ L1 + L2 + L3 + Organization specific |\n\nTip\nYou can find information on defining your organization's data classification model in the [Well-Architected Framework: Architecture strategies for data classification](https://learn.microsoft.com/en-us/azure/well-architected/security/data-classification).\n#### Public\nAs most sovereign controls apply to business workloads, the Public management group is introduced to host publicly available information. Publicly available information shouldn't be restricted by sovereign controls such as data residency or encryption at rest or in use, which is why this management group has only standard security policies. While services hosted in this management group are less restricted, it's recommended not to allow any private network connectivity from these workloads into the Online/Corp and Confidential Online/Confidential Corp services. Any required communication should follow a zero-trust principle. In some cases, it might be possible to use private endpoints from services hosted in these management groups to make them available to Public management group\u2013hosted applications. Otherwise, API calls to workloads in Online and Confidential Online are also possible. These network restrictions help ensure full isolation between sovereign and highly controlled workloads and publicly available services.\n#### Online / Confidential Online"
+              "excerpt": "# Implement controls and principles in SLZ\n## Management Group hierarchy in SLZ\n| Management Group | Parent Management Group | Data classification most suited | Networking model | Controls| \n|  --- | --- | --- | --- | ---  |\n| `Public` | `Landing Zones` | Public/General | Internet only, no Layer 3 connectivity to other application landing zone subscriptions | ALZ defaults + Organization specific |\n| `Online` | `Landing Zones` | General/Confidential | Internet, with controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults + L1 + L2 + Organization specific |\n| `Corp` | `Landing Zones` | General/Confidential | Internal only, controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults + L1 + L2 + Organization specific |\n| `Confidential Online` | `Landing Zones` | Highly Confidential/Secret | Internet, controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults + L1 + L2 + L3 + Organization specific |\n| `Confidential Corp` | `Landing Zones` | Highly Confidential/Secret | Internal only, controlled connectivity via the connectivity hub to other application landing zone subscriptions | ALZ defaults+ L1 + L2 + L3 + Organization specific |\n\nTip\nYou can find information on defining your organization's data classification model in the [Well-Architected Framework: Architecture strategies for data classification](https://learn.microsoft.com/en-us/azure/well-architected/security/data-classification).\n#### Public\nAs most sovereign controls apply to business workloads, the Public management group is introduced to host publicly available information. Publicly available information shouldn't be restricted by sovereign controls such as data residency or encryption at rest or in use, which is why this management group has only standard security policies. While services hosted in this management group are less restricted, it's recommended not to allow any private network connectivity from these workloads into the Online/Corp and Confidential Online/Confidential Corp services. Any required communication should follow a zero-trust principle. In some cases, it might be possible to use private endpoints from services hosted in these management groups to make them available to Public management group–hosted applications. Otherwise, API calls to workloads in Online and Confidential Online are also possible. These network restrictions help ensure full isolation between sovereign and highly controlled workloads and publicly available services.\n#### Online / Confidential Online"
             },
             {
               "title": "Design area: Azure governance",
               "url": "",
-              "excerpt": "# Design area: Azure governance\n## Design area review\nThe [Azure landing zones Bicep\u2014Deployment flow](https://github.com/Azure/ALZ-Bicep/wiki/DeploymentFlow) repository contains Bicep deployment templates that can accelerate your greenfield and brownfield Azure landing zone deployments. These templates have integrated Microsoft proven-practice governance guidance.\nConsider using the [Azure landing zone default policy assignments](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/modules/policy/assignments/alzDefaults) Bicep module to get a head start on ensuring compliance for your Azure environments.\nFor more information, see [Brownfield environment considerations](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/brownfield-considerations).\n## Design area overview\nYour organization's cloud adoption journey starts with strong controls for government environments.\nGovernance provides mechanisms and processes for maintaining control over platforms, applications, and resources in Azure.\n[![Diagram that shows the landing zone governance design.](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/enterprise-scale/media/lz-design.png)](../../enterprise-scale/media/lz-design.png#lightbox)\nExplore the following considerations and recommendations to make informed decisions as you plan your landing zone.\nThe governance design area focuses on design decisions for your landing zone. For information about governance processes and tools, see [Govern in the Cloud Adoption Framework for Azure](https://learn.microsoft.com/azure/cloud-adoption-framework/govern/)."
+              "excerpt": "# Design area: Azure governance\n## Design area review\nThe [Azure landing zones Bicep—Deployment flow](https://github.com/Azure/ALZ-Bicep/wiki/DeploymentFlow) repository contains Bicep deployment templates that can accelerate your greenfield and brownfield Azure landing zone deployments. These templates have integrated Microsoft proven-practice governance guidance.\nConsider using the [Azure landing zone default policy assignments](https://github.com/Azure/ALZ-Bicep/tree/main/infra-as-code/bicep/modules/policy/assignments/alzDefaults) Bicep module to get a head start on ensuring compliance for your Azure environments.\nFor more information, see [Brownfield environment considerations](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/brownfield-considerations).\n## Design area overview\nYour organization's cloud adoption journey starts with strong controls for government environments.\nGovernance provides mechanisms and processes for maintaining control over platforms, applications, and resources in Azure.\n[![Diagram that shows the landing zone governance design.](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/enterprise-scale/media/lz-design.png)](../../enterprise-scale/media/lz-design.png#lightbox)\nExplore the following considerations and recommendations to make informed decisions as you plan your landing zone.\nThe governance design area focuses on design decisions for your landing zone. For information about governance processes and tools, see [Govern in the Cloud Adoption Framework for Azure](https://learn.microsoft.com/azure/cloud-adoption-framework/govern/)."
             }
           ]
         },
@@ -8868,7 +8878,7 @@
         "initiatives": [
           {
             "title": "Establish platform and landing zone management group hierarchy",
-            "initiative_id": "INIT-001",
+            "checklist_id": "A01.01",
             "references": [
               {
                 "title": "Azure Virtual Machines baseline architecture in an Azure landing zone",
@@ -8886,7 +8896,7 @@
           },
           {
             "title": "Centralize diagnostics and security visibility",
-            "initiative_id": "INIT-002",
+            "checklist_id": "E01.01",
             "references": [
               {
                 "title": "Design area: Security",
@@ -8904,7 +8914,7 @@
           },
           {
             "title": "Apply baseline governance policies",
-            "initiative_id": "INIT-003",
+            "checklist_id": "F01.01",
             "references": [
               {
                 "title": "Management groups",
@@ -8922,7 +8932,7 @@
           },
           {
             "title": "Implement hub-spoke network topology with centralized egress and DDoS protection",
-            "initiative_id": "INIT-004",
+            "checklist_id": "D07.01",
             "references": [
               {
                 "title": "Hub-spoke network topology in Azure",
@@ -8940,7 +8950,7 @@
           },
           {
             "title": "Expand Defender coverage and enforce security baseline",
-            "initiative_id": "INIT-005",
+            "checklist_id": "G01.01",
             "references": [
               {
                 "title": "Design area: Security",
@@ -8958,7 +8968,7 @@
           },
           {
             "title": "Integrate centralized identity logging and Entra ID diagnostics",
-            "initiative_id": "INIT-006",
+            "checklist_id": "B01.01",
             "references": [
               {
                 "title": "Hybrid identity with Active Directory and Microsoft Entra ID in Azure landing zones",

@@ -103,10 +103,10 @@ def sample_signals():
 
 @pytest.fixture
 def sample_initiatives():
-    """Minimal initiative list for testing."""
+    """Minimal remediation item list for testing."""
     return [
         {
-            "initiative_id": "INIT-001",
+            "checklist_id": "D07.01",
             "title": "Deploy hub-spoke network with Azure Firewall",
             "priority": 1,
             "blast_radius": "High",
@@ -115,22 +115,22 @@ def sample_initiatives():
             "dependencies": [],
         },
         {
-            "initiative_id": "INIT-002",
+            "checklist_id": "E01.01",
             "title": "Centralise logging and monitoring",
             "priority": 2,
             "blast_radius": "High",
             "caf_discipline": "Management",
             "controls": ["CTRL-MGMT-001"],
-            "dependencies": ["INIT-001"],
+            "dependencies": ["D07.01"],
         },
         {
-            "initiative_id": "INIT-003",
+            "checklist_id": "F01.01",
             "title": "Enable Microsoft Defender for Cloud",
             "priority": 3,
             "blast_radius": "Medium",
             "caf_discipline": "Security",
             "controls": ["CTRL-SEC-001"],
-            "dependencies": ["INIT-002"],
+            "dependencies": ["E01.01"],
         },
     ]
 
@@ -152,10 +152,10 @@ def sample_top_risks():
 def sample_blockers():
     return [
         {
-            "category": "Network",
+            "category": "Networking",
             "description": "No hub-spoke topology",
             "severity": "Critical",
-            "resolving_initiative": "INIT-001",
+            "resolving_checklist_ids": ["D07.01"],
         },
     ]
 
@@ -426,7 +426,7 @@ class TestDecisionImpact:
         )
         assert len(dim1["items"]) == len(dim2["items"])
         for i1, i2 in zip(dim1["items"], dim2["items"]):
-            assert i1["initiative_id"] == i2["initiative_id"]
+            assert i1["checklist_id"] == i2["checklist_id"]
             assert i1["confidence"]["value"] == i2["confidence"]["value"]
 
     def test_all_items_have_evidence_refs(self, sample_initiatives, sample_results,
@@ -437,7 +437,7 @@ class TestDecisionImpact:
             sample_blockers, sample_section_scores, sample_signals,
         )
         for item in dim["items"]:
-            violations = validate_evidence_refs(item, f"DIM[{item['initiative_id']}]")
+            violations = validate_evidence_refs(item, f"DIM[{item['checklist_id']}]")
             assert violations == [], f"Violations: {violations}"
 
     def test_blocker_maps_to_enterprise_blocked(self, sample_initiatives, sample_results,
@@ -447,8 +447,8 @@ class TestDecisionImpact:
             sample_initiatives, sample_results, sample_top_risks,
             sample_blockers, sample_section_scores, sample_signals,
         )
-        init001 = next(i for i in dim["items"] if i["initiative_id"] == "INIT-001")
-        assert init001["if_not_implemented"]["enterprise_scale_blocked"] is True
+        item_d07 = next(i for i in dim["items"] if i["checklist_id"] == "D07.01")
+        assert item_d07["if_not_implemented"]["enterprise_scale_blocked"] is True
 
     def test_dependency_blocking(self, sample_initiatives, sample_results,
                                   sample_top_risks, sample_blockers,
@@ -457,8 +457,8 @@ class TestDecisionImpact:
             sample_initiatives, sample_results, sample_top_risks,
             sample_blockers, sample_section_scores, sample_signals,
         )
-        init001 = next(i for i in dim["items"] if i["initiative_id"] == "INIT-001")
-        assert "INIT-002" in init001["if_not_implemented"]["blocked_initiatives"]
+        item_d07 = next(i for i in dim["items"] if i["checklist_id"] == "D07.01")
+        assert "E01.01" in item_d07["if_not_implemented"]["blocked_items"]
 
 
 # ── T-9: cost simulation no dollars in category mode ─────────────
@@ -485,7 +485,7 @@ class TestCostSimulationIntegration:
     def test_all_drivers_have_evidence_refs(self, sample_initiatives, sample_results):
         sim = build_cost_simulation(sample_initiatives, sample_results)
         for driver in sim["drivers"]:
-            violations = validate_evidence_refs(driver, f"cost[{driver['initiative_id']}]")
+            violations = validate_evidence_refs(driver, f"cost[{driver['checklist_id']}]")
             assert violations == [], f"Violations: {violations}"
 
 

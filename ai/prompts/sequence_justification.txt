@@ -16,17 +16,17 @@ Return ONLY valid JSON matching this schema:
   "sequence_rationale": "High-level narrative: why this order maximizes platform value and minimizes risk",
   "dependency_chain": [
     {
-      "initiative_id": "INIT-001",
+      "checklist_id": "A01.01",
       "title": "...",
       "position_justification": "Why this runs at position N — what it needs, what it enables",
-      "blocks": ["INIT-IDs that cannot start until this completes"],
-      "blocked_by": ["INIT-IDs that must complete before this can start"],
+      "blocks": ["checklist_ids that cannot start until this completes"],
+      "blocked_by": ["checklist_ids that must complete before this can start"],
       "capability_unlocked": "Platform capability enabled on completion"
     }
   ],
   "parallel_opportunities": [
-    ["INIT-001", "INIT-002"],
-    ["INIT-003", "INIT-004"]
+    ["A01.01", "A01.02"],
+    ["B02.01", "B02.03"]
   ],
   "platform_prerequisites": [
     "Conditions that must be true before the roadmap starts (e.g. tenant root access, Entra P2 licensing)"
@@ -41,7 +41,7 @@ Return ONLY valid JSON matching this schema:
       "topic": "Specific topic for the engagement",
       "alz_design_area": "One of the 8 official ALZ design areas",
       "justification": "Why this engagement is needed based on assessment findings",
-      "initiatives_addressed": ["INIT-IDs this engagement supports"],
+      "initiatives_addressed": ["checklist_ids this engagement supports"],
       "priority": "High | Medium | Low"
     }
   ]

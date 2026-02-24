@@ -1,4 +1,4 @@
-"""Cost Simulation — category-based cost drivers per initiative.
+"""Cost Simulation — category-based cost drivers per remediation item.
 
 Two modes:
   - "tool_backed"   : compute from MCP pricing tool SKU data (when available)
@@ -111,12 +111,12 @@ INITIATIVE_RESOURCE_PATTERNS: dict[str, list[str]] = {
 }
 
 
-def _infer_resources(initiative: dict) -> list[str]:
-    """Infer which Azure resources an initiative would introduce."""
-    title = (initiative.get("title") or "").lower()
-    controls = initiative.get("controls", [])
-    caf = (initiative.get("caf_discipline") or "").lower()
-    selected_pattern = (initiative.get("selected_pattern") or "").lower()
+def _infer_resources(item: dict) -> list[str]:
+    """Infer which Azure resources a remediation item would introduce."""
+    title = (item.get("title") or item.get("checklist_title") or "").lower()
+    controls = item.get("controls", [])
+    caf = (item.get("caf_discipline") or item.get("waf") or "").lower()
+    selected_pattern = (item.get("selected_pattern") or "").lower()
 
     search_text = f"{title} {caf} {selected_pattern} {' '.join(controls)}"
 
@@ -129,19 +129,19 @@ def _infer_resources(initiative: dict) -> list[str]:
 
 
 def build_cost_simulation(
-    initiatives: list[dict],
+    items: list[dict],
     results: list[dict],
     mcp_pricing_available: bool = False,
 ) -> dict:
     """
-    Build cost simulation with per-initiative cost drivers.
+    Build cost simulation with per-item cost drivers.
 
     If MCP pricing tool is unavailable, outputs category labels only.
 
     Parameters
     ----------
-    initiatives : list[dict]
-        Initiative list from the roadmap.
+    items : list[dict]
+        Remediation items (each with checklist_id, controls, etc.).
     results : list[dict]
         Assessment control results.
     mcp_pricing_available : bool
@@ -154,9 +154,9 @@ def build_cost_simulation(
     mode = "tool_backed" if mcp_pricing_available else "category_only"
 
     drivers = []
-    for init in initiatives:
-        init_id = init.get("initiative_id", "")
-        resources = _infer_resources(init)
+    for item in items:
+        cid = item.get("checklist_id", "")
+        resources = _infer_resources(item)
 
         if not resources:
             continue
@@ -177,16 +177,16 @@ def build_cost_simulation(
         else:
             combined_category = "Low"
 
-        # Evidence: controls affected by this initiative
-        init_controls = init.get("controls", [])
+        # Evidence: controls affected by this item
+        item_controls = item.get("controls", [])
 
         driver = {
-            "initiative_id": init_id,
+            "checklist_id": cid,
             "resources_introduced": resources,
             "billing_meters": list(set(billing_meters)),
             "estimated_monthly_category": combined_category,
             "evidence_refs": {
-                "controls": init_controls[:10],
+                "controls": item_controls[:10],
                 "risks": [],
                 "blockers": [],
                 "signals": [],

@@ -12,7 +12,7 @@ Return ONLY valid JSON matching this schema:
 {
   "implementation_decisions": [
     {
-      "initiative_id": "INIT-001",
+      "checklist_id": "A01.01",
       "initiative_title": "...",
       "recommended_pattern": "The pattern_name from the options list",
       "alz_module": "The ALZ Bicep module path (e.g. ALZ-Bicep/modules/hubNetworking)",
@@ -31,7 +31,7 @@ Rules:
 - Select EXACTLY ONE pattern per initiative from the provided options
 - If no provided option fits, describe a custom pattern but still reference ALZ modules
 - Justify every selection with SPECIFIC assessment evidence (section scores, gap IDs, maturity data)
-- Prerequisites must reference real initiative IDs or platform conditions
+- Prerequisites must reference real checklist_ids or platform conditions
 - capability_unlocked must describe a CONCRETE platform outcome, not a generic benefit
 - operating_model_impact must name specific roles (Platform Engineering, Security, Identity, Network)
 - next_engagement_alignment must be one of: CSA Workshop, Architecture Review, PoC, Deployment Assistance, Health Check
