@@ -63,7 +63,7 @@ Return ONLY valid JSON matching this schema:
       "alz_design_area": "One of the 8 official ALZ design areas",
       "why_it_matters": "...",
       "success_criteria": "...",
-      "controls": ["control_id"],
+      "controls": ["control_id (use EXACT 8-char keys from the control pack e.g. 'e6c4cfd3', 'storage-', 'rbac-hyg')"],
       "dependencies": ["B02.03"],
       "permission_requirements": ["..."],
       "owner_role": "...",
@@ -111,6 +111,12 @@ Return ONLY valid JSON matching this schema:
 CRITICAL: Use the checklist_id from the ALZ review-checklists (e.g. A01.01, B02.03).
 Do NOT generate synthetic IDs like INIT-001. The checklist_id is the canonical identifier.
 Use depends_on arrays with checklist_id references, not free-text action strings.
+
+CONTROL IDs: The "controls" array must use EXACT 8-character canonical keys from
+the control pack (e.g. "e6c4cfd3", "storage-", "rbac-hyg", "cost-for", "monitor-").
+Do NOT use long-form IDs like "storage-posture-001" or full UUIDs.
+Each key is an 8-character truncated identifier — use it exactly as provided in the
+assessment data.
 
 Write outcomes, not tasks.
 Actions must begin with a measurable platform outcome.

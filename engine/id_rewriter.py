@@ -5,15 +5,20 @@ removed.  Checklist IDs from the Azure review-checklists repository are now
 the canonical identifiers.
 
 Retained utilities:
-  - ``clamp_readiness_score``   — clamp readiness score to valid range
-  - ``patch_blocker_items``     — patch blockers with resolving checklist_id
+  - ``normalize_control_ids``       — canonical control ID normalization at AI ingestion
+  - ``clamp_readiness_score``       — clamp readiness score to valid range
+  - ``patch_blocker_items``         — patch blockers with resolving checklist_id
   - ``validate_pipeline_integrity`` — structural integrity check suite
 """
 from __future__ import annotations
 
+import json
+import logging
 import re
+from pathlib import Path
 from typing import Any
 
+log = logging.getLogger(__name__)
 
 # Valid checklist_id pattern: letter(s) + digits + dot + digits (e.g. A01.01)
 _CHECKLIST_ID_RE = re.compile(r"^[A-Z]\d{2}\.\d{2}$")
@@ -31,6 +36,156 @@ _SYNTHETIC_ID_PATTERNS = [
 def is_synthetic_id(value: str) -> bool:
     """Return True if the value matches a known synthetic ID pattern."""
     return any(p.match(value) for p in _SYNTHETIC_ID_PATTERNS)
+
+
+# ── Canonical Control ID Normalization ────────────────────────────
+# The deterministic layer must never tolerate identifier drift.
+# AI output may emit full-length control IDs (e.g. "cost-forecast-001",
+# "e6c4cfd3-e504-4547-a244-7ec66138a720") but the canonical control
+# pack uses 8-character truncated keys (e.g. "cost-for", "e6c4cfd3").
+#
+# Strategy:
+#   1. Exact match     → keep as-is (already canonical)
+#   2. Prefix match    → rewrite to canonical key (first 8 chars match
+#                         exactly one canonical key)
+#   3. Ambiguous/none  → reject with structural violation
+
+_CONTROLS_JSON_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "control_packs" / "alz" / "v1.0" / "controls.json"
+)
+
+_CANONICAL_KEYS: set[str] | None = None
+
+
+def _load_canonical_keys() -> set[str]:
+    """Load the set of canonical control keys from controls.json (cached)."""
+    global _CANONICAL_KEYS
+    if _CANONICAL_KEYS is None:
+        with open(_CONTROLS_JSON_PATH, encoding="utf-8") as f:
+            pack = json.load(f)
+        _CANONICAL_KEYS = set(pack.get("controls", {}).keys())
+    return _CANONICAL_KEYS
+
+
+def _resolve_control_id(raw_id: str, canonical_keys: set[str]) -> tuple[str, str]:
+    """Resolve a single raw control ID to its canonical form.
+
+    Returns
+    -------
+    tuple[str, str]
+        (resolved_id, status) where status is one of:
+        - "exact"    — already canonical
+        - "prefix"   — resolved via 8-char prefix
+        - "reject"   — no match or ambiguous match
+    """
+    # 1. Exact match
+    if raw_id in canonical_keys:
+        return raw_id, "exact"
+
+    # 2. Prefix match — the canonical keys are 8-char truncated.
+    #    Take the first 8 characters of the raw ID and check for a
+    #    unique match among canonical keys.
+    prefix = raw_id[:8]
+    matches = [k for k in canonical_keys if k == prefix]
+    if len(matches) == 1:
+        return matches[0], "prefix"
+
+    # 3. No match
+    return raw_id, "reject"
+
+
+def normalize_control_ids(
+    items: list[dict],
+    canonical_keys: set[str] | None = None,
+) -> list[str]:
+    """Normalize control IDs in AI-generated items to canonical 8-char keys.
+
+    Modifies items in-place.  Each item's ``controls`` list is rewritten
+    so that every entry is a canonical key from ``controls.json``.
+
+    Rejected IDs are removed from the controls list and recorded as
+    pipeline violations.
+
+    Parameters
+    ----------
+    items : list[dict]
+        Remediation items from the AI roadmap pass, each with a
+        ``controls`` list.
+    canonical_keys : set[str], optional
+        The canonical control keys.  If *None*, loads from
+        ``controls.json``.
+
+    Returns
+    -------
+    list[str]
+        Pipeline violation messages for rejected or rewritten IDs.
+    """
+    if canonical_keys is None:
+        canonical_keys = _load_canonical_keys()
+
+    violations: list[str] = []
+    total_exact = 0
+    total_prefix = 0
+    total_reject = 0
+
+    for item in items:
+        raw_controls = item.get("controls", [])
+        if not raw_controls:
+            continue
+
+        normalized: list[str] = []
+        item_id = item.get("checklist_id", item.get("initiative_id", "UNKNOWN"))
+
+        for raw_id in raw_controls:
+            resolved, status = _resolve_control_id(raw_id, canonical_keys)
+
+            if status == "exact":
+                normalized.append(resolved)
+                total_exact += 1
+
+            elif status == "prefix":
+                normalized.append(resolved)
+                total_prefix += 1
+                log.info(
+                    "Control ID normalized: '%s' → '%s' (item %s)",
+                    raw_id, resolved, item_id,
+                )
+                violations.append(
+                    f"CONTROL_ID_NORMALIZED: '{raw_id}' → '{resolved}' "
+                    f"in item {item_id} (prefix match)"
+                )
+
+            else:  # reject
+                total_reject += 1
+                log.warning(
+                    "Control ID rejected: '%s' in item %s — "
+                    "no canonical match found",
+                    raw_id, item_id,
+                )
+                violations.append(
+                    f"CONTROL_ID_REJECTED: '{raw_id}' in item {item_id} — "
+                    f"no canonical match in controls.json"
+                )
+
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for cid in normalized:
+            if cid not in seen:
+                seen.add(cid)
+                deduped.append(cid)
+
+        item["controls"] = deduped
+
+    # Summary log
+    print(
+        f"        → control ID normalization: "
+        f"{total_exact} exact, {total_prefix} prefix-resolved, "
+        f"{total_reject} rejected"
+    )
+
+    return violations
 
 
 def patch_blocker_items(

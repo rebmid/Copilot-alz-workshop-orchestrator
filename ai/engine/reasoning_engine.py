@@ -132,6 +132,16 @@ class ReasoningEngine:
                                 roadmap_raw.get("initiative_execution_plan", []))
         print(f"        → {len(items)} remediation item(s)")
 
+        # ── 1b. Canonical control ID normalization ────────────────
+        # AI may emit full-length control IDs (e.g. "storage-posture-001",
+        # "e6c4cfd3-e504-4547-...").  Normalize to canonical 8-char keys
+        # from controls.json BEFORE any downstream processing.
+        from engine.id_rewriter import normalize_control_ids
+        _control_id_violations: list[str] = []
+        if items:
+            print("        Normalizing control IDs to canonical keys …")
+            _control_id_violations = normalize_control_ids(items)
+
         # ── 2. Executive briefing ─────────────────────────────────
         print(f"  [2/{total_passes}] Generating executive briefing …")
         executive = self._safe_run(
@@ -482,6 +492,9 @@ class ReasoningEngine:
         # Merge checklist grounding violations
         if _checklist_violations:
             _pipeline_violations.extend(_checklist_violations)
+        # Merge control ID normalization violations
+        if _control_id_violations:
+            _pipeline_violations.extend(_control_id_violations)
 
         # ── Assemble unified output ───────────────────────────────
         output: dict[str, Any] = {
