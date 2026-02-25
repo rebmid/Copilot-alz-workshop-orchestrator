@@ -8,17 +8,30 @@
 
 import asyncio
 import json
+import os
+import subprocess
 import sys
 
 from copilot import CopilotClient, Tool, ToolResult
 
 # ── Import the 4 handler functions from the tool layer ───────────
-from workshop_tools import (
+from src.workshop_tools import (
     run_scan      as _handle_run_scan,
     load_results  as _handle_load_results,
     summarize_findings as _handle_summarize_findings,
     generate_outputs   as _handle_generate_outputs,
+    _load_cached,
 )
+
+# ══════════════════════════════════════════════════════════════════
+# Session-level cache
+# ──────────────────────────────────────────────────────────────────
+# After run_scan or load_results, we remember the active run so that
+# subsequent summarize / generate calls can omit run_id.
+# ══════════════════════════════════════════════════════════════════
+
+active_run_id:  str  | None = None
+active_results: dict | None = None
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -32,7 +45,7 @@ from workshop_tools import (
 # in a ToolResult.
 # ══════════════════════════════════════════════════════════════════
 
-from workshop_tools import (
+from src.workshop_tools import (
     RunScanParams,
     LoadResultsParams,
     SummarizeFindingsParams,
@@ -41,6 +54,7 @@ from workshop_tools import (
 
 
 def _handler_run_scan(invocation) -> ToolResult:
+    global active_run_id, active_results
     args = invocation.get("arguments", {})
     params = RunScanParams(
         scope=args.get("scope"),
@@ -48,22 +62,45 @@ def _handler_run_scan(invocation) -> ToolResult:
         tag=args.get("tag"),
     )
     result = _handle_run_scan(params)
+
+    # ── Populate session cache ────────────────────────────────
+    try:
+        payload = json.loads(result)
+        rid = payload.get("run_id")
+        if rid:
+            active_run_id = rid
+            active_results = _load_cached(rid)
+    except (json.JSONDecodeError, Exception):
+        pass  # scan may have returned an error — leave cache unchanged
+
     return ToolResult(content=result)
 
 
 def _handler_load_results(invocation) -> ToolResult:
+    global active_run_id, active_results
     args = invocation.get("arguments", {})
-    params = LoadResultsParams(
-        run_id=args.get("run_id", "latest"),
-    )
+    run_id = args.get("run_id", "latest")
+    params = LoadResultsParams(run_id=run_id)
     result = _handle_load_results(params)
+
+    # ── Populate session cache ────────────────────────────────
+    try:
+        payload = json.loads(result)
+        rid = payload.get("run_id")
+        if rid:
+            active_run_id = rid
+            active_results = _load_cached(rid)
+    except (json.JSONDecodeError, Exception):
+        pass
+
     return ToolResult(content=result)
 
 
 def _handler_summarize_findings(invocation) -> ToolResult:
     args = invocation.get("arguments", {})
+    run_id = args.get("run_id") or active_run_id or "latest"
     params = SummarizeFindingsParams(
-        run_id=args.get("run_id", "latest"),
+        run_id=run_id,
         design_area=args.get("design_area"),
         severity=args.get("severity"),
         failed_only=args.get("failed_only", False),
@@ -75,8 +112,9 @@ def _handler_summarize_findings(invocation) -> ToolResult:
 
 def _handler_generate_outputs(invocation) -> ToolResult:
     args = invocation.get("arguments", {})
+    run_id = args.get("run_id") or active_run_id or "latest"
     params = GenerateOutputsParams(
-        run_id=args.get("run_id", "latest"),
+        run_id=run_id,
         formats=args.get("formats", ["html"]),
     )
     result = _handle_generate_outputs(params)
@@ -223,7 +261,21 @@ async def _run(*, demo: bool = True):
     print("╚══════════════════════════════════════════════════╝")
     print()
 
-    client = CopilotClient()
+    # Resolve GitHub token: env var → gh CLI fallback
+    token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if not token:
+        try:
+            token = subprocess.run(
+                ["gh", "auth", "token"],
+                capture_output=True, text=True, timeout=10,
+            ).stdout.strip()
+        except Exception:
+            token = None
+    if not token:
+        print("[error] No GitHub token found. Set GITHUB_TOKEN or run 'gh auth login'.")
+        return
+
+    client = CopilotClient({"github_token": token})
 
     session = await client.create_session({
         "model": "gpt-4o",

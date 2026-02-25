@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "alz-workshop": {
+      "command": "python",
+      "args": ["scan.py", "--workshop-copilot", "--demo"],
+      "cwd": ".",
+      "env": {}
+    }
+  }
+}

@@ -134,7 +134,7 @@ def main():
 
     # ── Workshop-Copilot mode (Copilot SDK session) ───────────────
     if args.workshop_copilot:
-        from workshop_copilot import run_workshop
+        from src.workshop_copilot import run_workshop
         run_workshop(demo=args.demo)
         return
 

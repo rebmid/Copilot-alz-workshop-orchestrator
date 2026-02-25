@@ -167,3 +167,40 @@ The following are prohibited until stabilization ends:
 - Schema changes to `assessment_run.schema.json` or `control_definition.schema.json`
 
 Append-only additions to AI-owned keys are permitted. Reporting-layer changes that consume existing keys are permitted.
+
+---
+
+## Layer 4 — Copilot SDK Workshop
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  scan.py --workshop-copilot                             │
+│        │                                                │
+│        ▼                                                │
+│  src/workshop_copilot.py                                │
+│  ├─ CopilotClient → CopilotSession (gpt-4o)            │
+│  ├─ 4 Tool() registrations (explicit JSON schemas)      │
+│  ├─ Session cache: active_run_id / active_results       │
+│  └─ REPL loop                                           │
+│        │                                                │
+│        ▼                                                │
+│  src/workshop_tools.py                                  │
+│  ├─ run_scan        → subprocess scan.py                │
+│  ├─ load_results    → disk + memory cache               │
+│  ├─ summarize_findings → deterministic filter           │
+│  ├─ generate_outputs → HTML / Excel renderers           │
+│  └─ ensure_out_path → path guardrail                    │
+│        │                                                │
+│        ▼                                                │
+│  out/                                                   │
+│  └─ All generated artefacts confined here                │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Rules**:
+- Exactly 4 tools exposed. No extras.
+- No data fabrication — all responses grounded in loaded run data.
+- No environment mutation — read-only against Azure.
+- File writes confined to `out/` via `ensure_out_path()`.
+- Format allow-list: `html`, `excel` only.
+
