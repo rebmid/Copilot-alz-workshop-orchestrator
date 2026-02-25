@@ -8,11 +8,16 @@
 
 import asyncio
 import json
+import logging
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
 
 from copilot import CopilotClient, Tool, ToolResult
+from copilot.types import CopilotClientOptions
+
+logger = logging.getLogger("workshop")
 
 # ── Import the 4 handler functions from the tool layer ───────────
 from src.workshop_tools import (
@@ -53,6 +58,19 @@ from src.workshop_tools import (
 )
 
 
+def _log_tool(tool_name: str, run_id: str | None, **extra) -> None:
+    """Emit a structured log entry for every tool invocation."""
+    logger.info(
+        "tool_invocation",
+        extra={
+            "tool_name": tool_name,
+            "run_id": run_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **extra,
+        },
+    )
+
+
 def _handler_run_scan(invocation) -> ToolResult:
     global active_run_id, active_results
     args = invocation.get("arguments", {})
@@ -61,6 +79,7 @@ def _handler_run_scan(invocation) -> ToolResult:
         demo=args.get("demo", False),
         tag=args.get("tag"),
     )
+    _log_tool("run_scan", None, demo=params.demo, scope=params.scope)
     result = _handle_run_scan(params)
 
     # ── Populate session cache ────────────────────────────────
@@ -80,6 +99,7 @@ def _handler_load_results(invocation) -> ToolResult:
     global active_run_id, active_results
     args = invocation.get("arguments", {})
     run_id = args.get("run_id", "latest")
+    _log_tool("load_results", run_id)
     params = LoadResultsParams(run_id=run_id)
     result = _handle_load_results(params)
 
@@ -99,6 +119,7 @@ def _handler_load_results(invocation) -> ToolResult:
 def _handler_summarize_findings(invocation) -> ToolResult:
     args = invocation.get("arguments", {})
     run_id = args.get("run_id") or active_run_id or "latest"
+    _log_tool("summarize_findings", run_id, design_area=args.get("design_area"))
     params = SummarizeFindingsParams(
         run_id=run_id,
         design_area=args.get("design_area"),
@@ -113,6 +134,7 @@ def _handler_summarize_findings(invocation) -> ToolResult:
 def _handler_generate_outputs(invocation) -> ToolResult:
     args = invocation.get("arguments", {})
     run_id = args.get("run_id") or active_run_id or "latest"
+    _log_tool("generate_outputs", run_id, formats=args.get("formats", ["html"]))
     params = GenerateOutputsParams(
         run_id=run_id,
         formats=args.get("formats", ["html"]),
@@ -287,7 +309,7 @@ async def _run(*, demo: bool = True):
         print("        and gh CLI is on your PATH.")
         return
 
-    client = CopilotClient({"github_token": token})
+    client = CopilotClient(CopilotClientOptions(github_token=token))
 
     session = await client.create_session({
         "model": "gpt-4o",

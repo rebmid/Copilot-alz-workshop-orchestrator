@@ -120,7 +120,122 @@ def test_load_results_latest_picks_newest(tmp_path, monkeypatch):
 
 
 # ══════════════════════════════════════════════════════════════════
-# Test 4 — Smoke: session + tool call happens
+# Test 4 — run_scan handler (subprocess, demo mode)
+# ══════════════════════════════════════════════════════════════════
+
+def test_run_scan_demo_mode(tmp_path, monkeypatch):
+    """run_scan in demo mode produces a run file without Azure access."""
+    import src.workshop_tools as workshop_tools
+    from src.workshop_tools import run_scan, RunScanParams
+
+    out = tmp_path / "out_scan"
+    out.mkdir()
+    monkeypatch.setattr(workshop_tools, "OUT_DIR", out.resolve())
+    # _PROJECT_ROOT must be parent of OUT_DIR for relative_to() calls
+    monkeypatch.setattr(workshop_tools, "_PROJECT_ROOT", tmp_path.resolve())
+
+    # Copy demo fixture so scan.py --demo can find it
+    demo_src = ROOT / "demo" / "demo_run.json"
+    demo_dest = out / "run-demo.json"
+
+    # Simulate scan by monkeypatching subprocess.run: the fake subprocess
+    # creates the run file (run_scan detects new files by diffing before/after)
+    import shutil
+    import types as _types
+
+    def _fake_scan(cmd, **kw):
+        """Pretend scan.py ran and produced a run file."""
+        shutil.copy(demo_src, out / "run-20260225-0000.json")
+        return _types.SimpleNamespace(
+            returncode=0, stdout="Scan complete.\n", stderr=""
+        )
+
+    monkeypatch.setattr(subprocess, "run", _fake_scan)
+
+    result = json.loads(run_scan(RunScanParams(demo=True)))
+    assert "error" not in result
+    assert "run_id" in result
+    assert result["run_id"] == "run-20260225-0000"
+
+
+# ══════════════════════════════════════════════════════════════════
+# Test 5 — generate_outputs rejects invalid format
+# ══════════════════════════════════════════════════════════════════
+
+def test_generate_outputs_rejects_invalid_format():
+    """generate_outputs refuses formats outside the allow-list."""
+    from src.workshop_tools import generate_outputs, GenerateOutputsParams
+
+    result = json.loads(generate_outputs(GenerateOutputsParams(
+        run_id="latest",
+        formats=["pdf"],
+    )))
+    assert "error" in result
+    assert "pdf" in result["error"].lower()
+
+
+# ══════════════════════════════════════════════════════════════════
+# Test 6 — generate_outputs accepts allowed format
+# ══════════════════════════════════════════════════════════════════
+
+def test_generate_outputs_html():
+    """generate_outputs with html format loads the run and attempts render."""
+    from src.workshop_tools import generate_outputs, GenerateOutputsParams
+
+    result = json.loads(generate_outputs(GenerateOutputsParams(
+        run_id="latest",
+        formats=["html"],
+    )))
+    # Even if reporting.render is unavailable, the output must have run_id
+    # and either generated or errors — never an unhandled exception.
+    assert "run_id" in result
+    assert "generated" in result or "errors" in result
+
+
+# ══════════════════════════════════════════════════════════════════
+# Test 7 — Structured logging emits tool_name, run_id, timestamp
+# ══════════════════════════════════════════════════════════════════
+
+def test_structured_logging(caplog):
+    """Every handler adapter logs tool_name, run_id, and timestamp."""
+    import logging
+    from src.workshop_copilot import (
+        _handler_load_results,
+        _handler_summarize_findings,
+    )
+
+    with caplog.at_level(logging.INFO, logger="workshop"):
+        _handler_load_results({
+            "arguments": {"run_id": "latest"},
+            "tool_name": "load_results",
+            "tool_call_id": "test-1",
+            "session_id": "test-session",
+        })
+        _handler_summarize_findings({
+            "arguments": {"run_id": "latest", "design_area": "Security"},
+            "tool_name": "summarize_findings",
+            "tool_call_id": "test-2",
+            "session_id": "test-session",
+        })
+
+    # Verify log records contain required fields
+    tool_records = [
+        r for r in caplog.records
+        if r.getMessage() == "tool_invocation"
+    ]
+    assert len(tool_records) >= 2, (
+        f"Expected ≥2 tool_invocation log entries, got {len(tool_records)}"
+    )
+
+    for rec in tool_records:
+        assert hasattr(rec, "tool_name"), "Missing tool_name in log record"
+        assert hasattr(rec, "run_id"), "Missing run_id in log record"
+        assert hasattr(rec, "timestamp"), "Missing timestamp in log record"
+        assert rec.tool_name in {"load_results", "summarize_findings"}
+
+
+# ══════════════════════════════════════════════════════════════════
+# Test 8 — Smoke: session + tool call happens
 # ══════════════════════════════════════════════════════════════════
 
 def _resolve_github_token():
@@ -148,9 +263,11 @@ def test_smoke_session_tool_call():
     """Start a real Copilot SDK session, ask 'summarize identity findings',
     and verify summarize_findings is invoked by the model."""
     from copilot import CopilotClient, Tool, ToolResult
+    from copilot.types import CopilotClientOptions
     from src.workshop_copilot import TOOLS, SYSTEM_PROMPT
 
     token = _resolve_github_token()
+    assert token is not None  # guarded by skipif above
     tool_calls_seen = []
 
     # Wrap tools with spy handlers to track invocations
@@ -169,7 +286,7 @@ def test_smoke_session_tool_call():
     spy_tools = [_make_spy(t) for t in TOOLS]
 
     async def _session_test():
-        client = CopilotClient({"github_token": token})
+        client = CopilotClient(CopilotClientOptions(github_token=token))
         session = await client.create_session({
             "model": "gpt-4o",
             "system_message": {"content": SYSTEM_PROMPT},
