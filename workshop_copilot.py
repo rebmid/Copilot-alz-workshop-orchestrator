@@ -13,6 +13,9 @@ import sys
 from pydantic import BaseModel, Field
 from copilot import CopilotClient, define_tool
 
+# ── operational tool layer (run_scan, load_results, etc.) ────────
+from workshop_tools import ALL_TOOLS as OPERATIONAL_TOOLS
+
 # ── lazy-loaded run cache ────────────────────────────────────────
 _run_cache: dict | None = None
 
@@ -190,10 +193,13 @@ Rules
 4. Do not suggest or perform environment changes.
 5. When asked about risks, always cite the affected controls and their status.
 6. When presenting a roadmap, include phase, initiative name, and linked checklist IDs.
+7. All file outputs must stay under out/. Never write outside that directory.
+8. Only generate outputs in allowed formats (html, excel).
 """
 
 
-ALL_TOOLS = [
+# Analytical tools (read cached run data)
+_ANALYTICAL_TOOLS = [
     load_assessment,
     get_executive_summary,
     list_controls,
@@ -201,6 +207,9 @@ ALL_TOOLS = [
     why_domain_risk,
     get_roadmap,
 ]
+
+# Full tool surface: analytical + operational
+ALL_TOOLS = _ANALYTICAL_TOOLS + list(OPERATIONAL_TOOLS)
 
 
 async def _run(*, demo: bool = True):
