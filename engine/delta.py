@@ -2,12 +2,20 @@ import json
 
 
 def _canonical_results_map(run):
-    """Return deterministic control_id -> result mapping for delta operations."""
+    """Return deterministic control_id -> result mapping for delta operations.
+
+    If duplicate control IDs exist, tie-breaking is stable via canonical JSON.
+    """
     mapped = {}
-    for item in sorted(
-        run.get("results", []),
-        key=lambda r: (r["control_id"], json.dumps(r, sort_keys=True, separators=(",", ":"))),
-    ):
+    canonical = [
+        (
+            item["control_id"],
+            json.dumps(item, sort_keys=True, separators=(",", ":")),
+            item,
+        )
+        for item in run.get("results", [])
+    ]
+    for _, _, item in sorted(canonical):
         mapped[item["control_id"]] = item
     return mapped
 
