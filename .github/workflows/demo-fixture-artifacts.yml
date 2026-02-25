@@ -1,0 +1,31 @@
+name: Demo Fixture Artifacts
+
+on:
+  workflow_dispatch:
+  pull_request:
+
+jobs:
+  demo-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run demo fixture assessment
+        run: python scan.py --why Networking --demo --no-ai
+
+      - name: Upload out artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: out-artifacts
+          path: out/
+          if-no-files-found: error
