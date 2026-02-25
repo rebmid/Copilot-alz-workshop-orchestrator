@@ -245,6 +245,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <a href="#roadmap">Roadmap</a>
     <a href="#design-areas">Design Areas</a>
     <a href="#workshop">Workshop</a>
+    <a href="#critical-issues">Critical Issues</a>
   </div>
 </nav>
 
@@ -302,7 +303,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
       Resolving controls: <strong>{{ b.resolving_initiative_title }}</strong>
       {% if b.resolving_checklist_ids %}
-        ({{ b.resolving_checklist_ids|join(", ") }})
+        ({% for rid in b.resolving_checklist_ids %}<a href="#control-{{ rid }}" style="color:inherit">{{ rid }}</a>{% if not loop.last %}, {% endif %}{% endfor %})
       {% endif %}
       {% if b.controls_resolved %}
         &middot; {{ b.controls_resolved }} control(s) resolved
@@ -541,10 +542,14 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         </thead>
         <tbody>
           {% for ctrl in area.controls %}
-          <tr>
+          <tr{% if ctrl.checklist_ids %} id="control-{{ ctrl.checklist_ids[0] }}"{% endif %}>
             <td>
               <span style="font-weight:500">{{ ctrl.text }}</span><br/>
+              {% if ctrl.checklist_ids %}
+              <a href="#control-{{ ctrl.checklist_ids[0] }}" style="font-size:.7rem;color:var(--muted);text-decoration:none">{{ ctrl.checklist_ids[0] }}</a>
+              {% else %}
               <span style="font-size:.7rem;color:var(--muted)">{{ ctrl.control_id }}</span>
+              {% endif %}
             </td>
             <td><span class="badge badge-{{ ctrl.status|lower }}">{{ ctrl.status }}</span></td>
             <td><span class="badge badge-{{ ctrl.signal_type|lower }}">{{ ctrl.signal_type }}</span></td>
@@ -649,6 +654,24 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     {% endfor %}
   {% else %}
     <p style="color:var(--muted)">No workshop data available.</p>
+  {% endif %}
+</section>
+
+<!-- ═══════════════ S6  CRITICAL ISSUES & COURSE OF ACTION ═══ -->
+<section id="critical-issues">
+  <h2>&sect; 6 &mdash; Critical Issues &amp; Course of Action</h2>
+  {% if critical_issues %}
+  {% for issue in critical_issues %}
+  <div class="issue">
+    <h3>{{ issue.title }}</h3>
+    <p><strong>Design Area:</strong> {{ issue.design_area }}</p>
+    <p><strong>Severity:</strong> {{ issue.severity }}</p>
+    <p>{{ issue.business_risk }}</p>
+    <p><strong>Course of Action:</strong> {{ issue.recommended_action }}</p>
+  </div>
+  {% endfor %}
+  {% else %}
+    <p style="color:var(--muted)">No critical issues identified.</p>
   {% endif %}
 </section>
 

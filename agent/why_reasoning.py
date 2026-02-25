@@ -3,7 +3,6 @@
 Architecture (clean separation of concerns):
 
   agent/why_reasoning.py   ← deterministic payload + terminal display (this file)
-  agent/why_ai.py          ← AI explanation layer (optional)
   agent/run_loader.py      ← loads runs from disk or demo fixture
 
 Pipeline:

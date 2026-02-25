@@ -1,5 +1,17 @@
 """Evaluator registry — maps control GUIDs to ControlEvaluator instances.
 
+┌─────────────────────────────────────────────────────────────────┐
+│                    LAYER 1 — DETERMINISTIC                      │
+│                                                                 │
+│  Pure evaluation — NO AI, NO LLM, NO network calls.             │
+│  Maps control GUIDs to deterministic ControlEvaluator funcs.    │
+│  Each evaluator returns Pass / Fail / Partial / NotAssessed     │
+│  based solely on signal data.                                   │
+│                                                                 │
+│  This module is FROZEN during stabilization.                    │
+│  Do NOT add AI imports, prompt strings, or model calls.         │
+└─────────────────────────────────────────────────────────────────┘
+
 Usage:
     from evaluators.registry import EVALUATORS, evaluate_control
     result = evaluate_control("e6c4cfd3-...", scope, signal_bus)

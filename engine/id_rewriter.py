@@ -1,5 +1,19 @@
 """Pipeline Utilities — readiness normalization, blocker patching, integrity checks.
 
+┌─────────────────────────────────────────────────────────────────┐
+│                  LAYER 2 — CHECKLIST MAPPING                    │
+│                                                                 │
+│  Post-processing guards applied to AI output before it leaves   │
+│  the pipeline.  Normalises IDs, clamps scores, validates        │
+│  structural integrity.                                          │
+│                                                                 │
+│  Called FROM Layer 3 (reasoning engine) as a downward           │
+│  dependency — never the reverse.                                │
+│                                                                 │
+│  This module is FROZEN during stabilization.                    │
+│  Do NOT add AI imports, prompt strings, or model calls.         │
+└─────────────────────────────────────────────────────────────────┘
+
 Formerly the "Initiative ID Rewriter" — the synthetic INIT-xxx layer has been
 removed.  Checklist IDs from the Azure review-checklists repository are now
 the canonical identifiers.
@@ -183,6 +197,151 @@ def normalize_control_ids(
         f"        → control ID normalization: "
         f"{total_exact} exact, {total_prefix} prefix-resolved, "
         f"{total_reject} rejected"
+    )
+
+    return violations
+
+
+def resolve_item_checklist_ids(
+    items: list[dict],
+    roadmap_phases: dict | None = None,
+    canonical_keys: set[str] | None = None,
+) -> list[str]:
+    """Resolve synthetic checklist_ids on remediation items to canonical format.
+
+    The AI may emit ``checklist_id`` values like ``"rbac-hygiene-001"`` or UUIDs
+    instead of canonical ALZ review-checklist IDs (e.g. ``A01.01``).  This
+    function deterministically resolves them using the ``controls[]`` array
+    on each item:
+
+      item.controls  →  controls.json  →  checklist_ids  →  A01.01
+
+    Also rewrites matching IDs in ``roadmap_phases`` (30/60/90 day entries)
+    so blocker and roadmap references stay consistent.
+
+    Modifies items and roadmap_phases in-place.
+
+    Parameters
+    ----------
+    items : list[dict]
+        Remediation items with ``checklist_id`` and ``controls`` fields.
+    roadmap_phases : dict | None
+        The ``roadmap_30_60_90`` dict with ``30_days``, ``60_days``,
+        ``90_days`` lists of entries that reference ``checklist_id``.
+    canonical_keys : set[str] | None
+        The canonical control keys from controls.json.  Loaded if *None*.
+
+    Returns
+    -------
+    list[str]
+        Violation/info messages for logging.
+    """
+    if canonical_keys is None:
+        canonical_keys = _load_canonical_keys()
+
+    # Load controls.json for checklist_id lookup
+    controls_path = _CONTROLS_JSON_PATH
+    try:
+        with open(controls_path, encoding="utf-8") as f:
+            pack = json.load(f)
+        controls_data = pack.get("controls", {})
+    except Exception:
+        return ["CHECKLIST_RESOLVE_SKIP: could not load controls.json"]
+
+    violations: list[str] = []
+    id_remap: dict[str, str] = {}  # old_id → new_canonical_id
+    total_resolved = 0
+    total_already_valid = 0
+    total_unresolvable = 0
+
+    for item in items:
+        old_id = item.get("checklist_id", "")
+        if not old_id:
+            continue
+
+        # Already valid canonical format — skip
+        if _CHECKLIST_ID_RE.match(old_id):
+            total_already_valid += 1
+            continue
+
+        # Resolve via controls[] → controls.json → checklist_ids
+        controls_list = item.get("controls", [])
+        resolved_cid: str | None = None
+
+        for ctrl_key in controls_list:
+            ctrl_data = controls_data.get(ctrl_key, {})
+            cids = ctrl_data.get("checklist_ids", [])
+            if cids:
+                resolved_cid = cids[0]  # take the primary checklist_id
+                break
+
+        if resolved_cid and _CHECKLIST_ID_RE.match(resolved_cid):
+            id_remap[old_id] = resolved_cid
+            item["checklist_id"] = resolved_cid
+            item["_original_synthetic_id"] = old_id
+            total_resolved += 1
+            violations.append(
+                f"CHECKLIST_ID_RESOLVED: '{old_id}' → '{resolved_cid}' "
+                f"(via control '{controls_list[0]}')"
+            )
+        else:
+            total_unresolvable += 1
+            violations.append(
+                f"CHECKLIST_ID_UNRESOLVABLE: '{old_id}' has no "
+                f"canonical checklist_id mapping from controls {controls_list}"
+            )
+
+    # ── Prune hallucinated items ─────────────────────────────────
+    # Items with non-canonical IDs AND no controls[] are pure
+    # hallucinations — they have zero grounding in the control pack.
+    # Remove them before downstream passes see them.
+    pruned_count = 0
+    kept: list[dict] = []
+    for item in items:
+        cid = item.get("checklist_id", "")
+        if cid and not _CHECKLIST_ID_RE.match(cid) and not item.get("controls"):
+            pruned_count += 1
+            violations.append(
+                f"ITEM_PRUNED: '{cid}' has non-canonical ID and no "
+                f"controls[] — removed as hallucinated item."
+            )
+        else:
+            kept.append(item)
+    if pruned_count:
+        items[:] = kept  # mutate in-place so caller sees the change
+
+    # Rewrite roadmap phase entries to use remapped IDs
+    if roadmap_phases and id_remap:
+        for phase_key in ("30_days", "60_days", "90_days"):
+            entries = roadmap_phases.get(phase_key, [])
+            for entry in entries:
+                for id_field in ("checklist_id", "initiative_id"):
+                    old = entry.get(id_field, "")
+                    if old in id_remap:
+                        entry[id_field] = id_remap[old]
+
+    # Remove roadmap entries whose IDs are still synthetic/unknown
+    # (e.g. UUIDs the AI invented that don't match any item)
+    if roadmap_phases:
+        valid_item_ids = {i.get("checklist_id") for i in items if i.get("checklist_id")}
+        for phase_key in ("30_days", "60_days", "90_days"):
+            entries = roadmap_phases.get(phase_key, [])
+            cleaned = []
+            for entry in entries:
+                eid = entry.get("checklist_id", entry.get("initiative_id", ""))
+                if eid in valid_item_ids or _CHECKLIST_ID_RE.match(eid):
+                    cleaned.append(entry)
+                else:
+                    violations.append(
+                        f"ROADMAP_ENTRY_PRUNED: '{eid}' in {phase_key} "
+                        f"has no matching remediation item — removed."
+                    )
+            roadmap_phases[phase_key] = cleaned
+
+    print(
+        f"        → checklist_id resolution: "
+        f"{total_already_valid} already valid, {total_resolved} resolved, "
+        f"{total_unresolvable} unresolvable, {pruned_count} pruned"
     )
 
     return violations

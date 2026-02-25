@@ -30,5 +30,4 @@ run_*.json
 preflight.json
 target_architecture.json
 assessment.json
-output/
 test_output.txt

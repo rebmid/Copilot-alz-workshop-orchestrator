@@ -8,6 +8,9 @@ Layer: Derived models (deterministic joins only — no creative logic).
 """
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from engine.guardrails import (
     empty_evidence_refs,
     compute_derived_confidence,
@@ -15,6 +18,49 @@ from engine.guardrails import (
 )
 
 from schemas.taxonomy import BLOCKER_CATEGORY_TO_SECTIONS
+
+# ── Control-pack section metadata (cached) ───────────────────────
+_CONTROLS_JSON_PATH = (
+    Path(__file__).resolve().parent.parent
+    / "control_packs" / "alz" / "v1.0" / "controls.json"
+)
+_PACK_SECTION_MAP: dict[str, str] | None = None
+
+
+def _load_pack_sections() -> dict[str, str]:
+    """Return {8-char-key → lowercase design_area} from the control pack."""
+    global _PACK_SECTION_MAP
+    if _PACK_SECTION_MAP is None:
+        with open(_CONTROLS_JSON_PATH, encoding="utf-8") as f:
+            pack = json.load(f)
+        _PACK_SECTION_MAP = {
+            k: v.get("design_area", "") for k, v in pack.get("controls", {}).items()
+            if isinstance(v, dict)
+        }
+    return _PACK_SECTION_MAP
+
+
+# Direct mapping: blocker category (lowercase) → set of pack design_area values.
+# The pack uses short names (network, cost, data_protection) while the taxonomy
+# uses full titles (Network Topology and Connectivity, Networking).  This bridge
+# lets Strategy 2b match without going through the mismatched section names.
+_BLOCKER_TO_PACK_AREAS: dict[str, set[str]] = {
+    "network topology and connectivity": {"network"},
+    "networking":                         {"network"},
+    "identity and access management":     {"identity"},
+    "identity":                           {"identity"},
+    "security":                           {"security", "data_protection"},
+    "management":                         {"management"},
+    "governance":                         {"governance"},
+    "resource organization":              {"governance"},
+    "data protection":                    {"data_protection", "security"},
+    "resilience":                         {"resilience"},
+    "cost governance":                    {"cost", "governance"},
+    "automation":                         {"platform_automation"},
+    "platform automation and devops":     {"platform_automation"},
+    "billing":                            {"billing"},
+    "azure billing and microsoft entra id tenants": {"billing"},
+}
 
 
 def _build_item_index(items: list[dict]) -> dict:
@@ -140,6 +186,26 @@ def resolve_blockers_to_items(
                     matched.append(cid)
             if matched:
                 blocker_item_map[blocker_key] = matched
+                continue
+
+        # Strategy 2b: Match via control-pack design_area metadata.
+        # Strategies 1–2 rely on results_by_id which keys by full
+        # control_id from evaluator output.  Item controls[] use
+        # 8-char pack keys that may not appear in results_by_id.
+        # Fall through here to resolve via the pack's own design_area field,
+        # using _BLOCKER_TO_PACK_AREAS to bridge the naming gap.
+        target_pack_areas = _BLOCKER_TO_PACK_AREAS.get(blocker_key)
+        if target_pack_areas:
+            pack_sections = _load_pack_sections()
+            matched_pack = []
+            for cid, ctrl_set in item_controls_map.items():
+                for ctrl_key in ctrl_set:
+                    pack_area = pack_sections.get(ctrl_key, "")
+                    if pack_area in target_pack_areas:
+                        matched_pack.append(cid)
+                        break
+            if matched_pack:
+                blocker_item_map[blocker_key] = matched_pack
                 continue
 
         # Strategy 3: Fallback to existing resolving_checklist_ids / resolving_item

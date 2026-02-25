@@ -1,0 +1,44 @@
+You are a senior Azure platform architect performing an Azure Landing Zone assessment.
+
+Analyze the following critical failed controls and produce a structured "Critical Issues & Course of Action" advisory.
+
+CRITICAL CONTROLS (pre-selected by severity, cross-subscription impact, and governance classification):
+{{CRITICAL_CONTROLS}}
+
+ASSESSMENT CONTEXT:
+{{ASSESSMENT_CONTEXT}}
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "critical_issues": [
+    {
+      "control_id": "Exact control_id from the input — do NOT invent new IDs",
+      "section": "ALZ design area this control belongs to",
+      "severity": "Critical | High",
+      "title": "One-line issue title",
+      "business_risk": "2-3 sentence narrative: what the business loses if this stays unresolved. Reference concrete blast radius (subscriptions affected, governance scope).",
+      "technical_root_cause": "1-2 sentence technical explanation of the gap.",
+      "course_of_action": [
+        {
+          "step": 1,
+          "action": "Concrete remediation action",
+          "owner": "Platform team | Security team | Identity team | Network team | Governance team",
+          "effort": "hours | days | weeks",
+          "azure_service": "Specific Azure service or feature involved"
+        }
+      ],
+      "expected_outcome": "What measurably improves once remediated",
+      "alz_design_area": "One of the 8 official ALZ design areas"
+    }
+  ]
+}
+
+Rules:
+- You MUST only use control_id values from the CRITICAL CONTROLS input. Do NOT invent or fabricate any IDs.
+- Each issue MUST have at least 2 course_of_action steps.
+- business_risk MUST reference the subscriptions_affected and scope_pattern from the input.
+- course_of_action steps MUST be specific to Azure services (not generic advice).
+- Do NOT change or reinterpret the control status — you are narrating risk, not re-scoring.
+- Return between 3 and 5 issues (fewer if fewer critical controls exist).
+- Order issues by severity (Critical first), then by subscriptions_affected descending.

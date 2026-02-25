@@ -30,6 +30,7 @@ _log = logging.getLogger(__name__)
 def build_initiative_dependency_graph(
     initiatives: list[dict],
     control_dependencies: dict[str, list[str]] | None = None,
+    original_phases: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """
     Build a deterministic item-level dependency graph from
@@ -45,6 +46,10 @@ def build_initiative_dependency_graph(
     control_dependencies : dict[str, list[str]] | None
         Map of control_id → [prerequisite_control_ids] from the knowledge graph.
         If None, falls back to item-declared dependencies.
+    original_phases : dict[str, str] | None
+        AI-generated phase placements (checklist_id → "30_days" | "60_days" | "90_days").
+        Used as a floor for items with no resolved dependencies (depth 0)
+        so the engine doesn't collapse everything into 30_days.
 
     Returns
     -------
@@ -80,7 +85,7 @@ def build_initiative_dependency_graph(
     )
 
     # Step 4: Assign phases based on dependency depth
-    phase_assignment = _assign_phases(initiative_order, init_deps)
+    phase_assignment = _assign_phases(initiative_order, init_deps, original_phases)
 
     # Step 5: Identify parallel execution groups within each phase
     parallel_groups = _build_parallel_groups(initiative_order, init_deps, phase_assignment)
@@ -249,6 +254,7 @@ def _topo_sort_items(
 def _assign_phases(
     item_order: list[str],
     item_deps: dict[str, list[str]],
+    original_phases: dict[str, str] | None = None,
 ) -> dict[str, str]:
     """
     Assign items to 30/60/90 phases based on dependency depth.
@@ -256,8 +262,14 @@ def _assign_phases(
     Depth 0 (no dependencies) → 30_days
     Depth 1 (depends on depth-0 only) → 60_days
     Depth 2+ → 90_days
+
+    When *original_phases* is provided (AI-generated placements), items
+    at depth 0 (i.e. no resolved dependencies) use the AI placement as a
+    floor so the engine doesn't collapse everything into 30_days when
+    dependency resolution yields no edges.
     """
     phases = ("30_days", "60_days", "90_days")
+    _phase_rank = {p: i for i, p in enumerate(phases)}
 
     # Compute depth for each item
     depth: dict[str, int] = {}
@@ -274,7 +286,16 @@ def _assign_phases(
     for cid in item_order:
         d = depth.get(cid, 0)
         phase_idx = min(d, len(phases) - 1)
-        assignment[cid] = phases[phase_idx]
+        dep_phase = phases[phase_idx]
+
+        # For depth-0 items, respect AI placement as floor
+        if d == 0 and original_phases and cid in original_phases:
+            ai_phase = original_phases[cid]
+            ai_rank = _phase_rank.get(ai_phase, 0)
+            dep_rank = _phase_rank.get(dep_phase, 0)
+            assignment[cid] = phases[max(ai_rank, dep_rank)]
+        else:
+            assignment[cid] = dep_phase
 
     return assignment
 

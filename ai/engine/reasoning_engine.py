@@ -1,4 +1,28 @@
-"""Reasoning Engine — orchestrates all AI advisory passes into a unified output."""
+"""Reasoning Engine — orchestrates all AI advisory passes into a unified output.
+
+┌─────────────────────────────────────────────────────────────────┐
+│                    LAYER 3 — AI ENRICHMENT                      │
+│                                                                 │
+│  This module is the sole orchestration hub for Layer 3.         │
+│  It consumes scored output from Layer 1 (deterministic) and     │
+│  checklist mappings from Layer 2 (checklist mapping) in a       │
+│  read-only fashion.                                             │
+│                                                                 │
+│  IMMUTABILITY CONTRACT:                                         │
+│    AI output may NOT modify:                                    │
+│      - control verdicts (pass/fail/partial/not_assessed)        │
+│      - risk_tier values                                         │
+│      - maturity scores or section scores                        │
+│      - checklist IDs after Layer 2 normalization                │
+│      - deterministic metadata (signals, telemetry, scoring)     │
+│                                                                 │
+│  Dependency direction: Layer 3 → Layer 2 → Layer 1 (never ↑)   │
+│                                                                 │
+│  Cross-layer calls into Layer 2 (id_rewriter, checklist         │
+│  grounding) are post-processing guards applied to AI output     │
+│  before it leaves this pipeline — they do NOT modify Layer 1.   │
+└─────────────────────────────────────────────────────────────────┘
+"""
 from __future__ import annotations
 
 import json
@@ -103,7 +127,7 @@ class ReasoningEngine:
             Skip the per-initiative implementation pass (saves tokens).
         """
         system = self.prompts.system
-        total_passes = 9
+        total_passes = 11
 
         # ── 0. ALZ checklist grounding context ────────────────────
         # Inject official ALZ design area references + checklist items
@@ -141,6 +165,17 @@ class ReasoningEngine:
         if items:
             print("        Normalizing control IDs to canonical keys …")
             _control_id_violations = normalize_control_ids(items)
+
+        # ── 1c. Resolve synthetic checklist_ids to canonical format ──
+        # The AI may emit checklist_id values like "rbac-hygiene-001" or
+        # UUIDs instead of canonical A01.01 format.  Resolve them
+        # deterministically from the controls[] → checklist_ids mapping.
+        from engine.id_rewriter import resolve_item_checklist_ids
+        _roadmap_phases = roadmap_raw.get("roadmap_30_60_90", {})
+        if items:
+            print("        Resolving checklist_ids to canonical format …")
+            _cid_violations = resolve_item_checklist_ids(items, _roadmap_phases)
+            _control_id_violations.extend(_cid_violations)
 
         # ── 2. Executive briefing ─────────────────────────────────
         print(f"  [2/{total_passes}] Generating executive briefing …")
@@ -347,6 +382,33 @@ class ReasoningEngine:
         else:
             enriched_grounding = {}
 
+        # ── 10. Critical Issues & Course of Action ────────────────
+        # Pre-select top 5 failing controls by severity, cross-sub
+        # impact, and governance classification.  AI narrates risk +
+        # course of action but must NOT invent control IDs.
+        critical_issues: list[dict] = []
+        critical_candidates = self._select_critical_controls(assessment)
+        if critical_candidates:
+            print(f"  [10/{total_passes}] Generating critical issues advisory ({len(critical_candidates)} controls) …")
+            ci_context = {
+                "overall_maturity": assessment.get("overall_maturity", 0),
+                "design_area_maturity": assessment.get("design_area_maturity", []),
+                "execution_context": assessment.get("execution_context", {}),
+            }
+            ci_raw = self._safe_run(
+                system,
+                self.prompts.critical_issues(critical_candidates, ci_context),
+                label="Critical Issues",
+                max_tokens=8000,
+            )
+            critical_issues = ci_raw.get("critical_issues", [])
+            # Guard: strip any AI-hallucinated control IDs
+            valid_cids = {c["control_id"] for c in critical_candidates}
+            critical_issues = [ci for ci in critical_issues if ci.get("control_id") in valid_cids]
+            print(f"        → {len(critical_issues)} critical issue(s)")
+        else:
+            print(f"  [10/{total_passes}] Critical Issues skipped (no qualifying controls).")
+
         # ── Progress analysis (derived, no AOAI call) ─────────────
         progress = self._derive_progress(assessment)
 
@@ -417,10 +479,20 @@ class ReasoningEngine:
 
         print("  [derived] Building 3-layer deterministic decision engine …")
 
+        # Build original phase map from AI roadmap for floor-assignment
+        _original_phases: dict[str, str] = {}
+        for _pk in ("30_days", "60_days", "90_days"):
+            for _entry in _roadmap_phases.get(_pk, []):
+                _eid = _entry.get("checklist_id", _entry.get("initiative_id", ""))
+                if _eid:
+                    _original_phases[_eid] = _pk
+
         # Layer 1: Dependency Engine
         try:
             dep_graph = build_initiative_dependency_graph(
-                items, control_dependencies=_control_deps or None,
+                items,
+                control_dependencies=_control_deps or None,
+                original_phases=_original_phases or None,
             )
             print(f"        → dependency_engine: {len(dep_graph.get('item_order', dep_graph.get('initiative_order', [])))} items ordered, "
                   f"{len(dep_graph.get('dependency_violations', []))} violations detected")
@@ -483,6 +555,70 @@ class ReasoningEngine:
             from engine.id_rewriter import patch_blocker_items
             patch_blocker_items(readiness, blocker_item_mapping)
 
+        # ── 11. Blocker Resolution Summary ────────────────────────
+        # Uses existing blocker_item_mapping + dep_graph + trajectory.
+        # AI narrates structural fixes and maturity lift — must NOT
+        # invent checklist IDs or change control statuses.
+        blocker_resolution: list[dict] | dict = []
+        if blocker_item_mapping and _blockers:
+            print(f"  [11/{total_passes}] Generating blocker resolution summary ({len(blocker_item_mapping)} blockers) …")
+            # Build compact item summaries (checklist_id, title, controls only)
+            _item_summaries = [
+                {
+                    "checklist_id": i.get("checklist_id", ""),
+                    "title": i.get("title", ""),
+                    "controls": i.get("controls", []),
+                }
+                for i in items if i.get("checklist_id")
+            ]
+            br_raw = self._safe_run(
+                system,
+                self.prompts.blocker_resolution(
+                    blocker_item_mapping,
+                    _blockers,
+                    _item_summaries,
+                    dep_graph,
+                    det_trajectory,
+                ),
+                label="Blocker Resolution",
+                max_tokens=8000,
+            )
+            # Guard: strip any AI-hallucinated checklist IDs
+            _valid_cids = {i.get("checklist_id") for i in items if i.get("checklist_id")}
+            _br_items = br_raw.get("blocker_resolution", [])
+            for br_item in _br_items:
+                br_item["resolving_checklist_ids"] = [
+                    c for c in br_item.get("resolving_checklist_ids", [])
+                    if c in _valid_cids
+                ]
+                br_item["minimal_control_set"] = [
+                    c for c in br_item.get("minimal_control_set", [])
+                    if c in _valid_cids
+                ]
+                br_item["dependency_unlock"] = [
+                    c for c in br_item.get("dependency_unlock", [])
+                    if c in _valid_cids
+                ]
+            # Also guard the summary
+            _br_summary = br_raw.get("resolution_summary", {})
+            if _br_summary:
+                _br_summary["minimal_items_required"] = [
+                    c for c in _br_summary.get("minimal_items_required", [])
+                    if c in _valid_cids
+                ]
+                _br_summary["critical_path_items"] = [
+                    c for c in _br_summary.get("critical_path_items", [])
+                    if c in _valid_cids
+                ]
+            blocker_resolution = {
+                "blocker_resolution": _br_items,
+                "resolution_summary": _br_summary,
+            }
+            print(f"        → {len(_br_items)} blocker resolution(s)")
+        else:
+            print(f"  [11/{total_passes}] Blocker Resolution skipped (no blocker mapping).")
+            blocker_resolution = {"blocker_resolution": [], "resolution_summary": {}}
+
         # ── Pipeline integrity validation ──────────────────────────
         from engine.id_rewriter import validate_pipeline_integrity
         _pipeline_violations = validate_pipeline_integrity(
@@ -535,6 +671,8 @@ class ReasoningEngine:
             "transform_optimization": transform_opt,
             "deterministic_trajectory": det_trajectory,
             "blocker_item_mapping": blocker_item_mapping,
+            "critical_issues": critical_issues,
+            "blocker_resolution": blocker_resolution,
             # Pipeline structural integrity violations
             "_pipeline_violations": _pipeline_violations,
             # Keep raw blocks for backwards compatibility
@@ -592,6 +730,37 @@ class ReasoningEngine:
         except Exception as e:
             print(f"  ✗ {label} failed: {e}")
             return {}
+
+    @staticmethod
+    def _select_critical_controls(
+        assessment: dict,
+        top_n: int = 5,
+    ) -> list[dict]:
+        """Pre-select the top *top_n* failed controls for the critical-issues pass.
+
+        Selection criteria (deterministic — no AI):
+          1. Status is Fail or Partial
+          2. Severity is High or Critical
+          3. Sorted by: severity (Critical > High),
+                         subscriptions_affected descending,
+                         Platform Governance Gap first
+        """
+        _SEV_ORDER = {"Critical": 0, "High": 1}
+        _GOV_PATTERNS = {"Platform Governance Gap"}
+
+        candidates: list[dict] = []
+        for c in assessment.get("failing_controls", assessment.get("failed_controls", [])):
+            sev = c.get("severity", c.get("risk_level", "Medium"))
+            if sev not in _SEV_ORDER:
+                continue
+            candidates.append(c)
+
+        candidates.sort(key=lambda c: (
+            _SEV_ORDER.get(c.get("severity", c.get("risk_level", "High")), 9),
+            0 if c.get("scope_pattern") in _GOV_PATTERNS else 1,
+            -(c.get("subscriptions_affected", 0)),
+        ))
+        return candidates[:top_n]
 
     @staticmethod
     def _derive_progress(assessment: dict) -> dict:

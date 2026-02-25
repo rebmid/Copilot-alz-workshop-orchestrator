@@ -30,8 +30,8 @@ from alz.loader import (
 
 # Lazy MCP imports — avoids hard failure when mcp SDK is not installed
 # (e.g. --why / --demo mode only needs mcp_retriever's REST fallback)
-ClientSession = None
-streamable_http_client = None
+ClientSession: Any = None
+streamable_http_client: Any = None
 
 def _ensure_mcp():
     """Import MCP SDK on first real use; raise clear error if missing."""
@@ -44,6 +44,7 @@ def _ensure_mcp():
         ClientSession = _CS
         streamable_http_client = _SHC
     except ImportError as exc:
+        _grounding_telem["mode"] = "rest"
         raise ImportError(
             "MCP SDK not installed. Install with: pip install mcp"
         ) from exc
@@ -55,6 +56,29 @@ LEARN_SEARCH_FALLBACK = "https://learn.microsoft.com/api/search"
 _TIMEOUT = 30
 
 
+# ── Grounding telemetry (in-memory, append-only) ─────────────────
+_grounding_telem: dict[str, Any] = {
+    "mode": "auto",
+    "mcp_initialize_success": False,
+    "mcp_calls": {},
+    "rest_fallback_calls": 0,
+    "mcp_call_failures": 0,
+    "mcp_timeouts": 0,
+}
+
+
+def get_grounding_telemetry() -> dict:
+    """Return a snapshot of MCP grounding telemetry for this process."""
+    return {
+        "mode": _grounding_telem["mode"],
+        "mcp_initialize_success": _grounding_telem["mcp_initialize_success"],
+        "mcp_calls": dict(_grounding_telem["mcp_calls"]),
+        "rest_fallback_calls": _grounding_telem["rest_fallback_calls"],
+        "mcp_call_failures": _grounding_telem["mcp_call_failures"],
+        "mcp_timeouts": _grounding_telem["mcp_timeouts"],
+    }
+
+
 # ──────────────────────────────────────────────────────────────────
 # Core MCP client (official SDK, Streamable HTTP transport)
 # ──────────────────────────────────────────────────────────────────
@@ -62,11 +86,18 @@ _TIMEOUT = 30
 async def _mcp_call_async(tool_name: str, arguments: dict) -> dict | None:
     """Invoke an MCP tool using the official SDK's Streamable HTTP client."""
     _ensure_mcp()
+    assert streamable_http_client is not None
+    assert ClientSession is not None
     try:
         async with streamable_http_client(MCP_URL) as (read, write, _):
             async with ClientSession(read, write) as session:
                 await session.initialize()
+                _grounding_telem["mcp_initialize_success"] = True
                 result = await session.call_tool(tool_name, arguments)
+                # Track successful MCP call
+                _grounding_telem["mcp_calls"][tool_name] = (
+                    _grounding_telem["mcp_calls"].get(tool_name, 0) + 1
+                )
                 if result and result.content:
                     text = result.content[0].text  # type: ignore[union-attr]
                     if text:
@@ -74,10 +105,19 @@ async def _mcp_call_async(tool_name: str, arguments: dict) -> dict | None:
                         if stripped.startswith(("{", "[")):
                             return json.loads(stripped)
                         return {"text": text}
-    except BaseException:
-        # Must catch BaseException — asyncio.CancelledError (Python 3.9+)
-        # is a BaseException, not an Exception
+                # call_tool succeeded but returned empty/no content
+                _grounding_telem["mcp_call_failures"] += 1
+                return None
+    except TimeoutError:
+        _grounding_telem["mcp_timeouts"] += 1
         return None
+    except (Exception, asyncio.CancelledError):
+        # asyncio.CancelledError is a BaseException (Python 3.9+), so we
+        # list it explicitly.  KeyboardInterrupt / SystemExit must propagate.
+        _grounding_telem["mcp_call_failures"] += 1
+        return None
+    # Should not be reached, but guard for safety
+    _grounding_telem["mcp_call_failures"] += 1
     return None
 
 
@@ -90,14 +130,23 @@ def _mcp_call(tool_name: str, arguments: dict) -> dict | None:
         import concurrent.futures
         with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
             future = pool.submit(asyncio.run, _mcp_call_async(tool_name, arguments))
-            return future.result(timeout=_TIMEOUT)
-    except BaseException:
-        # CancelledError, KeyboardInterrupt, etc. — let callers fall back
+            try:
+                return future.result(timeout=_TIMEOUT)
+            except concurrent.futures.TimeoutError:
+                _grounding_telem["mcp_timeouts"] += 1
+                return None
+    except TimeoutError:
+        _grounding_telem["mcp_timeouts"] += 1
+        return None
+    except (Exception, asyncio.CancelledError):
+        # CancelledError needs catching; KeyboardInterrupt / SystemExit propagate.
+        _grounding_telem["mcp_call_failures"] += 1
         return None
 
 
 def _fallback_search(query: str, top: int = 5) -> list[dict]:
     """Public Learn search API fallback."""
+    _grounding_telem["rest_fallback_calls"] += 1
     try:
         resp = requests.get(
             LEARN_SEARCH_FALLBACK,

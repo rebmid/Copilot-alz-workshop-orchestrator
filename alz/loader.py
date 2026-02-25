@@ -71,6 +71,22 @@ def load_alz_checklist(*, force_refresh: bool = False) -> dict:
             return json.loads(_LOCAL_CACHE.read_text(encoding="utf-8"))
         raise
 
+    # ── Schema validation: fail fast if Microsoft changes the format ──
+    _items = data.get("items", data.get("checklist", []))
+    if not isinstance(_items, list) or len(_items) == 0:
+        raise ValueError(
+            "ALZ checklist schema drift: expected non-empty 'items' or 'checklist' list, "
+            f"got keys={list(data.keys())[:10]}"
+        )
+    _sample = _items[0]
+    _required_fields = {"category", "subcategory", "text", "guid"}
+    _missing = _required_fields - set(_sample.keys())
+    if _missing:
+        raise ValueError(
+            f"ALZ checklist schema drift: first item missing fields {_missing}. "
+            f"Got keys={list(_sample.keys())[:10]}"
+        )
+
     # Persist
     _cache["raw"], _cache["ts"] = data, now
     try:

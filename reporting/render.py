@@ -397,6 +397,7 @@ def _build_report_context(output: dict) -> dict:
 
             enriched_controls.append({
                 "control_id": ctrl.get("control_id", ""),
+                "checklist_ids": ctrl.get("checklist_ids", []),
                 "text": ctrl.get("text", ctrl.get("question", "")),
                 "status": ctrl.get("status", "Manual"),
                 "signal_type": sig_type,

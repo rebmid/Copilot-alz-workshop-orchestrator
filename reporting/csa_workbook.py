@@ -172,7 +172,13 @@ def _write_control_detail_rows(
         cid = ctrl.get("control_id", "")
         cl = checklist_lookup.get(cid, {})
 
-        ws.cell(row=row, column=1,  value=cl.get("id", ""))
+        # ID column: use ALZ checklist id when available, else fall back
+        # to the result's own checklist_ids (covers derived controls).
+        _display_id = cl.get("id", "")
+        if not _display_id:
+            _chk = ctrl.get("checklist_ids", [])
+            _display_id = ", ".join(_chk) if _chk else cid
+        ws.cell(row=row, column=1,  value=_display_id)
         ws.cell(row=row, column=2,  value=cl.get(
             "category", ctrl.get("category", ctrl.get("section", ""))))
         ws.cell(row=row, column=3,  value=cl.get("subcategory", ""))
