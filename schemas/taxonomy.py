@@ -1,6 +1,18 @@
 # schemas/taxonomy.py — Single authoritative taxonomy for ALZ design areas.
 """Centralised taxonomy for Azure Landing Zone design areas.
 
+┌─────────────────────────────────────────────────────────────────┐
+│                  LAYER 2 — CHECKLIST MAPPING                    │
+│                                                                 │
+│  Canonical type definitions and mapping tables.                 │
+│  Consumed by Layer 1 (scoring, evaluators) and Layer 3 (AI).    │
+│  Changes here affect ALL downstream layers.                     │
+│                                                                 │
+│  This module is FROZEN during stabilization.                    │
+│  Do NOT add new design areas, enum values, or mapping entries   │
+│  without a version bump in control_packs/loader.py.             │
+└─────────────────────────────────────────────────────────────────┘
+
 Foundation Layer 1: Taxonomy Integrity (Non-Negotiable)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Every control must carry a complete, validated taxonomy.  There is

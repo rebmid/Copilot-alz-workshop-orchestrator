@@ -270,7 +270,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <div class="kpi-label">Overall Maturity</div>
     </div>
     <div class="kpi">
-      <div class="kpi-value" style="color:var(--accent)">10/100</div>
+      <div class="kpi-value" style="color:var(--accent)">9/100</div>
       <div class="kpi-label">Readiness Score</div>
     </div>
     <div class="kpi">
@@ -290,20 +290,18 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Network Topology and Connectivity</strong>
       <span class="badge badge-critical">Critical</span>
-      <span class="badge badge-high">High confidence</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>No evidence of hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. No hub VNet detected. This prevents scalable, secure, and centrally managed network segmentation required for enterprise-scale operations.</p>
+    <p>No evidence of hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. Centralized network egress and segmentation are not implemented, which are mandatory for scaling and securing multi-subscription environments.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Hub-spoke network topology and firewall implementation</strong>
+      Resolving controls: <strong>Hub-spoke network topology and Azure Firewall deployment | DDoS Protection Standard for hub VNet</strong>
       
-        (C03.01)
-      
-      
-      
-        &middot; 1 risk(s) reduced
+        (C03.01, C04.01)
       
       
-        &middot; Dependencies: Centralized monitoring workspace for diagnostics and SOC
+      
+      
+        &middot; Dependencies: Centralized monitoring and workspace topology, Hub-spoke network topology and Azure Firewall deployment
       
     </div>
   </div>
@@ -312,20 +310,18 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Identity and Access Management</strong>
       <span class="badge badge-critical">Critical</span>
-      <span class="badge badge-high">High confidence</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>Privileged Identity Management (PIM) is not effective (0% eligible ratio), RBAC hygiene issues (27 Owner assignments, 0% group-based), and no validated break-glass accounts. These gaps prevent secure, least-privilege operations at scale.</p>
+    <p>Privileged Identity Management (PIM) is not effective (eligible ratio 0%). Excessive Owner role assignments (27, recommended ≤5) and lack of group-based RBAC (0%). No validated break-glass accounts. These are foundational for least-privilege operations and secure scaling.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>RBAC hygiene and group-based access | Privileged Identity Management (PIM) activation | Break-glass emergency access validation</strong>
+      Resolving controls: <strong>RBAC hygiene and group-based access | Privileged Identity Management (PIM) for privileged roles | Integrate Entra ID logs with centralized monitoring</strong>
       
-        (B03.01, B03.07, B03.15)
-      
-      
-      
-        &middot; 2 risk(s) reduced
+        (B03.01, B03.07, B03.14)
       
       
-        &middot; Dependencies: RBAC hygiene and group-based access
+      
+      
+        &middot; Dependencies: RBAC hygiene and group-based access, Privileged Identity Management (PIM) for privileged roles, Centralized monitoring and workspace topology
       
     </div>
   </div>
@@ -334,20 +330,18 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Management</strong>
       <span class="badge badge-critical">Critical</span>
-      <span class="badge badge-medium">Medium confidence</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>No centralized Log Analytics workspace, Sentinel not enabled, and log retention is only 30 days. This blocks centralized monitoring, security operations, and compliance reporting for multiple subscriptions.</p>
+    <p>No centralized Log Analytics workspace or Sentinel deployment. Workspace topology is fragmented (5 workspaces, retention below 90 days). This prevents centralized monitoring, incident response, and operational visibility at scale.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Centralized monitoring workspace for diagnostics and SOC | Update management and change tracking</strong>
+      Resolving controls: <strong>Centralized monitoring and workspace topology | Update management and change tracking for VMs</strong>
       
         (E01.01, E02.01)
       
       
       
-        &middot; 1 risk(s) reduced
       
-      
-        &middot; Dependencies: Centralized monitoring workspace for diagnostics and SOC
+        &middot; Dependencies: Centralized monitoring and workspace topology
       
     </div>
   </div>
@@ -356,20 +350,18 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Security</strong>
       <span class="badge badge-critical">Critical</span>
-      <span class="badge badge-high">High confidence</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>Centralized security visibility is missing (diagnostics coverage 2.1%), Defender for Cloud not enabled across all plans, and Secure Score unavailable. This blocks tenant-wide threat detection and response.</p>
+    <p>Centralized security visibility is lacking (diagnostics coverage 2.1%). Defender for Cloud is not enabled across all plans. Secure Score is unavailable or below threshold. This exposes the platform to unmanaged risk as scale increases.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Centralized security visibility and diagnostics</strong>
+      Resolving controls: <strong>Remediate storage and private endpoint posture</strong>
       
         (D01.01)
       
       
       
-        &middot; 1 risk(s) reduced
       
-      
-        &middot; Dependencies: Centralized monitoring workspace for diagnostics and SOC
+        &middot; Dependencies: Centralized monitoring and workspace topology
       
     </div>
   </div>
@@ -378,20 +370,18 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Data Protection</strong>
       <span class="badge badge-high">High</span>
-      <span class="badge badge-high">High confidence</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>Storage accounts and PaaS resources lack private endpoints and backup coverage is 0%. These are required for secure, resilient data handling at scale.</p>
+    <p>Storage accounts and PaaS services lack private endpoints and secure posture (0% compliant). No VM backup coverage. Data protection controls are essential for regulated workloads and disaster recovery at scale.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Backup coverage for critical workloads</strong>
+      Resolving controls: <strong>Remediate storage and private endpoint posture</strong>
       
-        (F01.01)
-      
-      
-      
-        &middot; 1 risk(s) reduced
+        (D01.01)
       
       
-        &middot; Dependencies: Centralized monitoring workspace for diagnostics and SOC
+      
+      
+        &middot; Dependencies: Centralized monitoring and workspace topology
       
     </div>
   </div>
@@ -399,21 +389,19 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   <div class="blocker-item">
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Governance</strong>
-      <span class="badge badge-high">High</span>
-      <span class="badge badge-high">High confidence</span>
+      <span class="badge badge-critical">Critical</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>No evidence of policy initiatives assigned at management group scope. Resource locks, tagging, and cost management controls are not enforced. This blocks consistent governance and compliance at scale.</p>
+    <p>No evidence of management group hierarchy, platform-level policy assignments, or resource locks. Policy compliance and enforcement are not in place, which is required to prevent configuration drift and manage blast radius.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Data protection for storage, private endpoints, and registries</strong>
+      Resolving controls: <strong>Hub-spoke network topology and Azure Firewall deployment | DDoS Protection Standard for hub VNet</strong>
       
-        (G01.01)
-      
-      
-      
-        &middot; 1 risk(s) reduced
+        (C03.01, C04.01)
       
       
-        &middot; Dependencies: Hub-spoke network topology and firewall implementation, Centralized security visibility and diagnostics
+      
+      
+        &middot; Dependencies: Centralized monitoring and workspace topology, Hub-spoke network topology and Azure Firewall deployment
       
     </div>
   </div>
@@ -422,11 +410,11 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
       <strong>Cost Governance</strong>
       <span class="badge badge-medium">Medium</span>
-      <span class="badge badge-medium">Medium confidence</span>
+      <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>Budgets and anomaly detection not implemented for all subscriptions. This risks uncontrolled spend as scale increases.</p>
+    <p>Budgets and cost anomaly detection are not fully implemented. Without these, uncontrolled spend is likely as subscription count grows.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Cost governance and budget enforcement</strong>
+      Resolving controls: <strong>Cost governance with budgets and alerts</strong>
       
         (A03.03)
       
@@ -451,61 +439,21 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">1</span>
-        <span class="risk-title">Sensitive Data Exposure and Regulatory Non-Alignment</span>
+        <span class="risk-title">Data Breach and Loss of Sensitive Information</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-critical">Critical</span>
         <span class="badge badge-confirmed">Confirmed</span>
         <span class="badge badge-high">High conf</span>
         <span class="tag">Data Protection</span>
-        <span class="tag">2 controls</span>
-      </div>
-
-      
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Potential for data breaches, regulatory penalties, and loss of customer trust due to inadequate protection of storage and PaaS resources.</p>
-      
-      
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Storage accounts and PaaS services lack private endpoints and compliant security posture (0% compliance on key controls).</p>
-      
-
-      
-      <div style="margin-top:.5rem">
-        <span style="font-size:.75rem;color:var(--muted);text-transform:uppercase">Score Drivers</span>
-        <div style="margin-top:.2rem">
-          
-          <span class="tag">Contains High severity controls</span>
-          
-          <span class="tag">2 affected control(s)</span>
-          
-          <span class="tag">2 in Fail state</span>
-          
-          <span class="tag">Blast radius: Medium</span>
-          
-        </div>
-      </div>
-      
-
-      
-    </div>
-    
-    <div class="risk-card">
-      <div class="risk-header">
-        <span class="risk-number">2</span>
-        <span class="risk-title">Platform Compromise via Inadequate Network Security</span>
-      </div>
-      <div class="risk-meta">
-        <span class="badge badge-critical">Critical</span>
-        <span class="badge badge-confirmed">Confirmed</span>
-        <span class="badge badge-high">High conf</span>
-        <span class="tag">Networking</span>
         <span class="tag">3 controls</span>
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Increased likelihood of service disruption, lateral movement by attackers, and inability to contain threats, resulting in operational downtime and reputational harm.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Exposure of customer or proprietary data could result in regulatory penalties, loss of customer trust, and direct financial losses.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No Azure Firewall, no hub-spoke topology, and missing DDoS protection across VNets.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Storage accounts and PaaS services lack required protections (encryption, private endpoints); backup coverage is absent.</p>
       
 
       
@@ -519,7 +467,43 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           <span class="tag">3 in Fail state</span>
           
-          <span class="tag">Blast radius: High</span>
+        </div>
+      </div>
+      
+
+      
+    </div>
+    
+    <div class="risk-card">
+      <div class="risk-header">
+        <span class="risk-number">2</span>
+        <span class="risk-title">Operational Disruption Due to Inadequate Network Security</span>
+      </div>
+      <div class="risk-meta">
+        <span class="badge badge-critical">Critical</span>
+        <span class="badge badge-confirmed">Confirmed</span>
+        <span class="badge badge-high">High conf</span>
+        <span class="tag">Networking</span>
+        <span class="tag">3 controls</span>
+      </div>
+
+      
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Service outages or degraded performance from DDoS attacks or unauthorized access could disrupt business operations and impact revenue.</p>
+      
+      
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No Azure Firewall or DDoS protection; hub-spoke topology not implemented.</p>
+      
+
+      
+      <div style="margin-top:.5rem">
+        <span style="font-size:.75rem;color:var(--muted);text-transform:uppercase">Score Drivers</span>
+        <div style="margin-top:.2rem">
+          
+          <span class="tag">Contains High severity controls</span>
+          
+          <span class="tag">3 affected control(s)</span>
+          
+          <span class="tag">3 in Fail state</span>
           
         </div>
       </div>
@@ -531,21 +515,21 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">3</span>
-        <span class="risk-title">Unauthorized Access and Privilege Escalation</span>
+        <span class="risk-title">Privilege Escalation and Unauthorized Access</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-high">High</span>
         <span class="badge badge-confirmed">Confirmed</span>
         <span class="badge badge-high">High conf</span>
         <span class="tag">Identity</span>
-        <span class="tag">2 controls</span>
+        <span class="tag">3 controls</span>
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Risk of unauthorized changes, data exfiltration, or service disruption due to excessive Owner role assignments and lack of Privileged Identity Management (PIM) enforcement.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Excessive privileged access increases the risk of malicious or accidental changes, leading to data loss, service downtime, or compliance violations.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> RBAC hygiene issues (27 Owner assignments, no group-based access), and PIM not in use for privileged roles.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> RBAC hygiene issues (too many Owner assignments, lack of group-based access); PIM not enforced; break-glass accounts not validated.</p>
       
 
       
@@ -555,11 +539,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           <span class="tag">Contains High severity controls</span>
           
-          <span class="tag">2 affected control(s)</span>
+          <span class="tag">3 affected control(s)</span>
           
-          <span class="tag">2 in Fail state</span>
-          
-          <span class="tag">Blast radius: High</span>
+          <span class="tag">3 in Fail state</span>
           
         </div>
       </div>
@@ -582,10 +564,10 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Delayed or missed detection of threats, leading to prolonged breaches and increased impact.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Delayed or missed detection of threats can lead to prolonged breaches, increased remediation costs, and reputational damage.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Centralized security visibility is lacking; SOC workspace topology is fragmented and Sentinel is not enabled.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Centralized security visibility is lacking; SOC workspace topology is fragmented and retention is insufficient.</p>
       
 
       
@@ -598,48 +580,6 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           <span class="tag">2 affected control(s)</span>
           
           <span class="tag">2 in Fail state</span>
-          
-          <span class="tag">Blast radius: High</span>
-          
-        </div>
-      </div>
-      
-
-      
-    </div>
-    
-    <div class="risk-card">
-      <div class="risk-header">
-        <span class="risk-number">5</span>
-        <span class="risk-title">Service Disruption and Data Loss from Lack of Resilience</span>
-      </div>
-      <div class="risk-meta">
-        <span class="badge badge-high">High</span>
-        <span class="badge badge-confirmed">Confirmed</span>
-        <span class="badge badge-high">High conf</span>
-        <span class="tag">Resilience</span>
-        <span class="tag">1 controls</span>
-      </div>
-
-      
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Business operations at risk due to absence of VM backups, increasing the likelihood of data loss and extended recovery times after incidents.</p>
-      
-      
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No VM backup coverage in the environment.</p>
-      
-
-      
-      <div style="margin-top:.5rem">
-        <span style="font-size:.75rem;color:var(--muted);text-transform:uppercase">Score Drivers</span>
-        <div style="margin-top:.2rem">
-          
-          <span class="tag">Contains High severity controls</span>
-          
-          <span class="tag">1 affected control(s)</span>
-          
-          <span class="tag">1 in Fail state</span>
-          
-          <span class="tag">Blast radius: Medium</span>
           
         </div>
       </div>
@@ -688,7 +628,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Cost governance and budget enforcement</strong>
+            <strong>Cost governance with budgets and alerts</strong>
             
             <span class="tag">Low</span>
             
@@ -700,7 +640,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             
             
             
-            <span>&#x23F1;&#xFE0F; 1 week</span>
+            <span>&#x23F1;&#xFE0F; 1-2 weeks</span>
             
             
             <span>&#x1F464; Platform Owner</span>
@@ -709,7 +649,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Budgets and cost alerts are active for all visible subscriptions; cost overruns trigger notifications to designated owners.
+            &#x2713; Budgets and cost alerts are configured and active for all visible subscriptions; cost overruns trigger notifications.
           </div>
           
         </div>
@@ -727,8 +667,6 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             
             
             
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
-            
             
             <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
@@ -739,14 +677,14 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Owner role assignments reduced to ≤5; ≥50% of privileged access is group-based.
+            &#x2713; Owner assignments reduced to recommended threshold; group-based RBAC implemented for all privileged roles.
           </div>
           
         </div>
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Break-glass emergency access validation</strong>
+            <strong>Centralized monitoring and workspace topology</strong>
             
             <span class="tag">Low</span>
             
@@ -756,36 +694,6 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             <span>&#x1F4CB; 1 controls</span>
             
             
-            
-            
-            <span>&#x23F1;&#xFE0F; 1 week</span>
-            
-            
-            <span>&#x1F464; Identity Administrator</span>
-            
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; At least two break-glass accounts exist, are monitored, and have MFA excluded with alerting.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Centralized monitoring workspace for diagnostics and SOC</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
             
             
             <span>&#x23F1;&#xFE0F; 2 weeks</span>
@@ -797,7 +705,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; All platform resources send diagnostics to a single, centrally managed workspace; Sentinel onboarding is unblocked.
+            &#x2713; All platform resources send diagnostics to a centralized workspace; workspace retention meets SOC requirements.
           </div>
           
         </div>
@@ -811,7 +719,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Privileged Identity Management (PIM) activation</strong>
+            <strong>Privileged Identity Management (PIM) for privileged roles</strong>
             
             <span class="tag">Low</span>
             
@@ -821,8 +729,6 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             <span>&#x1F4CB; 1 controls</span>
             
             
-            
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
             
             
             <span>&#x23F1;&#xFE0F; 2 weeks</span>
@@ -838,14 +744,46 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; ≥80% of privileged roles are eligible and managed through PIM; zero standing access is enforced.
+            &#x2713; All privileged roles are managed through PIM with access reviews and just-in-time elevation.
           </div>
           
         </div>
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Hub-spoke network topology and firewall implementation</strong>
+            <strong>Hub-spoke network topology and Azure Firewall deployment</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 2 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 3 weeks</span>
+            
+            
+            <span>&#x1F464; Network Engineering</span>
+            
+          </div>
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+            Depends on: Centralized monitoring and workspace topology
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; Hub VNet, spokes, and Azure Firewall are deployed; all spokes route through the hub for egress and inspection.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>Remediate storage and private endpoint posture</strong>
             
             <span class="tag">Low</span>
             
@@ -856,64 +794,28 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             
             
             
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
-            
-            
-            <span>&#x23F1;&#xFE0F; 3 weeks</span>
-            
-            
-            <span>&#x1F464; Network Architect</span>
-            
-          </div>
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Centralized monitoring workspace for diagnostics and SOC
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; All VNets are peered to a central hub; Azure Firewall and DDoS Protection are active in the hub.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Centralized security visibility and diagnostics</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
-            
             
             <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
             
-            <span>&#x1F464; Security Operations</span>
+            <span>&#x1F464; Platform Engineering</span>
             
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Centralized monitoring workspace for diagnostics and SOC
+            Depends on: Centralized monitoring and workspace topology
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Diagnostics coverage exceeds 80% for all resource types; security center recommendations are actionable.
+            &#x2713; All storage accounts and PaaS resources are compliant with encryption, firewall, and private endpoint policies.
           </div>
           
         </div>
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Update management and change tracking</strong>
+            <strong>Update management and change tracking for VMs</strong>
             
             <span class="tag">Low</span>
             
@@ -933,46 +835,12 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Centralized monitoring workspace for diagnostics and SOC
+            Depends on: Centralized monitoring and workspace topology
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Update Manager and change tracking are active for all VMs; patch compliance is reported centrally.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Backup coverage for critical workloads</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
-            
-            
-            <span>&#x23F1;&#xFE0F; 2 weeks</span>
-            
-            
-            <span>&#x1F464; Platform Engineering</span>
-            
-          </div>
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Centralized monitoring workspace for diagnostics and SOC
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; 100% of critical VMs are protected by Azure Backup with tested restore points.
+            &#x2713; Update Manager and change tracking are enabled for all applicable resources; patch compliance is monitored.
           </div>
           
         </div>
@@ -986,21 +854,83 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Data protection for storage, private endpoints, and registries</strong>
+            <strong>Integrate Entra ID logs with centralized monitoring</strong>
             
             <span class="tag">Low</span>
             
           </div>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
             
-            <span>&#x1F4CB; 3 controls</span>
+            <span>&#x1F4CB; 1 controls</span>
             
             
             
-            <span>&#x1F6E1;&#xFE0F; Reduces 1 risk(s)</span>
+            
+            <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
             
-            <span>&#x23F1;&#xFE0F; 3 weeks</span>
+            <span>&#x1F464; Security Operations</span>
+            
+          </div>
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+            Depends on: Privileged Identity Management (PIM) for privileged roles, Centralized monitoring and workspace topology
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; Entra ID logs and security events are ingested into the central workspace and available for SOC analytics.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>DDoS Protection Standard for hub VNet</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 1 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 1 week</span>
+            
+            
+            <span>&#x1F464; Network Security</span>
+            
+          </div>
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+            Depends on: Hub-spoke network topology and Azure Firewall deployment
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; DDoS Protection Standard is active on hub VNet; all spokes inherit protection.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>Expand backup coverage to all critical VMs</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 1 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
             
             <span>&#x1F464; Platform Engineering</span>
@@ -1008,12 +938,12 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Hub-spoke network topology and firewall implementation, Centralized security visibility and diagnostics
+            Depends on: Update management and change tracking for VMs
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; All storage accounts, private endpoints, and container registries meet data protection baseline (encryption, private access, firewall rules).
+            &#x2713; All critical VMs are protected by Azure Backup with policy-compliant retention.
           </div>
           
         </div>
@@ -1510,9 +1440,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
               
             </td>
             <td><span class="badge badge-low">Low</span></td>
-            <td class="why-cell">Signal: resource_graph:app_service_posture · All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-02-24T04:10:37.9471293Z, correlationId = 1878ed3e-9f89-40ba-8987-51a3b1014d1c.
+            <td class="why-cell">Signal: resource_graph:app_service_posture · All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-02-25T02:53:33.6651770Z, correlationId = aaa387d7-c6d2-4307-96fe-4ad2dc606374.
 Code: BadRequest
-Message: Please provide below info when asking for support: timestamp = 2026-02-24T04:1</td>
+Message: Please provide below info when asking for support: timestamp = 2026-02-25T02:5</td>
           </tr>
           
           <tr>
@@ -6188,7 +6118,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
               
               <span class="badge badge-medium" style="margin-right:.3rem">Medium</span>
               
-              Budgets and anomaly detection not implemented for all subscriptions. This risks uncontrolled spend as scale increases.
+              Budgets and cost anomaly detection are not fully implemented. Without these, uncontrolled spend is likely as subscription count grows.
             </div>
             
           
@@ -6224,9 +6154,9 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
             
             <div class="funnel-item">
               
-              <span class="badge badge-high" style="margin-right:.3rem">High</span>
+              <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              No evidence of policy initiatives assigned at management group scope. Resource locks, tagging, and cost management controls are not enforced. This blocks consistent governance and compliance at scale.
+              No evidence of management group hierarchy, platform-level policy assignments, or resource locks. Policy compliance and enforcement are not in place, which is required to prevent configuration drift and manage blast radius.
             </div>
             
           
@@ -6237,7 +6167,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are governance controls (including policy assignment, resource locks, and compliance monitoring) standardized and enforced at scale across all management groups and subscriptions?</div>
+              <div class="q-text">How mature is your governance model for resource locks, policy enforcement, and platform-wide guardrails?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6245,7 +6175,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Run a governance and policy management workshop to define and implement ALZ governance controls and compliance monitoring.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Initiate a governance and policy review session to define and implement required guardrails.</div>
               
               
             </div>
@@ -6269,7 +6199,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
             
             <div class="funnel-item">
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Unauthorized Access and Privilege Escalation
+              Privilege Escalation and Unauthorized Access
             </div>
             
           
@@ -6283,7 +6213,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              Privileged Identity Management (PIM) is not effective (0% eligible ratio), RBAC hygiene issues (27 Owner assignments, 0% group-based), and no validated break-glass accounts. These gaps prevent secure, least-privilege operations at scale.
+              Privileged Identity Management (PIM) is not effective (eligible ratio 0%). Excessive Owner role assignments (27, recommended ≤5) and lack of group-based RBAC (0%). No validated break-glass accounts. These are foundational for least-privilege operations and secure scaling.
             </div>
             
           
@@ -6294,7 +6224,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are privileged access management, RBAC hygiene, and break-glass account processes standardized and enforced across the platform?</div>
+              <div class="q-text">What is the maturity of your identity and privileged access management practices, including RBAC hygiene, Privileged Identity Management (PIM) for privileged roles, and break-glass account validation?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6302,7 +6232,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate an identity and privileged access management workshop to align on RBAC, PIM, and break-glass account best practices, then implement with ALZ identity modules.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Schedule an identity and access management review and PIM enablement workshop.</div>
               
               
             </div>
@@ -6325,13 +6255,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
           
             
             <div class="funnel-item">
-              <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Inability to Detect and Respond to Security Incidents
+              <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
+              Data Breach and Loss of Sensitive Information
             </div>
             
             <div class="funnel-item">
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Service Disruption and Data Loss from Lack of Resilience
+              Inability to Detect and Respond to Security Incidents
             </div>
             
           
@@ -6345,7 +6275,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              No centralized Log Analytics workspace, Sentinel not enabled, and log retention is only 30 days. This blocks centralized monitoring, security operations, and compliance reporting for multiple subscriptions.
+              No centralized Log Analytics workspace or Sentinel deployment. Workspace topology is fragmented (5 workspaces, retention below 90 days). This prevents centralized monitoring, incident response, and operational visibility at scale.
             </div>
             
           
@@ -6356,7 +6286,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent is a centralized management and monitoring platform (including workspace topology, update management, change tracking, and alert action mapping) implemented and operational?</div>
+              <div class="q-text">What is the level of centralized monitoring and management for your Azure environment, including workspace topology, update management, alerting, and change tracking?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6364,13 +6294,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a management and monitoring platform workshop to design the target state; implement ALZ management modules and policies.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a management and monitoring architecture workshop to define workspace topology and operational processes.</div>
               
               
             </div>
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are backup and resilience controls (including VM backup coverage and recovery processes) implemented and regularly tested across all critical workloads?</div>
+              <div class="q-text">How mature is your approach to cost forecasting and financial governance across Azure subscriptions?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6378,13 +6308,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a backup and resilience review; implement ALZ backup and recovery modules and establish regular testing procedures.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a cost management and optimization session to implement forecasting and alerting practices.</div>
               
               
             </div>
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are cost forecasting and proactive cost management practices implemented and integrated into platform operations?</div>
+              <div class="q-text">What is the maturity of your backup and resilience strategy for critical workloads in Azure?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6392,7 +6322,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a cost management and forecasting workshop; implement ALZ cost management modules and establish regular review processes.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Perform a backup and resilience capability assessment and define remediation steps.</div>
               
               
             </div>
@@ -6416,7 +6346,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
             
             <div class="funnel-item">
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
-              Platform Compromise via Inadequate Network Security
+              Operational Disruption Due to Inadequate Network Security
             </div>
             
           
@@ -6430,7 +6360,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              No evidence of hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. No hub VNet detected. This prevents scalable, secure, and centrally managed network segmentation required for enterprise-scale operations.
+              No evidence of hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. Centralized network egress and segmentation are not implemented, which are mandatory for scaling and securing multi-subscription environments.
             </div>
             
           
@@ -6441,7 +6371,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent is a standardized, secure, and scalable network topology (including hub-spoke architecture, Azure Firewall, DDoS Protection, and network segmentation) designed, documented, and enforced across all landing zones?</div>
+              <div class="q-text">To what extent is a standardized hub-and-spoke network topology with centralized security controls (such as Azure Firewall and DDoS Protection) implemented across all Azure environments?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6449,7 +6379,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a network topology and security architecture workshop to define and document the target state, then implement ALZ network modules and policies.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a network architecture workshop to design or validate the hub-and-spoke topology and define the rollout plan for centralized security controls.</div>
               
               
             </div>
@@ -6473,7 +6403,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
             
             <div class="funnel-item">
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
-              Sensitive Data Exposure and Regulatory Non-Alignment
+              Data Breach and Loss of Sensitive Information
             </div>
             
             <div class="funnel-item">
@@ -6492,14 +6422,14 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              Centralized security visibility is missing (diagnostics coverage 2.1%), Defender for Cloud not enabled across all plans, and Secure Score unavailable. This blocks tenant-wide threat detection and response.
+              Centralized security visibility is lacking (diagnostics coverage 2.1%). Defender for Cloud is not enabled across all plans. Secure Score is unavailable or below threshold. This exposes the platform to unmanaged risk as scale increases.
             </div>
             
             <div class="funnel-item">
               
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
               
-              Storage accounts and PaaS resources lack private endpoints and backup coverage is 0%. These are required for secure, resilient data handling at scale.
+              Storage accounts and PaaS services lack private endpoints and secure posture (0% compliant). No VM backup coverage. Data protection controls are essential for regulated workloads and disaster recovery at scale.
             </div>
             
           
@@ -6510,7 +6440,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent is centralized security visibility (including diagnostic log coverage, alerting, and action mapping) implemented and integrated with a SOC or SIEM solution?</div>
+              <div class="q-text">How mature is your approach to data protection for storage, container registries, and use of private endpoints for PaaS resources?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6518,13 +6448,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Run a security monitoring and SOC integration workshop to define log, alert, and action group requirements; implement ALZ monitoring and security modules.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Run a data protection and private endpoint configuration review, followed by remediation planning.</div>
               
               
             </div>
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are data protection controls (including secure storage configuration, private endpoint coverage, and secure container registry practices) standardized and enforced across all workloads?</div>
+              <div class="q-text">What is the maturity of your centralized security monitoring and incident response capabilities, including diagnostic coverage and alerting?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6532,7 +6462,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-02-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a data protection and storage security review; implement ALZ policies for storage, private endpoints, and container registry security.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a security monitoring and incident response workshop to assess and enhance coverage.</div>
               
               
             </div>

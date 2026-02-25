@@ -12,16 +12,38 @@ Taxonomy enforcement:
     ``ControlDefinition`` instances.  If ANY control has a missing or
     invalid taxonomy field the loader raises ``TaxonomyViolation`` —
     the assessment never starts.
+
+Version locking:
+    The ALZ v1.0 pack is frozen.  A SHA-256 checksum of controls.json
+    is verified at load time.  If the file changes without an explicit
+    version bump the loader raises ``ControlPackVersionError``.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from schemas.taxonomy import ControlDefinition
 from engine.taxonomy_validator import validate_and_build_controls
+
+_log = logging.getLogger(__name__)
+
+# ── Version-locked checksums ──────────────────────────────────────
+# SHA-256 of the canonical controls.json for each frozen version.
+# If a pack is listed here, any content change requires an explicit
+# version bump (new directory under control_packs/<family>/).
+_FROZEN_CHECKSUMS: dict[str, str] = {
+    "alz/v1.0": "03eb5c86e10c5203",  # 48 controls, 8 design areas
+}
+
+
+class ControlPackVersionError(Exception):
+    """Raised when a frozen control pack's checksum does not match."""
+    pass
 
 
 @dataclass
@@ -39,6 +61,12 @@ class ControlPack:
     controls: dict[str, ControlDefinition]
     design_areas: dict[str, dict[str, Any]]
     manifest: dict[str, Any]
+    controls_checksum: str = ""
+
+    @property
+    def version_tag(self) -> str:
+        """Canonical version identifier for run metadata (e.g. 'alz-v1.0')."""
+        return self.pack_id or f"{self.manifest.get('pack_id', 'unknown')}"
 
     def signal_bus_names(self) -> list[str]:
         """Return all signal_bus_name values (non-null) for preflight cross-ref."""
@@ -129,6 +157,23 @@ def load_pack(family: str = "alz", version: str = "v1.0") -> ControlPack:
     # Returns dict[str, ControlDefinition] or raises TaxonomyViolation.
     typed_controls = validate_and_build_controls(raw_controls, design_areas)
 
+    # ── Version-lock guardrail ────────────────────────────────────
+    # Frozen packs must not change on disk without a version bump.
+    with open(controls_path, "rb") as fb:
+        controls_checksum = hashlib.sha256(fb.read()).hexdigest()[:16]
+
+    pack_key = f"{family}/{version}"
+    expected = _FROZEN_CHECKSUMS.get(pack_key)
+    if expected and controls_checksum != expected:
+        raise ControlPackVersionError(
+            f"Control pack '{pack_key}' is version-locked (expected checksum "
+            f"{expected}, got {controls_checksum}).  If you modified controls.json, "
+            f"create a new version directory (e.g. {family}/v1.1/) and update "
+            f"_FROZEN_CHECKSUMS in control_packs/loader.py."
+        )
+    if expected:
+        _log.debug("Control pack %s: checksum verified (%s)", pack_key, controls_checksum)
+
     pack = ControlPack(
         pack_id=manifest.get("pack_id", ""),
         name=manifest.get("name", ""),
@@ -138,6 +183,7 @@ def load_pack(family: str = "alz", version: str = "v1.0") -> ControlPack:
         controls=typed_controls,
         design_areas=design_areas,
         manifest=manifest,
+        controls_checksum=controls_checksum,
     )
 
     return pack

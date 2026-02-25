@@ -70,6 +70,8 @@ def load_all_trees() -> list[DecisionTree]:
     if not _TREE_DIR.is_dir():
         return trees
     for fp in sorted(_TREE_DIR.glob("*.json")):
+        if fp.name.endswith(".schema.json"):
+            continue
         raw = json.loads(fp.read_text(encoding="utf-8"))
         trees.append(DecisionTree(raw))
     return trees

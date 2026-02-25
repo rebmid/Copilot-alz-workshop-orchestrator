@@ -1,6 +1,18 @@
 # engine/scoring.py
 """Deterministic scoring — all status accounting imported from taxonomy.
 
+┌─────────────────────────────────────────────────────────────────┐
+│                    LAYER 1 — DETERMINISTIC                      │
+│                                                                 │
+│  Pure computation — NO AI, NO LLM, NO network calls.            │
+│  Input:  evaluated control results + taxonomy weights           │
+│  Output: section scores, gap scores, maturity metrics           │
+│                                                                 │
+│  This module is FROZEN during stabilization.                    │
+│  Do NOT add AI imports, prompt strings, or model calls.         │
+│  All status sets come from schemas/taxonomy.py.                 │
+└─────────────────────────────────────────────────────────────────┘
+
 Every control status is explicitly categorized in schemas/taxonomy.py.
 This module NEVER defines its own status sets.  If a status is missing
 from the taxonomy enum, the system refuses to start (compile-time assert).

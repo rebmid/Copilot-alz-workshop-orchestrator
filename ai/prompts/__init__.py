@@ -96,3 +96,35 @@ class PromptPack:
             .replace("{{DEPENDENCY_ORDER}}", json.dumps(dependency_order, indent=2))
             .replace("{{ASSESSMENT_CONTEXT}}", json.dumps(assessment_context, indent=2))
         )
+
+    def critical_issues(
+        self,
+        critical_controls: list[dict],
+        assessment_context: dict,
+    ) -> str:
+        import json
+        tpl = _load("critical_issues.txt")
+        return (
+            tpl
+            .replace("{{CRITICAL_CONTROLS}}", json.dumps(critical_controls, indent=2))
+            .replace("{{ASSESSMENT_CONTEXT}}", json.dumps(assessment_context, indent=2))
+        )
+
+    def blocker_resolution(
+        self,
+        blocker_mapping: dict,
+        blockers: list[dict],
+        remediation_items: list[dict],
+        dependency_graph: dict,
+        maturity_trajectory: dict,
+    ) -> str:
+        import json
+        tpl = _load("blocker_resolution.txt")
+        return (
+            tpl
+            .replace("{{BLOCKER_MAPPING}}", json.dumps(blocker_mapping, indent=2))
+            .replace("{{BLOCKERS}}", json.dumps(blockers, indent=2))
+            .replace("{{REMEDIATION_ITEMS}}", json.dumps(remediation_items, indent=2))
+            .replace("{{DEPENDENCY_GRAPH}}", json.dumps(dependency_graph, indent=2))
+            .replace("{{MATURITY_TRAJECTORY}}", json.dumps(maturity_trajectory, indent=2))
+        )

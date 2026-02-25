@@ -1,0 +1,51 @@
+You are a senior Azure platform architect performing an Azure Landing Zone assessment.
+
+Analyze the blocker-to-remediation-item mapping and dependency graph below. Produce a structured "Blocker Resolution Summary" that identifies the minimal set of controls to unblock the landing zone.
+
+BLOCKER MAPPING (blocker category → resolving checklist IDs, deterministically derived):
+{{BLOCKER_MAPPING}}
+
+BLOCKERS (from enterprise readiness assessment):
+{{BLOCKERS}}
+
+REMEDIATION ITEMS (checklist_id, controls, title — the canonical item set):
+{{REMEDIATION_ITEMS}}
+
+DEPENDENCY GRAPH (topological order, phase assignments, parallel groups):
+{{DEPENDENCY_GRAPH}}
+
+MATURITY TRAJECTORY (deterministic projection):
+{{MATURITY_TRAJECTORY}}
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "blocker_resolution": [
+    {
+      "blocker_category": "Exact category string from the BLOCKER MAPPING input",
+      "resolving_checklist_ids": ["Exact checklist_id(s) from the BLOCKER MAPPING — do NOT invent IDs"],
+      "minimal_control_set": ["Subset of resolving_checklist_ids that form the minimum fix — typically 1-2 items"],
+      "structural_fix": "2-3 sentence description of WHAT changes architecturally when these items are resolved. Reference the dependency graph to explain unblocking effects.",
+      "dependency_unlock": ["checklist_id(s) from the dependency graph that become unblocked once this blocker is resolved"],
+      "phase": "30_days | 60_days | 90_days — from the dependency graph phase_assignment",
+      "estimated_maturity_lift_percent": 0.0,
+      "rationale": "1-2 sentence explanation of how the maturity lift was derived (reference trajectory numbers if available)"
+    }
+  ],
+  "resolution_summary": {
+    "total_blockers": 0,
+    "fully_resolved": 0,
+    "minimal_items_required": ["The deduplicated minimal set of checklist_ids across ALL blockers"],
+    "estimated_total_maturity_lift_percent": 0.0,
+    "critical_path_items": ["checklist_ids that appear in the dependency graph critical path and also resolve blockers"]
+  }
+}
+
+Rules:
+- You MUST only use checklist_id values from the BLOCKER MAPPING and REMEDIATION ITEMS inputs. Do NOT invent or fabricate any IDs.
+- minimal_control_set MUST be a subset of the resolving_checklist_ids for that blocker.
+- estimated_maturity_lift_percent MUST reference the MATURITY TRAJECTORY numbers. If trajectory data is unavailable, set to 0.0 and state "trajectory data unavailable" in rationale.
+- dependency_unlock MUST only contain checklist_ids that appear in the DEPENDENCY GRAPH initiative_deps as dependents of the resolving items.
+- phase MUST match the phase_assignment from the DEPENDENCY GRAPH for the first item in minimal_control_set.
+- Do NOT change or reinterpret control statuses — you are summarising resolution paths, not re-scoring.
+- Order blocker_resolution entries by phase (30_days first) then by estimated_maturity_lift_percent descending.

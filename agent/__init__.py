@@ -1,4 +1,7 @@
-"""Agent package — orchestration, workshop loop, and session state."""
-from agent.session import AgentSession  # noqa: F401
-from agent.workshop import WorkshopAgent  # noqa: F401
+"""Agent package — orchestration, workshop loop, and session state.
+
+Note: AgentSession and WorkshopAgent are quarantined from public re-exports
+during stabilization.  They remain importable directly from their modules
+for test use, but are no longer surfaced via ``from agent import *``.
+"""
 from agent.intent_orchestrator import IntentOrchestrator  # noqa: F401
