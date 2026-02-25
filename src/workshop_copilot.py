@@ -318,16 +318,34 @@ async def _run(*, demo: bool = True):
     })
 
     done = asyncio.Event()
+    _debug = os.environ.get("WORKSHOP_DEBUG", "").lower() in ("1", "true", "yes")
 
     def on_event(event):
         etype = event.type if isinstance(event.type, str) else event.type.value
+        if _debug:
+            # Show every event type so we can diagnose flow issues
+            data_preview = ""
+            try:
+                d = getattr(event, "data", None)
+                if d is not None:
+                    c = getattr(d, "content", None)
+                    m = getattr(d, "message", None)
+                    if c:
+                        data_preview = f" content={str(c)[:80]!r}..."
+                    elif m:
+                        data_preview = f" message={str(m)[:80]!r}"
+            except Exception:
+                pass
+            print(f"  [debug] event: {etype}{data_preview}", flush=True)
         if etype == "assistant.message":
-            print(f"\n{event.data.content}\n")
+            content = getattr(event.data, "content", None) if event.data else None
+            if content:
+                print(f"\n{content}\n", flush=True)
             done.set()
         elif etype == "session.idle":
             done.set()
         elif etype == "session.error":
-            print(f"\n[error] {getattr(event.data, 'message', event.data)}\n")
+            print(f"\n[error] {getattr(event.data, 'message', event.data)}\n", flush=True)
             done.set()
 
     session.on(on_event)
