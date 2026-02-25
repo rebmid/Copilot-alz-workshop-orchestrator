@@ -263,15 +263,28 @@ async def _run(*, demo: bool = True):
     # Resolve GitHub token: env var → gh CLI fallback
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if not token:
+        # Try gh CLI — resolve full path on Windows to avoid PATH issues
+        gh_cmd = "gh"
+        if sys.platform == "win32":
+            import shutil
+            gh_path = shutil.which("gh")
+            if gh_path:
+                gh_cmd = gh_path
         try:
-            token = subprocess.run(
-                ["gh", "auth", "token"],
+            proc = subprocess.run(
+                [gh_cmd, "auth", "token"],
                 capture_output=True, text=True, timeout=10,
-            ).stdout.strip()
+            )
+            if proc.returncode == 0 and proc.stdout.strip():
+                token = proc.stdout.strip()
+        except FileNotFoundError:
+            pass
         except Exception:
-            token = None
+            pass
     if not token:
-        print("[error] No GitHub token found. Set GITHUB_TOKEN or run 'gh auth login'.")
+        print("[error] No GitHub token found.")
+        print("        Fix: set GITHUB_TOKEN env var, or ensure 'gh auth login' is done")
+        print("        and gh CLI is on your PATH.")
         return
 
     client = CopilotClient({"github_token": token})
