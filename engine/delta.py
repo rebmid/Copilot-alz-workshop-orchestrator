@@ -1,21 +1,37 @@
-def compute_delta(prev, curr):
+import json
 
-    prev_map = {r["control_id"]: r for r in prev.get("results", [])}
+
+def _canonical_results_map(run):
+    """Return deterministic control_id -> result mapping for delta operations."""
+    mapped = {}
+    for item in sorted(
+        run.get("results", []),
+        key=lambda r: (r["control_id"], json.dumps(r, sort_keys=True, separators=(",", ":"))),
+    ):
+        mapped[item["control_id"]] = item
+    return mapped
+
+
+def compute_delta(prev, curr):
+    """Compute deterministic status changes between two run snapshots."""
+    prev_map = _canonical_results_map(prev)
+    curr_map = _canonical_results_map(curr)
     changes = []
 
-    for r in curr.get("results", []):
-        old = prev_map.get(r["control_id"])
-        if old and old["status"] != r["status"]:
+    for control_id in sorted(curr_map):
+        old = prev_map.get(control_id)
+        current = curr_map[control_id]
+        if old and old["status"] != current["status"]:
             changes.append({
-                "control_id": r["control_id"],
+                "control_id": control_id,
                 "previous": old["status"],
-                "current": r["status"]
+                "current": current["status"],
             })
 
     return {
         "has_previous": True,
         "changed_controls": changes,
-        "count": len(changes)
+        "count": len(changes),
     }
 
 
