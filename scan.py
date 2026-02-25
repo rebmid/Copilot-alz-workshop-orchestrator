@@ -119,6 +119,8 @@ def parse_args():
                    help="Probe all signal providers without scoring and exit")
     p.add_argument("--tag", metavar="TAG",
                    help="Label this run snapshot (e.g. 'baseline', 'sprint-3')")
+    p.add_argument("--workshop-copilot", action="store_true",
+                   help="Start a Copilot SDK workshop session")
     return p.parse_args()
 
 
@@ -129,6 +131,12 @@ def parse_args():
 def main():
     args = parse_args()
     enable_ai = not args.no_ai
+
+    # ── Workshop-Copilot mode (Copilot SDK session) ───────────────
+    if args.workshop_copilot:
+        from workshop_copilot import run_workshop
+        run_workshop(demo=args.demo)
+        return
 
     print("╔══════════════════════════════════════╗")
     print("║   Azure Landing Zone Assessor        ║")

@@ -1,38 +1,58 @@
-## 🧠 Reasoning Agent for Enterprise-Scale Azure Governance
+# Copilot Enterprise Workshop Orchestrator
 
-### Why This Is a True Reasoning Agent (Not Just an Assessment Tool)
+### Deterministic Azure Landing Zone Governance — Multi-Turn, Tool-Restricted, Enterprise Guardrailed
 
-This system performs structured, multi-step reasoning over live Azure telemetry:
+This project implements a GitHub Copilot SDK–powered **enterprise workshop orchestrator** over a deterministic Azure Landing Zone (ALZ) governance engine.
 
-1. Deterministic control evaluation  
-2. Dependency graph impact analysis  
-3. Initiative ordering based on structural constraints  
-4. Causal “why-risk” chain construction  
-5. Grounded remediation via Microsoft Learn MCP  
+> **Copilot does not score controls.**
+> **Copilot does not mutate the environment.**
+
+Copilot acts as a multi-turn orchestration layer, selecting from explicit, guardrailed tools that execute deterministic governance logic and return structured, traceable evidence.
+
+---
+
+## What Makes This Enterprise-Grade
+
+- **One-way data flow:** deterministic → AI
+- **Tool-restricted execution surface**
+- **No scoring modification**
+- **No environment mutation**
+- **No file writes outside `out/`**
+- **Structured output validation**
+- **Microsoft Learn grounding via MCP**
+
+> **This is not a chatbot.**
+>
+> It is a controlled governance orchestration layer over live Azure telemetry.
+
+---
+
+## Deterministic Reasoning Foundation
+
+The underlying assessment engine performs structured, multi-stage reasoning over live Azure telemetry:
+
+1. Deterministic control evaluation
+2. Dependency graph impact analysis
+3. Initiative ordering based on structural constraints
+4. Causal "why-risk" chain construction
+5. Microsoft Learn–grounded remediation guidance
 
 **The AI does not score. It reasons over scored evidence.**
 
-This is a deterministic Azure Landing Zone assessment engine with a multi-stage AI reasoning layer that:
+### What the Engine Produces
 
-- Scores every control in the [Azure Landing Zone Review Checklist](https://github.com/Azure/review-checklists) against live Azure telemetry  
-- Builds a dependency-ordered 30-60-90 transformation roadmap  
-- Performs causal “why-risk” analysis across domains  
-- Grounds every remediation in official Microsoft Learn documentation via MCP  
+- Scores every control in the [Azure Landing Zone Review Checklist](https://github.com/Azure/review-checklists) against live Azure telemetry
+- Builds a dependency-ordered 30-60-90 transformation roadmap
+- Performs causal "why-risk" analysis across domains
+- Grounds remediation in official Microsoft Learn documentation
 
-# Azure Landing Zone Assessor (`lz-assessor`)
+---
 
-Built for **Cloud Solution Architects (CSAs)**, this engine evaluates an Azure tenant against Microsoft’s [Azure Review Checklists](https://github.com/Azure/review-checklists), scores controls from live platform signals.
+## Built for Cloud Solution Architects
 
-## Why This Exists
+Designed for CSA-led enterprise engagements, this system replaces slideware and checklist interviews with deterministic telemetry analysis.
 
-Most landing zone assessments rely on interviews, slideware, or static checklists.
-
-Evaluates the actual Azure configuration state using read-only telemetry and maps findings directly to official checklist IDs.
-- Grounds every finding in a canonical checklist control  
-- Separates deterministic evaluation from AI enrichment  
-- Accelerates CSA workshops without replacing architectural judgement  
-
-**Run one command → get a scored assessment, executive briefing, and a traceable 30-60-90 transformation plan.**
+**Run one command → enter a Copilot-facilitated workshop session over scored governance evidence.**
 
 > [!IMPORTANT]
 > 🔍 **Open the interactive demo report:**
