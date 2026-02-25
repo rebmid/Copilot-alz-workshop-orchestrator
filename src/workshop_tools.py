@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent  # src/ → project root
 OUT_DIR = (_PROJECT_ROOT / "out").resolve()
+DEMO_DIR = (_PROJECT_ROOT / "demo").resolve()
 
 
 def ensure_out_path(path: str | Path) -> Path:
@@ -53,6 +54,7 @@ def _resolve_run_path(run_id: str) -> Path:
     """Map a run_id to its JSON file.
 
     Special value ``"latest"`` → newest ``run-*.json`` in out/.
+    Otherwise looks in out/ first, then falls back to demo/.
     """
     if run_id == "latest":
         runs = sorted(OUT_DIR.glob("run-*.json"), reverse=True)
@@ -62,9 +64,13 @@ def _resolve_run_path(run_id: str) -> Path:
             )
         return runs[0]
     candidate = OUT_DIR / f"{run_id}.json"
-    if not candidate.exists():
-        raise FileNotFoundError(f"Run file not found: {candidate}")
-    return ensure_out_path(candidate)
+    if candidate.exists():
+        return ensure_out_path(candidate)
+    # Fallback: check demo/ for pre-built fixtures
+    demo_candidate = DEMO_DIR / f"{run_id}.json"
+    if demo_candidate.exists():
+        return demo_candidate
+    raise FileNotFoundError(f"Run file not found: {candidate}")
 
 
 def _load_cached(run_id: str) -> dict:

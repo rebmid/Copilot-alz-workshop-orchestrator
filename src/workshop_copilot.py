@@ -323,8 +323,10 @@ async def _run(*, demo: bool = True):
         etype = event.type if isinstance(event.type, str) else event.type.value
         if etype == "assistant.message":
             print(f"\n{event.data.content}\n")
-            done.set()
-        elif etype == "session.idle":
+        elif etype == "assistant.turn_end":
+            # Fires after the LLM has finished its full turn, including
+            # any tool calls and the follow-up response.  This is the
+            # correct signal to unblock the REPL.
             done.set()
         elif etype == "session.error":
             print(f"\n[error] {getattr(event.data, 'message', event.data)}\n")
