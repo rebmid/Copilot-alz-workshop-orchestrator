@@ -23,7 +23,6 @@ from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field
-from copilot import define_tool
 
 # ══════════════════════════════════════════════════════════════════
 # Path guardrails
@@ -103,13 +102,6 @@ class RunScanParams(BaseModel):
     )
 
 
-@define_tool(
-    description=(
-        "Execute an Azure Landing Zone assessment scan. "
-        "Returns the run_id and output paths. "
-        "No Azure resources are mutated — read-only telemetry scan."
-    ),
-)
 def run_scan(params: RunScanParams) -> str:
     """Invoke scan.py as a subprocess and return run metadata.
 
@@ -196,13 +188,6 @@ class LoadResultsParams(BaseModel):
     )
 
 
-@define_tool(
-    description=(
-        "Load an assessment run into memory and return structured metadata. "
-        "If run_id is 'latest', loads the newest run from out/. "
-        "Data is cached for the session — subsequent tool calls reuse it."
-    ),
-)
 def load_results(params: LoadResultsParams) -> str:
     """Load a run and return its metadata summary."""
     try:
@@ -261,14 +246,6 @@ class SummarizeFindingsParams(BaseModel):
     )
 
 
-@define_tool(
-    description=(
-        "Deterministic filtering of assessment findings. "
-        "No AI summarization — pure structured filtering by "
-        "design_area, severity, and/or failed_only. "
-        "Returns a summary with counts and top items."
-    ),
-)
 def summarize_findings(params: SummarizeFindingsParams) -> str:
     """Filter the results array and return a deterministic summary."""
     try:
@@ -368,13 +345,6 @@ class GenerateOutputsParams(BaseModel):
     )
 
 
-@define_tool(
-    description=(
-        "Generate output artefacts (HTML report, Excel workbook) from "
-        "a loaded assessment run. All outputs are written to out/. "
-        "Formats must be in the allow-list: html, excel."
-    ),
-)
 def generate_outputs(params: GenerateOutputsParams) -> str:
     """Generate reports for the specified run.
 
@@ -485,13 +455,3 @@ def generate_outputs(params: GenerateOutputsParams) -> str:
     return json.dumps(result, indent=2, default=str)
 
 
-# ══════════════════════════════════════════════════════════════════
-# Collect all tools for registration
-# ══════════════════════════════════════════════════════════════════
-
-ALL_TOOLS = [
-    run_scan,
-    load_results,
-    summarize_findings,
-    generate_outputs,
-]
