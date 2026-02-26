@@ -1,10 +1,8 @@
 {
   "mcpServers": {
-    "alz-workshop": {
-      "command": "python",
-      "args": ["scan.py", "--workshop-copilot", "--demo"],
-      "cwd": ".",
-      "env": {}
+    "microsoft-learn": {
+      "transport": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
     }
   }
 }
