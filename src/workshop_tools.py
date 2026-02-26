@@ -114,11 +114,33 @@ def run_scan(params: RunScanParams) -> str:
     We shell out rather than importing main() to guarantee process
     isolation — scan.py was not designed for re-entrant calls inside
     the same interpreter.
-    """
-    cmd = [sys.executable, str(_PROJECT_ROOT / "scan.py")]
 
+    In demo mode, we copy the demo fixture into out/ instead of running
+    scan.py (which ignores --demo for the main scan path).
+    """
+    from datetime import datetime as _dt, timezone as _tz
+    import shutil as _shutil
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # ── Demo mode: copy fixture, skip subprocess ──────────────
     if params.demo:
-        cmd.append("--demo")
+        demo_src = _PROJECT_ROOT / "demo" / "demo_run.json"
+        if not demo_src.exists():
+            return json.dumps({"error": "demo/demo_run.json not found."})
+
+        run_id = _dt.now(_tz.utc).strftime("run-%Y%m%d-%H%M")
+        dest = OUT_DIR / f"{run_id}.json"
+        _shutil.copy2(str(demo_src), str(dest))
+
+        return json.dumps({
+            "run_id": run_id,
+            "demo": True,
+            "output_paths": [str(dest.relative_to(_PROJECT_ROOT))],
+        }, indent=2)
+
+    # ── Live mode: shell out to scan.py ───────────────────────
+    cmd = [sys.executable, str(_PROJECT_ROOT / "scan.py")]
     if params.scope:
         cmd.extend(["--mg-scope", params.scope])
     if params.tag:
@@ -134,16 +156,20 @@ def run_scan(params: RunScanParams) -> str:
         result = subprocess.run(
             cmd,
             capture_output=True,
-            text=True,
             timeout=600,  # 10-minute ceiling
             cwd=str(_PROJECT_ROOT),
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
         )
     except subprocess.TimeoutExpired:
         return json.dumps({"error": "Scan timed out after 600 seconds."})
 
+    # Decode stdout/stderr from bytes to str safely
+    stdout_text = (result.stdout or b"").decode("utf-8", errors="replace")
+    stderr_text = (result.stderr or b"").decode("utf-8", errors="replace")
+
     if result.returncode != 0:
         # Surface a useful error without leaking full stderr
-        stderr_tail = (result.stderr or "").strip().splitlines()[-5:]
+        stderr_tail = stderr_text.strip().splitlines()[-5:]
         return json.dumps({
             "error": "Scan failed",
             "exit_code": result.returncode,
@@ -157,7 +183,7 @@ def run_scan(params: RunScanParams) -> str:
     if not new_files:
         return json.dumps({
             "error": "Scan completed but no new run file was created.",
-            "stdout_tail": (result.stdout or "").strip().splitlines()[-5:],
+            "stdout_tail": stdout_text.strip().splitlines()[-5:],
         })
 
     run_path = new_files[-1]  # latest one

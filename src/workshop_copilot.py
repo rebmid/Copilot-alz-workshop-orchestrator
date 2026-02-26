@@ -37,6 +37,7 @@ from src.workshop_tools import (
 
 active_run_id:  str  | None = None
 active_results: dict | None = None
+_session_demo: bool = False  # Set True when --demo; forces run_scan to use demo fixture
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -73,74 +74,104 @@ def _log_tool(tool_name: str, run_id: str | None, **extra) -> None:
 
 def _handler_run_scan(invocation) -> ToolResult:
     global active_run_id, active_results
-    args = invocation.get("arguments", {})
-    params = RunScanParams(
-        scope=args.get("scope"),
-        demo=args.get("demo", False),
-        tag=args.get("tag"),
-    )
-    _log_tool("run_scan", None, demo=params.demo, scope=params.scope)
-    result = _handle_run_scan(params)
-
-    # ── Populate session cache ────────────────────────────────
+    print(f"  [tool] run_scan invoked — type={type(invocation).__name__}", flush=True)
     try:
-        payload = json.loads(result)
-        rid = payload.get("run_id")
-        if rid:
-            active_run_id = rid
-            active_results = _load_cached(rid)
-    except (json.JSONDecodeError, Exception):
-        pass  # scan may have returned an error — leave cache unchanged
+        # Dump raw invocation for debug visibility
+        try:
+            print(f"  [tool] invocation keys: {list(invocation.keys())}", flush=True)
+        except Exception:
+            print(f"  [tool] invocation repr: {repr(invocation)[:200]}", flush=True)
+        args = invocation.get("arguments", {})
+        # The session-level flag is authoritative — ignore what the model passes
+        params = RunScanParams(
+            scope=args.get("scope"),
+            demo=_session_demo,
+            tag=args.get("tag"),
+        )
+        _log_tool("run_scan", None, demo=params.demo, scope=params.scope)
+        result = _handle_run_scan(params)
 
-    return ToolResult(content=result)
+        # ── Populate session cache ────────────────────────────────
+        try:
+            payload = json.loads(result)
+            rid = payload.get("run_id")
+            if rid:
+                active_run_id = rid
+                active_results = _load_cached(rid)
+        except (json.JSONDecodeError, Exception):
+            pass  # scan may have returned an error — leave cache unchanged
+
+        print(f"  [tool] run_scan completed", flush=True)
+        return ToolResult(textResultForLlm=result)
+    except Exception as exc:
+        print(f"  [tool] run_scan ERROR: {exc}", flush=True)
+        return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
 
 
 def _handler_load_results(invocation) -> ToolResult:
     global active_run_id, active_results
-    args = invocation.get("arguments", {})
-    run_id = args.get("run_id", "latest")
-    _log_tool("load_results", run_id)
-    params = LoadResultsParams(run_id=run_id)
-    result = _handle_load_results(params)
-
-    # ── Populate session cache ────────────────────────────────
+    print("  [tool] load_results invoked …", flush=True)
     try:
-        payload = json.loads(result)
-        rid = payload.get("run_id")
-        if rid:
-            active_run_id = rid
-            active_results = _load_cached(rid)
-    except (json.JSONDecodeError, Exception):
-        pass
+        args = invocation.get("arguments", {})
+        run_id = args.get("run_id", "latest")
+        _log_tool("load_results", run_id)
+        params = LoadResultsParams(run_id=run_id)
+        result = _handle_load_results(params)
 
-    return ToolResult(content=result)
+        # ── Populate session cache ────────────────────────────────
+        try:
+            payload = json.loads(result)
+            rid = payload.get("run_id")
+            if rid:
+                active_run_id = rid
+                active_results = _load_cached(rid)
+        except (json.JSONDecodeError, Exception):
+            pass
+
+        print(f"  [tool] load_results completed", flush=True)
+        return ToolResult(textResultForLlm=result)
+    except Exception as exc:
+        print(f"  [tool] load_results ERROR: {exc}", flush=True)
+        return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
 
 
 def _handler_summarize_findings(invocation) -> ToolResult:
-    args = invocation.get("arguments", {})
-    run_id = args.get("run_id") or active_run_id or "latest"
-    _log_tool("summarize_findings", run_id, design_area=args.get("design_area"))
-    params = SummarizeFindingsParams(
-        run_id=run_id,
-        design_area=args.get("design_area"),
-        severity=args.get("severity"),
-        failed_only=args.get("failed_only", False),
-        limit=args.get("limit", 25),
-    )
-    result = _handle_summarize_findings(params)
-    return ToolResult(content=result)
+    print("  [tool] summarize_findings invoked …", flush=True)
+    try:
+        args = invocation.get("arguments", {})
+        run_id = args.get("run_id") or active_run_id or "latest"
+        _log_tool("summarize_findings", run_id, design_area=args.get("design_area"))
+        params = SummarizeFindingsParams(
+            run_id=run_id,
+            design_area=args.get("design_area"),
+            severity=args.get("severity"),
+            failed_only=args.get("failed_only", False),
+            limit=args.get("limit", 25),
+        )
+        result = _handle_summarize_findings(params)
+        print(f"  [tool] summarize_findings completed", flush=True)
+        return ToolResult(textResultForLlm=result)
+    except Exception as exc:
+        print(f"  [tool] summarize_findings ERROR: {exc}", flush=True)
+        return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
 
 
 def _handler_generate_outputs(invocation) -> ToolResult:
-    args = invocation.get("arguments", {})
-    run_id = args.get("run_id") or active_run_id or "latest"
-    _log_tool("generate_outputs", run_id, formats=args.get("formats", ["html"]))
-    params = GenerateOutputsParams(
-        run_id=run_id,
-        formats=args.get("formats", ["html"]),
-    )
-    result = _handle_generate_outputs(params)
-    return ToolResult(content=result)
+    print("  [tool] generate_outputs invoked …", flush=True)
+    try:
+        args = invocation.get("arguments", {})
+        run_id = args.get("run_id") or active_run_id or "latest"
+        _log_tool("generate_outputs", run_id, formats=args.get("formats", ["html"]))
+        params = GenerateOutputsParams(
+            run_id=run_id,
+            formats=args.get("formats", ["html"]),
+        )
+        result = _handle_generate_outputs(params)
+        print(f"  [tool] generate_outputs completed", flush=True)
+        return ToolResult(textResultForLlm=result)
+    except Exception as exc:
+        print(f"  [tool] generate_outputs ERROR: {exc}", flush=True)
+        return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -253,7 +284,7 @@ Role: You are a CSA workshop facilitator for Azure Landing Zone assessments.
 Behavior: Use tools to answer every question. Do not invent or fabricate results.
 Scope: Only discuss items present in the loaded run results.
 Safety: Do not suggest or perform environment changes. All outputs go to out/ only.
-
+{demo_note}
 Tools (exactly 4):
   run_scan            — execute a deterministic ALZ scan
   load_results        — load a completed run into memory
@@ -309,21 +340,34 @@ async def _run(*, demo: bool = True):
         print("        and gh CLI is on your PATH.")
         return
 
+    _debug = os.environ.get("WORKSHOP_DEBUG", "").lower() in ("1", "true", "yes")
+
+    # Propagate demo flag so tool handlers use the demo fixture
+    global _session_demo
+    _session_demo = demo
+
+    # Build system prompt with demo-mode note if applicable
+    demo_note = (
+        "\nMode: DEMO — using sample data, no Azure connection. "
+        "Always pass demo=true when calling run_scan."
+        if demo
+        else "\nMode: LIVE — running against the authenticated Azure subscription. "
+             "Always pass demo=false when calling run_scan."
+    )
+    system_prompt = SYSTEM_PROMPT.format(demo_note=demo_note)
+
     client = CopilotClient(CopilotClientOptions(github_token=token))
 
     session = await client.create_session({
         "model": "gpt-4o",
-        "system_message": {"content": SYSTEM_PROMPT},
+        "system_message": {"content": system_prompt},
         "tools": TOOLS,
     })
 
-    done = asyncio.Event()
-    _debug = os.environ.get("WORKSHOP_DEBUG", "").lower() in ("1", "true", "yes")
-
-    def on_event(event):
-        etype = event.type if isinstance(event.type, str) else event.type.value
-        if _debug:
-            # Show every event type so we can diagnose flow issues
+    # ── Optional debug observer — logs every event without affecting flow ──
+    if _debug:
+        def _debug_observer(event):
+            etype = event.type if isinstance(event.type, str) else event.type.value
             data_preview = ""
             try:
                 d = getattr(event, "data", None)
@@ -331,31 +375,41 @@ async def _run(*, demo: bool = True):
                     c = getattr(d, "content", None)
                     m = getattr(d, "message", None)
                     if c:
-                        data_preview = f" content={str(c)[:80]!r}..."
+                        data_preview = f" content={str(c)[:120]!r}"
                     elif m:
-                        data_preview = f" message={str(m)[:80]!r}"
+                        data_preview = f" message={str(m)[:120]!r}"
             except Exception:
                 pass
             print(f"  [debug] event: {etype}{data_preview}", flush=True)
-        if etype == "assistant.message":
-            content = getattr(event.data, "content", None) if event.data else None
-            if content:
-                print(f"\n{content}\n", flush=True)
-            done.set()
-        elif etype == "session.idle":
-            done.set()
-        elif etype == "session.error":
-            print(f"\n[error] {getattr(event.data, 'message', event.data)}\n", flush=True)
-            done.set()
+        session.on(_debug_observer)
 
-    session.on(on_event)
+    # ── Helper: send prompt and print response ──
+    async def _send_and_print(prompt: str, timeout: float = 660.0):
+        """Use the SDK's send_and_wait which correctly handles the
+        session.idle / assistant.message lifecycle."""
+        try:
+            response = await session.send_and_wait(
+                {"prompt": prompt}, timeout=timeout,
+            )
+            if response:
+                content = getattr(response.data, "content", None)
+                if content:
+                    print(f"\n{content}\n", flush=True)
+                else:
+                    if _debug:
+                        print("  [debug] response received but no content", flush=True)
+            else:
+                if _debug:
+                    print("  [debug] send_and_wait returned None (no assistant message)", flush=True)
+        except asyncio.TimeoutError:
+            print("\n[timeout] The request took too long. Try again.\n", flush=True)
+        except Exception as exc:
+            print(f"\n[error] {exc}\n", flush=True)
 
     # Initial greeting
-    await session.send({
-        "prompt": "Briefly introduce yourself and list the 4 tools you have available.",
-    })
-    await done.wait()
-    done.clear()
+    await _send_and_print(
+        "Briefly introduce yourself and list the 4 tools you have available."
+    )
 
     # Interactive loop
     while True:
@@ -369,9 +423,7 @@ async def _run(*, demo: bool = True):
                 break
             continue
 
-        done.clear()
-        await session.send({"prompt": user})
-        await done.wait()
+        await _send_and_print(user)
 
     print("\nSession ended.")
     await session.destroy()

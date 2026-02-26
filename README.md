@@ -310,6 +310,18 @@ AZURE_OPENAI_ENDPOINT=https://<your-resource>.openai.azure.com/
 AZURE_OPENAI_KEY=<your-api-key>
 ```
 
+The tool expects a **`gpt-4.1`** deployment (or any chat-completion model) on the Azure OpenAI resource. See [Configuration](#configuration) for details.
+
+> **Without these credentials**, the assessment still runs — all deterministic scoring, control evaluation, and data collection work normally. However, the 11-pass AI reasoning pipeline will be skipped (`⚠ AI skipped`), meaning these report sections will be empty:
+> - 30-60-90 Transformation Roadmap
+> - Executive Briefing & Top Business Risks
+> - Enterprise-Scale Readiness & Blockers
+> - Critical Issues & Course of Action
+> - Workshop Decision Funnel smart questions
+> - Microsoft Learn MCP grounding
+>
+> Use `--no-ai` to explicitly skip AI, or omit the `.env` file to skip silently.
+
 ### 5. Authenticate with Azure
 
 ```bash
@@ -331,11 +343,11 @@ python scan.py
 That's it. The tool will:
 
 1. Discover your Azure execution context (tenant, subscriptions, identity)
-2. Fetch the latest ALZ checklist from GitHub
+2. Fetch the latest ALZ checklist from GitHub (~243 controls)
 3. Run all evaluators against your environment
 4. Score every control with weighted domain scoring
-5. Run the multi-stage AI reasoning pipeline (if OpenAI is configured)
-6. Ground recommendations in Microsoft Learn documentation
+5. Run the 11-pass AI reasoning pipeline (requires `.env` — see step 4)
+6. Ground recommendations in Microsoft Learn documentation via MCP
 7. Output all artifacts to the `out/` directory
 
 ---
@@ -346,12 +358,15 @@ That's it. The tool will:
 
 | Variable | Required | Description |
 |---|---|---|
-| `AZURE_OPENAI_ENDPOINT` | For AI features | Your Azure OpenAI resource endpoint URL |
+| `AZURE_OPENAI_ENDPOINT` | For AI features | Your Azure OpenAI resource endpoint URL (e.g. `https://myresource.openai.azure.com/`) |
 | `AZURE_OPENAI_KEY` | For AI features | API key for the Azure OpenAI resource |
+| `GITHUB_TOKEN` | For Copilot Workshop | Personal access token — alternatively, authenticate via `gh auth login` |
+
+All variables can be set in a `.env` file in the project root (loaded automatically via `python-dotenv`) or as system environment variables.
 
 ### Azure OpenAI Model
 
-The tool defaults to the `gpt-4.1` deployment. To use a different model, modify the `AOAIClient` initialization in `ai/engine/aoai_client.py`.
+The tool defaults to the **`gpt-4.1`** deployment name. To use a different model, modify the `AOAIClient` initialization in `ai/engine/aoai_client.py`.
 
 ### API Version
 
@@ -360,13 +375,77 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 ## CLI Reference
 
 ```
-python scan.py            # Standard assessment
-python scan.py --tenant-wide  # Cross-subscription enterprise scan
+python scan.py                 # Standard assessment
+python scan.py --tenant-wide   # Cross-subscription enterprise scan
+```
+
+| Flag | Description |
+|---|---|
 | `--pretty` | Pretty-print the final JSON to stdout after the run |
 | `--preflight` | Run preflight access probes and exit — validates permissions without a full assessment |
 | `--why DOMAIN` | Explain **why** a domain is the top risk — runs causal reasoning over an existing assessment |
 | `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
 | `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
+| `--no-html` | Skip HTML report generation |
+| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
+| `--workshop-copilot` | Enter the interactive Copilot SDK workshop session (see below) |
+
+---
+
+## Copilot Workshop Session
+
+The workshop session provides an interactive, multi-turn Copilot experience with 4 guardrailed tools for running assessments, exploring findings, and generating reports.
+
+### Demo Mode (no Azure connection required)
+
+```bash
+python scan.py --workshop-copilot --demo
+```
+
+Uses the bundled demo fixture (`demo/demo_run.json`) — no Azure credentials or Azure OpenAI needed. The demo fixture includes pre-computed AI output, so report sections like the roadmap and executive briefing are populated. Great for testing, demos, and learning the workflow.
+
+> **Note:** Demo mode loads a static fixture. It does **not** run evaluators, the AI pipeline, or MCP grounding. To get fresh AI-enriched output, use live mode with `.env` configured.
+
+### Live Mode (real Azure environment)
+
+```bash
+python scan.py --workshop-copilot
+```
+
+Runs against your authenticated Azure subscription. The live scan takes 5–10 minutes depending on environment size. If `.env` is configured with Azure OpenAI credentials, the full 11-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
+
+### Prerequisites
+
+- **GitHub token** — either set `GITHUB_TOKEN` env var or authenticate via `gh auth login`
+- **Azure CLI** (live mode only) — `az login` and confirm the correct subscription with `az account show`
+- **Azure OpenAI** (live mode, for AI features) — `.env` file with `AZURE_OPENAI_ENDPOINT` and `AZURE_OPENAI_KEY` (see [Configuration](#configuration))
+
+### Debug Mode
+
+To see all SDK events during a session (useful for troubleshooting):
+
+```powershell
+$env:WORKSHOP_DEBUG = "1"
+python scan.py --workshop-copilot --demo
+```
+
+### Workshop Tools
+
+Once inside the session, you can ask the Copilot to use any of these tools:
+
+| Tool | Description | Example Prompt |
+|---|---|---|
+| `run_scan` | Execute a deterministic ALZ assessment scan | *"run a scan"* |
+| `load_results` | Load a completed run into memory | *"load the latest results"* |
+| `summarize_findings` | Filter findings by design area, severity, or failure status | *"show critical Security findings"* |
+| `generate_outputs` | Produce HTML report or Excel workbook | *"generate an HTML report"* |
+
+### Typical Workshop Flow
+
+1. **"run a scan"** — executes the assessment (instant in demo, 5–10 min live)
+2. **"load results"** — loads the run into the session
+3. **"summarize findings"** — explore findings by design area or severity
+4. **"generate an HTML report"** — produce the customer-facing deliverable
 
 ---
 
@@ -523,23 +602,6 @@ All ~243 controls in a flat table with 19 columns:
 
 ---
 
-## On-Demand Evaluation Mode
-
-For targeted workshop assessments, use `--on-demand`:
-
-```bash
-python scan.py --on-demand enterprise_readiness
-```
-
-This runs the **IntentOrchestrator** which:
-1. Loads the ALZ control pack
-2. Routes the intent to relevant evaluators
-3. Runs the assessment runtime against the targeted scope
-4. Optionally generates an AI explanation of the results
-5. Saves output to `out/run-*-on-demand.json`
-
----
-
 ## Why-Risk Reasoning (`--why`)
 
 After a full assessment, drill into **why** a specific domain was flagged as the top risk:
@@ -628,14 +690,16 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 
 | Problem | Solution |
 |---|---|
-| `AZURE_OPENAI_KEY / AZURE_OPENAI_ENDPOINT not set` | Create a `.env` file with your Azure OpenAI credentials, or run with `--no-ai` |
+| `AZURE_OPENAI_KEY / AZURE_OPENAI_ENDPOINT not set` | Create a `.env` file with your Azure OpenAI credentials (see [Quick Start step 4](#4-configure-environment-variables)), or run with `--no-ai` to skip AI |
+| Report sections are empty (roadmap, executive briefing, critical issues) | AI credentials are not configured. Create a `.env` file — without it, the 11-pass AI pipeline is silently skipped |
 | `No subscriptions found` | Ensure `az login` succeeded and your identity has Reader on at least one subscription |
 | `Management group hierarchy not visible` | Your identity needs Management Group Reader — the tool still works, but MG-related controls will be `Manual` |
-| `Unterminated string` / JSON parse errors in AI output | The tool auto-repairs truncated JSON. If it persists, check your Azure OpenAI quota and model deployment |
+| `Unterminated string` / JSON parse errors in AI output | The tool auto-repairs truncated JSON. If it persists, check your Azure OpenAI quota and model deployment name (`gpt-4.1`) |
 | `MCP connection failed` | The tool falls back to the public Learn search API automatically. No action needed. |
 | `ModuleNotFoundError` | Ensure your virtual environment is activated and `pip install -r requirements.txt` completed successfully |
 | `az: command not found` | Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) |
 | Slow execution | Large tenants take longer. Use `--tenant-wide` only when needed. AI passes add ~60-90s. |
+| Workshop session: `GITHUB_TOKEN` errors | Set `GITHUB_TOKEN` env var with a personal access token, or run `gh auth login` |
 
 ## Built with AI Assistance
 
