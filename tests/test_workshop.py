@@ -131,31 +131,22 @@ def test_run_scan_demo_mode(tmp_path, monkeypatch):
     out = tmp_path / "out_scan"
     out.mkdir()
     monkeypatch.setattr(workshop_tools, "OUT_DIR", out.resolve())
-    # _PROJECT_ROOT must be parent of OUT_DIR for relative_to() calls
+    # _PROJECT_ROOT must be parent of OUT_DIR and contain demo/ for relative_to() calls
     monkeypatch.setattr(workshop_tools, "_PROJECT_ROOT", tmp_path.resolve())
 
-    # Copy demo fixture so scan.py --demo can find it
+    # Create demo fixture at the patched _PROJECT_ROOT location so
+    # run_scan(demo=True) can find it.
+    demo_dir = tmp_path / "demo"
+    demo_dir.mkdir()
     demo_src = ROOT / "demo" / "demo_run.json"
-    demo_dest = out / "run-demo.json"
-
-    # Simulate scan by monkeypatching subprocess.run: the fake subprocess
-    # creates the run file (run_scan detects new files by diffing before/after)
-    import shutil
-    import types as _types
-
-    def _fake_scan(cmd, **kw):
-        """Pretend scan.py ran and produced a run file."""
-        shutil.copy(demo_src, out / "run-20260225-0000.json")
-        return _types.SimpleNamespace(
-            returncode=0, stdout="Scan complete.\n", stderr=""
-        )
-
-    monkeypatch.setattr(subprocess, "run", _fake_scan)
+    (demo_dir / "demo_run.json").write_text(
+        demo_src.read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
     result = json.loads(run_scan(RunScanParams(demo=True)))
     assert "error" not in result
     assert "run_id" in result
-    assert result["run_id"] == "run-20260225-0000"
+    assert result["run_id"].startswith("run-")
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -318,3 +309,271 @@ def test_smoke_session_tool_call():
         "Expected at least one tool call but got none. "
         "The model should invoke tools rather than guessing."
     )
+
+
+
+# ══════════════════════════════════════════════════════════════════
+# Tests for src/run_store.py
+# ══════════════════════════════════════════════════════════════════
+# NOTE: All tests below use `tmp_path / "base"` (never `tmp_path` directly)
+# to avoid interference from the autouse `_seed_demo_run` fixture, which
+# places a run file under `tmp_path / "out"`.
+# ══════════════════════════════════════════════════════════════════
+
+
+class TestResolveRunSource:
+    """Unit tests for resolve_run_source()."""
+
+    def test_out_returns_out_dir(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        (root / "out").mkdir()
+        result = resolve_run_source("out", project_root=root)
+        assert result == (root / "out").resolve()
+
+    def test_demo_finds_lowercase_demo(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        (root / "demo").mkdir()
+        result = resolve_run_source("demo", project_root=root)
+        assert result == (root / "demo").resolve()
+
+    def test_demo_finds_uppercase_Demo(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        (root / "Demo").mkdir()
+        result = resolve_run_source("demo", project_root=root)
+        assert result == (root / "Demo").resolve()
+
+    def test_demo_prefers_lowercase_over_uppercase(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        (root / "demo").mkdir()
+        (root / "Demo").mkdir()
+        result = resolve_run_source("demo", project_root=root)
+        assert result == (root / "demo").resolve()
+
+    def test_demo_missing_raises(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        with pytest.raises(FileNotFoundError, match="Demo run directory not found"):
+            resolve_run_source("demo", project_root=root)
+
+    def test_arbitrary_path_absolute(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        custom = tmp_path / "custom_runs"
+        custom.mkdir()
+        result = resolve_run_source(str(custom), project_root=root)
+        assert result == custom.resolve()
+
+    def test_arbitrary_path_missing_raises(self, tmp_path):
+        from src.run_store import resolve_run_source
+        root = tmp_path / "proj"
+        root.mkdir()
+        with pytest.raises(FileNotFoundError):
+            resolve_run_source("/nonexistent/path/xyz", project_root=root)
+
+
+class TestDiscoverRuns:
+    """Unit tests for discover_runs()."""
+
+    def test_flat_json_layout(self, tmp_path):
+        from src.run_store import discover_runs
+        base = tmp_path / "base"
+        base.mkdir()
+        (base / "run-20260101-0000.json").write_text("{}", encoding="utf-8")
+        (base / "run-20260214-1430.json").write_text("{}", encoding="utf-8")
+        runs = discover_runs(base)
+        names = {r.display_name for r in runs}
+        assert "run-20260101-0000" in names
+        assert "run-20260214-1430" in names
+
+    def test_nested_run_json_layout(self, tmp_path):
+        from src.run_store import discover_runs
+        base = tmp_path / "base"
+        base.mkdir()
+        run_dir = base / "run-20260214-1430"
+        run_dir.mkdir()
+        (run_dir / "run.json").write_text("{}", encoding="utf-8")
+        runs = discover_runs(base)
+        assert len(runs) == 1
+        assert runs[0].display_name == "run-20260214-1430"
+
+    def test_excludes_delta_subdir(self, tmp_path):
+        from src.run_store import discover_runs
+        base = tmp_path / "base"
+        base.mkdir()
+        (base / "run-20260101-0000.json").write_text("{}", encoding="utf-8")
+        deltas_dir = base / "deltas"
+        deltas_dir.mkdir()
+        (deltas_dir / "run-20260214__run-20260101.json").write_text("{}", encoding="utf-8")
+        runs = discover_runs(base)
+        assert len(runs) == 1
+        assert runs[0].display_name == "run-20260101-0000"
+
+    def test_excludes_delta_name_pattern(self, tmp_path):
+        from src.run_store import discover_runs
+        base = tmp_path / "base"
+        base.mkdir()
+        (base / "abc__def.json").write_text("{}", encoding="utf-8")
+        (base / "run-20260101-0000.json").write_text("{}", encoding="utf-8")
+        runs = discover_runs(base)
+        names = {r.display_name for r in runs}
+        assert "run-20260101-0000" in names
+        assert "abc__def" not in names
+
+    def test_parses_timestamp_from_filename(self, tmp_path):
+        from src.run_store import discover_runs
+        from datetime import datetime, timezone
+        base = tmp_path / "base"
+        base.mkdir()
+        (base / "run-20260214-1430.json").write_text("{}", encoding="utf-8")
+        runs = discover_runs(base)
+        assert len(runs) == 1
+        ts = runs[0].timestamp
+        assert ts is not None
+        assert ts == datetime(2026, 2, 14, 14, 30, tzinfo=timezone.utc)
+
+
+class TestLatestAndPrevious:
+    """Unit tests for latest_run() and previous_run() selection."""
+
+    def _write_runs(self, base: "Path", *names: str) -> None:
+        for name in names:
+            (base / f"{name}.json").write_text("{}", encoding="utf-8")
+
+    def test_latest_is_newest(self, tmp_path):
+        from src.run_store import latest_run
+        base = tmp_path / "base"
+        base.mkdir()
+        self._write_runs(base, "run-20260101-0000", "run-20260214-1430")
+        ref = latest_run(base)
+        assert ref is not None
+        assert ref.display_name == "run-20260214-1430"
+
+    def test_previous_is_second_newest(self, tmp_path):
+        from src.run_store import previous_run
+        base = tmp_path / "base"
+        base.mkdir()
+        self._write_runs(
+            base,
+            "run-20260101-0000",
+            "run-20260214-1430",
+            "run-20260301-0900",
+        )
+        ref = previous_run(base)
+        assert ref is not None
+        assert ref.display_name == "run-20260214-1430"
+
+    def test_latest_none_when_empty(self, tmp_path):
+        from src.run_store import latest_run
+        base = tmp_path / "base"
+        base.mkdir()
+        assert latest_run(base) is None
+
+    def test_previous_none_with_one_run(self, tmp_path):
+        from src.run_store import previous_run
+        base = tmp_path / "base"
+        base.mkdir()
+        self._write_runs(base, "run-20260101-0000")
+        assert previous_run(base) is None
+
+
+class TestCompareRunsTool:
+    """Integration tests for compare_runs tool handler."""
+
+    def test_compare_needs_two_runs(self, tmp_path, monkeypatch):
+        import src.workshop_tools as wt
+        from src.workshop_tools import compare_runs, CompareRunsParams
+
+        out = tmp_path / "out"
+        runs_dir = tmp_path / "runs"
+        out.mkdir(exist_ok=True)
+        runs_dir.mkdir()
+        monkeypatch.setattr(wt, "OUT_DIR", out.resolve())
+        monkeypatch.setattr(wt, "_PROJECT_ROOT", tmp_path.resolve())
+        monkeypatch.setattr(wt, "_run_source_dir", runs_dir.resolve())
+        wt._run_cache.clear()
+
+        result = json.loads(compare_runs(CompareRunsParams()))
+        assert "error" in result
+        assert "Not enough runs" in result["error"]
+
+    def test_compare_produces_delta(self, tmp_path, monkeypatch):
+        import src.workshop_tools as wt
+        from src.workshop_tools import compare_runs, CompareRunsParams
+
+        out = tmp_path / "out"
+        runs_dir = tmp_path / "runs"
+        out.mkdir(exist_ok=True)
+        runs_dir.mkdir()
+
+        monkeypatch.setattr(wt, "OUT_DIR", out.resolve())
+        monkeypatch.setattr(wt, "_PROJECT_ROOT", tmp_path.resolve())
+        monkeypatch.setattr(wt, "_run_source_dir", runs_dir.resolve())
+        wt._run_cache.clear()
+
+        # Write two minimal run files (older = run_a, newer = run_b)
+        run_a = {
+            "meta": {"run_id": "run-A"},
+            "scoring": {"overall_maturity_percent": 60.0},
+            "results": [{"control_id": "C1", "status": "Fail"}],
+        }
+        run_b = {
+            "meta": {"run_id": "run-B"},
+            "scoring": {"overall_maturity_percent": 70.0},
+            "results": [{"control_id": "C1", "status": "Pass"}],
+        }
+        (runs_dir / "run-20260101-0000.json").write_text(
+            json.dumps(run_a), encoding="utf-8"
+        )
+        (runs_dir / "run-20260214-1430.json").write_text(
+            json.dumps(run_b), encoding="utf-8"
+        )
+
+        result = json.loads(compare_runs(CompareRunsParams()))
+        assert "error" not in result
+        assert result["score_delta"] == 10.0
+        assert result["improvements"] == 1
+        assert result["regressions"] == 0
+        assert "delta_path" in result
+        # Delta must be written under out/
+        assert result["delta_path"].startswith("out/")
+
+
+class TestListRunsTool:
+    """Tests for list_runs tool handler."""
+
+    def test_list_runs_empty(self, tmp_path, monkeypatch):
+        import src.workshop_tools as wt
+        from src.workshop_tools import list_runs, ListRunsParams
+
+        runs_dir = tmp_path / "runs"
+        runs_dir.mkdir()
+        monkeypatch.setattr(wt, "_run_source_dir", runs_dir.resolve())
+
+        result = json.loads(list_runs(ListRunsParams()))
+        assert result["count"] == 0
+
+    def test_list_runs_shows_roles(self, tmp_path, monkeypatch):
+        import src.workshop_tools as wt
+        from src.workshop_tools import list_runs, ListRunsParams
+
+        runs_dir = tmp_path / "runs"
+        runs_dir.mkdir()
+        (runs_dir / "run-20260101-0000.json").write_text("{}", encoding="utf-8")
+        (runs_dir / "run-20260214-1430.json").write_text("{}", encoding="utf-8")
+        monkeypatch.setattr(wt, "_run_source_dir", runs_dir.resolve())
+
+        result = json.loads(list_runs(ListRunsParams()))
+        assert result["count"] == 2
+        roles = {r["display_name"]: r["role"] for r in result["runs"]}
+        assert roles["run-20260214-1430"] == "latest"
+        assert roles["run-20260101-0000"] == "previous"

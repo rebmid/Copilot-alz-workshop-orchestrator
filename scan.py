@@ -121,6 +121,14 @@ def parse_args():
                    help="Label this run snapshot (e.g. 'baseline', 'sprint-3')")
     p.add_argument("--workshop-copilot", action="store_true",
                    help="Start a Copilot SDK workshop session")
+    p.add_argument("--run-source", metavar="SOURCE", default="out",
+                   help=(
+                       "Run source for workshop mode: "
+                       "'out' (default, real runs), "
+                       "'demo' (demo fixtures), "
+                       "or an arbitrary directory path. "
+                       "--demo implicitly sets --run-source demo."
+                   ))
     return p.parse_args()
 
 
@@ -135,7 +143,9 @@ def main():
     # ── Workshop-Copilot mode (Copilot SDK session) ───────────────
     if args.workshop_copilot:
         from src.workshop_copilot import run_workshop
-        run_workshop(demo=args.demo)
+        # --demo implicitly sets --run-source demo
+        run_source = "demo" if args.demo else args.run_source
+        run_workshop(demo=args.demo, run_source=run_source)
         return
 
     print("╔══════════════════════════════════════╗")
