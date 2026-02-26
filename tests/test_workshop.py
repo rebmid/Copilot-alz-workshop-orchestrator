@@ -125,6 +125,7 @@ def test_load_results_latest_picks_newest(tmp_path, monkeypatch):
 
 def test_run_scan_demo_mode(tmp_path, monkeypatch):
     """run_scan in demo mode produces a run file without Azure access."""
+    import shutil
     import src.workshop_tools as workshop_tools
     from src.workshop_tools import run_scan, RunScanParams
 
@@ -134,28 +135,16 @@ def test_run_scan_demo_mode(tmp_path, monkeypatch):
     # _PROJECT_ROOT must be parent of OUT_DIR for relative_to() calls
     monkeypatch.setattr(workshop_tools, "_PROJECT_ROOT", tmp_path.resolve())
 
-    # Copy demo fixture so scan.py --demo can find it
+    # Demo mode copies demo/demo_run.json from _PROJECT_ROOT — create it
     demo_src = ROOT / "demo" / "demo_run.json"
-    demo_dest = out / "run-demo.json"
-
-    # Simulate scan by monkeypatching subprocess.run: the fake subprocess
-    # creates the run file (run_scan detects new files by diffing before/after)
-    import shutil
-    import types as _types
-
-    def _fake_scan(cmd, **kw):
-        """Pretend scan.py ran and produced a run file."""
-        shutil.copy(demo_src, out / "run-20260225-0000.json")
-        return _types.SimpleNamespace(
-            returncode=0, stdout="Scan complete.\n", stderr=""
-        )
-
-    monkeypatch.setattr(subprocess, "run", _fake_scan)
+    demo_dir = tmp_path / "demo"
+    demo_dir.mkdir()
+    shutil.copy(demo_src, demo_dir / "demo_run.json")
 
     result = json.loads(run_scan(RunScanParams(demo=True)))
     assert "error" not in result
     assert "run_id" in result
-    assert result["run_id"] == "run-20260225-0000"
+    assert result["run_id"].startswith("run-")
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -287,9 +276,12 @@ def test_smoke_session_tool_call():
 
     async def _session_test():
         client = CopilotClient(CopilotClientOptions(github_token=token))
+        formatted_prompt = SYSTEM_PROMPT.format(
+            demo_note="\nMode: DEMO — using sample data, no Azure connection."
+        )
         session = await client.create_session({
             "model": "gpt-4o",
-            "system_message": {"content": SYSTEM_PROMPT},
+            "system_message": {"content": formatted_prompt},
             "tools": spy_tools,
         })
 

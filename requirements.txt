@@ -11,5 +11,7 @@ openpyxl
 openai
 python-dotenv
 mcp
+pydantic
+github-copilot-sdk
 
  
