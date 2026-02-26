@@ -31,3 +31,4 @@ preflight.json
 target_architecture.json
 assessment.json
 test_output.txt
+__pycache__/
