@@ -57,6 +57,10 @@ def set_run_source_dir(path: Path | None) -> None:
     _run_source_dir = path
 
 
+# Pattern for sanitising run IDs into safe filename components.
+_UNSAFE_ID_CHARS = re.compile(r"[^\w\-]")
+
+
 # ══════════════════════════════════════════════════════════════════
 # Run cache (lazy load, keep in memory for the session)
 # ══════════════════════════════════════════════════════════════════
@@ -655,8 +659,8 @@ def compare_runs(params: CompareRunsParams) -> str:
     # ── Write delta to out/deltas/ (guardrail: never outside out/) ─
     deltas_dir = OUT_DIR / "deltas"
     deltas_dir.mkdir(parents=True, exist_ok=True)
-    safe_latest = re.sub(r"[^\w\-]", "_", str(latest_id))
-    safe_previous = re.sub(r"[^\w\-]", "_", str(previous_id))
+    safe_latest = _UNSAFE_ID_CHARS.sub("_", str(latest_id))
+    safe_previous = _UNSAFE_ID_CHARS.sub("_", str(previous_id))
     delta_filename = f"{safe_latest}__{safe_previous}.json"
     delta_path = ensure_out_path(deltas_dir / delta_filename)
     delta_path.write_text(
