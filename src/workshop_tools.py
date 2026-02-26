@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -44,6 +45,19 @@ def ensure_out_path(path: str | Path) -> Path:
 
 
 # ══════════════════════════════════════════════════════════════════
+# Run source directory (set by workshop session for run discovery)
+# ══════════════════════════════════════════════════════════════════
+
+_run_source_dir: Path | None = None  # None → use OUT_DIR (default)
+
+
+def set_run_source_dir(path: Path | None) -> None:
+    """Configure the directory used for run discovery in this session."""
+    global _run_source_dir
+    _run_source_dir = path
+
+
+# ══════════════════════════════════════════════════════════════════
 # Run cache (lazy load, keep in memory for the session)
 # ══════════════════════════════════════════════════════════════════
 
@@ -53,16 +67,22 @@ _run_cache: dict[str, dict] = {}  # keyed by run_id or "latest"
 def _resolve_run_path(run_id: str) -> Path:
     """Map a run_id to its JSON file.
 
-    Special value ``"latest"`` → newest ``run-*.json`` in out/.
+    Special value ``"latest"`` → newest run in the active run source dir
+    (``_run_source_dir`` when set, otherwise ``OUT_DIR``).
     Otherwise looks in out/ first, then falls back to demo/.
     """
     if run_id == "latest":
-        runs = sorted(OUT_DIR.glob("run-*.json"), reverse=True)
-        if not runs:
+        from src.run_store import latest_run
+        source = _run_source_dir if _run_source_dir is not None else OUT_DIR
+        ref = latest_run(source)
+        if ref is None:
+            source_label = str(source)
             raise RuntimeError(
-                "No run files found in out/. Run a scan first."
+                f"No run files found in {source_label}. "
+                "Run a scan first or use --run-source to point at a directory "
+                "with existing runs."
             )
-        return runs[0]
+        return ref.path
     candidate = OUT_DIR / f"{run_id}.json"
     if candidate.exists():
         return ensure_out_path(candidate)
@@ -485,5 +505,166 @@ def generate_outputs(params: GenerateOutputsParams) -> str:
         result["errors"] = errors
 
     return json.dumps(result, indent=2, default=str)
+
+
+# ══════════════════════════════════════════════════════════════════
+# Tool 5 — list_runs
+# ══════════════════════════════════════════════════════════════════
+
+class ListRunsParams(BaseModel):
+    pass  # no parameters — always operates on the active run source
+
+
+def list_runs(params: ListRunsParams) -> str:
+    """List discovered runs in the active run source (newest first)."""
+    from src.run_store import discover_runs, sort_runs
+
+    source = _run_source_dir if _run_source_dir is not None else OUT_DIR
+    try:
+        runs = sort_runs(discover_runs(source))
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+    if not runs:
+        return json.dumps({
+            "run_source": str(source),
+            "count": 0,
+            "runs": [],
+            "message": "No runs found in the selected source.",
+        })
+
+    entries = []
+    for i, ref in enumerate(runs):
+        entries.append({
+            "index": i,
+            "display_name": ref.display_name,
+            "path": str(ref.path),
+            "timestamp": ref.timestamp.isoformat() if ref.timestamp else None,
+            "role": "latest" if i == 0 else ("previous" if i == 1 else None),
+        })
+
+    return json.dumps({
+        "run_source": str(source),
+        "count": len(entries),
+        "runs": entries,
+    }, indent=2, default=str)
+
+
+# ══════════════════════════════════════════════════════════════════
+# Tool 6 — compare_runs
+# ══════════════════════════════════════════════════════════════════
+
+class CompareRunsParams(BaseModel):
+    pass  # always compares latest vs previous in the active run source
+
+
+def compare_runs(params: CompareRunsParams) -> str:
+    """Compare the latest run against the previous run (delta analysis).
+
+    Guardrails:
+      - Reads from the active run source (demo or out/)
+      - Delta output written only to out/deltas/ (never into demo)
+    """
+    from src.run_store import discover_runs, sort_runs, load_run as _load_run_ref
+
+    source = _run_source_dir if _run_source_dir is not None else OUT_DIR
+    try:
+        runs = sort_runs(discover_runs(source))
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+    if len(runs) < 2:
+        return json.dumps({
+            "error": (
+                f"Not enough runs to compare. "
+                f"Found {len(runs)} run(s) in {source}. "
+                "At least 2 runs are needed for a delta comparison."
+            ),
+            "run_source": str(source),
+            "count": len(runs),
+        })
+
+    latest_ref = runs[0]
+    previous_ref = runs[1]
+
+    try:
+        latest_data = _load_run_ref(latest_ref)
+        previous_data = _load_run_ref(previous_ref)
+    except Exception as exc:
+        return json.dumps({"error": f"Failed to load run data: {exc}"})
+
+    # ── Compute deterministic delta ───────────────────────────────
+    def _score(run: dict) -> float | None:
+        return run.get("scoring", {}).get("overall_maturity_percent")
+
+    def _status_map(run: dict) -> dict[str, str]:
+        return {
+            c.get("control_id", ""): c.get("status", "")
+            for c in run.get("results", [])
+            if c.get("control_id")
+        }
+
+    latest_score = _score(latest_data)
+    previous_score = _score(previous_data)
+    score_delta = (
+        round(latest_score - previous_score, 2)
+        if latest_score is not None and previous_score is not None
+        else None
+    )
+
+    latest_statuses = _status_map(latest_data)
+    previous_statuses = _status_map(previous_data)
+
+    all_ids = set(latest_statuses) | set(previous_statuses)
+    changed: list[dict] = []
+    for cid in sorted(all_ids):
+        prev_st = previous_statuses.get(cid, "absent")
+        curr_st = latest_statuses.get(cid, "absent")
+        if prev_st != curr_st:
+            changed.append({
+                "control_id": cid,
+                "previous_status": prev_st,
+                "latest_status": curr_st,
+            })
+
+    regressions = [c for c in changed if c["latest_status"] == "Fail"]
+    improvements = [c for c in changed if c["previous_status"] == "Fail"
+                    and c["latest_status"] != "Fail"]
+
+    latest_id = (
+        latest_data.get("meta", {}).get("run_id")
+        or latest_ref.display_name
+    )
+    previous_id = (
+        previous_data.get("meta", {}).get("run_id")
+        or previous_ref.display_name
+    )
+
+    delta_payload: dict[str, Any] = {
+        "latest_run": latest_id,
+        "previous_run": previous_id,
+        "score_delta": score_delta,
+        "latest_score": latest_score,
+        "previous_score": previous_score,
+        "total_changes": len(changed),
+        "regressions": len(regressions),
+        "improvements": len(improvements),
+        "changed_controls": changed,
+    }
+
+    # ── Write delta to out/deltas/ (guardrail: never outside out/) ─
+    deltas_dir = OUT_DIR / "deltas"
+    deltas_dir.mkdir(parents=True, exist_ok=True)
+    safe_latest = re.sub(r"[^\w\-]", "_", str(latest_id))
+    safe_previous = re.sub(r"[^\w\-]", "_", str(previous_id))
+    delta_filename = f"{safe_latest}__{safe_previous}.json"
+    delta_path = ensure_out_path(deltas_dir / delta_filename)
+    delta_path.write_text(
+        json.dumps(delta_payload, indent=2, default=str),
+        encoding="utf-8",
+    )
+
+    delta_payload["delta_path"] = str(delta_path.relative_to(_PROJECT_ROOT))
+    return json.dumps(delta_payload, indent=2, default=str)
 
 
