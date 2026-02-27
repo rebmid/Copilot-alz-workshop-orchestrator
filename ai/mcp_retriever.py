@@ -17,6 +17,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import random
+import socket
+import time
 import requests
 from typing import Any
 
@@ -56,15 +59,71 @@ LEARN_SEARCH_FALLBACK = "https://learn.microsoft.com/api/search"
 _TIMEOUT = 30
 
 
+# ── Error classification ──────────────────────────────────────────
+
+def _classify_error(exc: BaseException) -> str:
+    """Classify an MCP/HTTP error into a bounded set of categories.
+
+    Returns one of: timeout, dns_failure, connection_refused,
+    rate_limited_429, server_5xx, bad_response, unknown.
+    """
+    if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
+        return "timeout"
+
+    # httpx errors (imported lazily to avoid hard dep at module level)
+    exc_type = type(exc).__name__
+    exc_msg = str(exc).lower()
+
+    # DNS resolution failures
+    if isinstance(exc, socket.gaierror) or "getaddrinfo" in exc_msg or "name or service not known" in exc_msg:
+        return "dns_failure"
+
+    # Connection refused
+    if "connection refused" in exc_msg or "connecterror" in exc_type.lower():
+        if "refused" in exc_msg:
+            return "connection_refused"
+        # Other connect errors (DNS, etc.) may also surface via httpx
+        if "name" in exc_msg or "resolve" in exc_msg:
+            return "dns_failure"
+        return "connection_refused"
+
+    # HTTP status errors (httpx.HTTPStatusError or requests.HTTPError)
+    status_code: int | None = None
+    if hasattr(exc, "response") and hasattr(exc.response, "status_code"):  # type: ignore[union-attr]
+        status_code = exc.response.status_code  # type: ignore[union-attr]
+    if status_code == 429:
+        return "rate_limited_429"
+    if status_code is not None and status_code >= 500:
+        return "server_5xx"
+
+    # Bad/unparseable response body
+    if isinstance(exc, (json.JSONDecodeError, ValueError, KeyError)):
+        return "bad_response"
+
+    return "unknown"
+
+
 # ── Grounding telemetry (in-memory, append-only) ─────────────────
 _grounding_telem: dict[str, Any] = {
     "mode": "auto",
     "mcp_initialize_success": False,
     "mcp_calls": {},
     "rest_fallback_calls": 0,
+    "rest_fallback_failures": 0,
     "mcp_call_failures": 0,
     "mcp_timeouts": 0,
+    "error_classifications": {},
+    "_notes": [],
 }
+
+
+def _record_error(exc: BaseException) -> str:
+    """Classify *exc*, bump the telemetry counter, and return the class."""
+    cls = _classify_error(exc)
+    _grounding_telem["error_classifications"][cls] = (
+        _grounding_telem["error_classifications"].get(cls, 0) + 1
+    )
+    return cls
 
 
 def get_grounding_telemetry() -> dict:
@@ -74,9 +133,139 @@ def get_grounding_telemetry() -> dict:
         "mcp_initialize_success": _grounding_telem["mcp_initialize_success"],
         "mcp_calls": dict(_grounding_telem["mcp_calls"]),
         "rest_fallback_calls": _grounding_telem["rest_fallback_calls"],
+        "rest_fallback_failures": _grounding_telem["rest_fallback_failures"],
         "mcp_call_failures": _grounding_telem["mcp_call_failures"],
         "mcp_timeouts": _grounding_telem["mcp_timeouts"],
+        "error_classifications": dict(_grounding_telem["error_classifications"]),
+        "cache_hits": _cache_hits,
+        "cache_misses": _cache_misses,
     }
+
+
+def get_grounding_status() -> dict:
+    """Compute a high-level grounding status summary.
+
+    Returns::
+
+        {
+          "mcp": "ok" | "degraded" | "bypassed",
+          "fallback": "ok" | "failed" | "unused",
+          "notes": ["human-readable strings …"]
+        }
+
+    This dict is purely informational — it is never consumed by the
+    deterministic scoring engine.
+    """
+    t = _grounding_telem
+    total_mcp = sum(t["mcp_calls"].values()) if t["mcp_calls"] else 0
+    failures = t["mcp_call_failures"]
+    timeouts = t["mcp_timeouts"]
+    notes: list[str] = list(t["_notes"])
+
+    # ── MCP status ────────────────────────────────────────────────
+    if _cb_tripped:
+        mcp_status = "bypassed"
+        notes.append("circuit breaker tripped — MCP bypassed")
+    elif t["mode"] == "rest" or not t["mcp_initialize_success"]:
+        mcp_status = "bypassed"
+        notes.append("MCP SDK not available — REST fallback only")
+    elif total_mcp > 0 and failures == 0 and timeouts == 0:
+        mcp_status = "ok"
+    elif total_mcp > 0:
+        mcp_status = "degraded"
+        if timeouts:
+            notes.append(f"{timeouts} MCP timeout(s)")
+        if failures:
+            notes.append(f"{failures} MCP call failure(s)")
+    else:
+        mcp_status = "bypassed"
+        notes.append("No MCP calls succeeded")
+
+    # Add per-class notes
+    for cls, count in t["error_classifications"].items():
+        notes.append(f"{cls}: {count}")
+
+    # ── Fallback status ───────────────────────────────────────────
+    fb_calls = t["rest_fallback_calls"]
+    fb_failures = t["rest_fallback_failures"]
+    if fb_calls == 0:
+        fb_status = "unused"
+    elif fb_failures == 0:
+        fb_status = "ok"
+    elif fb_failures < fb_calls:
+        fb_status = "ok"  # partial success still counts
+        notes.append(f"{fb_failures}/{fb_calls} fallback searches failed")
+    else:
+        fb_status = "failed"
+        notes.append("All fallback searches failed")
+
+    return {"mcp": mcp_status, "fallback": fb_status, "notes": notes}
+
+
+# ── Circuit breaker (lightweight trip-counter) ────────────────────
+# After _CB_THRESHOLD consecutive MCP failures, skip MCP entirely
+# for the remainder of the run and go straight to fallback / safe
+# defaults.  This avoids burning minutes on 30-second timeouts when
+# the endpoint is unreachable.
+_CB_THRESHOLD = 5          # consecutive failures before tripping
+_cb_consecutive_failures = 0
+_cb_tripped = False
+
+
+def _cb_record_success() -> None:
+    """Reset the consecutive-failure counter on a successful MCP call."""
+    global _cb_consecutive_failures
+    _cb_consecutive_failures = 0
+
+
+def _cb_record_failure() -> None:
+    """Increment the failure counter; trip the breaker if threshold reached."""
+    global _cb_consecutive_failures, _cb_tripped
+    _cb_consecutive_failures += 1
+    if _cb_consecutive_failures >= _CB_THRESHOLD and not _cb_tripped:
+        _cb_tripped = True
+        _grounding_telem["_notes"].append(
+            f"circuit breaker tripped after {_cb_consecutive_failures} "
+            f"consecutive MCP failures — skipping remaining MCP calls"
+        )
+
+
+def _cb_is_open() -> bool:
+    """Return True if the circuit breaker has tripped."""
+    return _cb_tripped
+
+
+def reset_circuit_breaker() -> None:
+    """Reset the circuit breaker (called between runs)."""
+    global _cb_consecutive_failures, _cb_tripped
+    _cb_consecutive_failures = 0
+    _cb_tripped = False
+
+
+# ── Retry policy ──────────────────────────────────────────────────
+# Only these classified errors are eligible for a single retry.
+_RETRYABLE_CLASSES: frozenset[str] = frozenset({
+    "timeout",
+    "connection_refused",  # covers connection-reset too
+    "server_5xx",          # includes 502, 503, 504
+    "rate_limited_429",
+})
+
+# Module-level holder for the most recent MCP exception (set by
+# _mcp_call_async, read by _mcp_call for retry decisions).
+_last_mcp_error: BaseException | None = None
+
+
+def _get_retry_after(exc: BaseException) -> float:
+    """Extract Retry-After seconds from a 429 response, or 0."""
+    resp = getattr(exc, "response", None)
+    if resp is None:
+        return 0.0
+    header = getattr(resp, "headers", {}).get("Retry-After") or ""
+    try:
+        return float(header)
+    except (ValueError, TypeError):
+        return 0.0
 
 
 # ──────────────────────────────────────────────────────────────────
@@ -85,6 +274,7 @@ def get_grounding_telemetry() -> dict:
 
 async def _mcp_call_async(tool_name: str, arguments: dict) -> dict | None:
     """Invoke an MCP tool using the official SDK's Streamable HTTP client."""
+    global _last_mcp_error
     _ensure_mcp()
     assert streamable_http_client is not None
     assert ClientSession is not None
@@ -107,41 +297,169 @@ async def _mcp_call_async(tool_name: str, arguments: dict) -> dict | None:
                         return {"text": text}
                 # call_tool succeeded but returned empty/no content
                 _grounding_telem["mcp_call_failures"] += 1
+                _last_mcp_error = None   # not an exception — just empty
                 return None
-    except TimeoutError:
+    except TimeoutError as exc:
         _grounding_telem["mcp_timeouts"] += 1
+        _record_error(exc)
+        _last_mcp_error = exc
         return None
-    except (Exception, asyncio.CancelledError):
-        # asyncio.CancelledError is a BaseException (Python 3.9+), so we
-        # list it explicitly.  KeyboardInterrupt / SystemExit must propagate.
+    except (Exception, asyncio.CancelledError) as exc:
         _grounding_telem["mcp_call_failures"] += 1
+        _record_error(exc)
+        _last_mcp_error = exc
         return None
     # Should not be reached, but guard for safety
     _grounding_telem["mcp_call_failures"] += 1
+    _last_mcp_error = None
     return None
 
 
 def _mcp_call(tool_name: str, arguments: dict) -> dict | None:
-    """Synchronous wrapper around the async MCP client."""
+    """Synchronous wrapper with a single bounded retry.
+
+    Retry policy:
+    - At most 1 retry for retryable error classes (timeout, connection
+      refused/reset, 502/503/504, 429).
+    - Jittered backoff 200–800 ms (or Retry-After header for 429).
+    - Total wall-clock time per call stays ≤ _TIMEOUT.
+    - 400, auth errors, bad_response, dns_failure, and unknown errors
+      are never retried.
+    """
+    global _last_mcp_error
+    deadline = time.monotonic() + _TIMEOUT
+
+    def _run_once() -> dict | None:
+        try:
+            return asyncio.run(_mcp_call_async(tool_name, arguments))
+        except RuntimeError:
+            import concurrent.futures
+            remaining = max(1, deadline - time.monotonic())
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                future = pool.submit(asyncio.run, _mcp_call_async(tool_name, arguments))
+                try:
+                    return future.result(timeout=remaining)
+                except concurrent.futures.TimeoutError as exc:
+                    global _last_mcp_error
+                    _grounding_telem["mcp_timeouts"] += 1
+                    _record_error(exc)
+                    _last_mcp_error = exc
+                    return None
+        except TimeoutError as exc:
+            _grounding_telem["mcp_timeouts"] += 1
+            _record_error(exc)
+            _last_mcp_error = exc
+            return None
+        except (Exception, asyncio.CancelledError) as exc:
+            _grounding_telem["mcp_call_failures"] += 1
+            _record_error(exc)
+            _last_mcp_error = exc
+            return None
+
+    # ── First attempt ─────────────────────────────────────────────
+    result = _run_once()
+    if result is not None:
+        return result
+
+    # ── Decide whether to retry ───────────────────────────────────
+    err = _last_mcp_error
+    if err is None:
+        # Empty-content response (not an exception) — don't retry.
+        return None
+
+    err_class = _classify_error(err)
+    if err_class not in _RETRYABLE_CLASSES:
+        return None
+
+    # Check time budget
+    remaining = deadline - time.monotonic()
+    if remaining < 1.0:
+        _grounding_telem["_notes"].append(
+            f"retry skipped for {err_class}: insufficient time budget"
+        )
+        return None
+
+    # Compute backoff — Retry-After for 429, else jitter 200-800 ms
+    if err_class == "rate_limited_429":
+        backoff = max(_get_retry_after(err), 0.5)
+    else:
+        backoff = random.uniform(0.2, 0.8)
+
+    if backoff >= remaining:
+        return None
+
+    time.sleep(backoff)
+    _grounding_telem["_notes"].append(f"retried {err_class} after {backoff:.2f}s")
+
+    # ── Retry (exactly once) ──────────────────────────────────────
+    return _run_once()
+
+
+# ── Per-run in-memory LRU cache for identical MCP queries ─────────
+# Keys: (tool_name, frozenset(arguments.items()))
+# Values: whatever _mcp_call returned (dict | None)
+# Bounded to _CACHE_MAX entries; evicts oldest on overflow.
+_CACHE_MAX = 128
+_mcp_cache: dict[tuple, dict | None] = {}
+_cache_hits = 0
+_cache_misses = 0
+
+
+def _cache_key(tool_name: str, arguments: dict) -> tuple:
+    """Build a hashable cache key from tool name + arguments."""
+    # arguments values are str/int/bool — safe to freeze.
     try:
-        return asyncio.run(_mcp_call_async(tool_name, arguments))
-    except RuntimeError:
-        # If there's already an event loop running, use a new thread
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-            future = pool.submit(asyncio.run, _mcp_call_async(tool_name, arguments))
-            try:
-                return future.result(timeout=_TIMEOUT)
-            except concurrent.futures.TimeoutError:
-                _grounding_telem["mcp_timeouts"] += 1
-                return None
-    except TimeoutError:
-        _grounding_telem["mcp_timeouts"] += 1
+        return (tool_name, frozenset(sorted(arguments.items())))
+    except TypeError:
+        # Unhashable value (shouldn't happen, but guard)
+        return (tool_name, id(arguments))
+
+
+def _cached_mcp_call(tool_name: str, arguments: dict) -> dict | None:
+    """Cache-aware wrapper around _mcp_call.
+
+    Avoids duplicate MCP round-trips within the same process run when
+    the same (tool, query) pair is requested multiple times (common in
+    ground_by_design_area which fires curated queries per design area).
+
+    Also respects the circuit breaker — if tripped, returns None
+    immediately without attempting MCP.
+    """
+    # Circuit breaker check
+    if _cb_is_open():
         return None
-    except (Exception, asyncio.CancelledError):
-        # CancelledError needs catching; KeyboardInterrupt / SystemExit propagate.
-        _grounding_telem["mcp_call_failures"] += 1
-        return None
+
+    global _cache_hits, _cache_misses
+    key = _cache_key(tool_name, arguments)
+    if key in _mcp_cache:
+        _cache_hits += 1
+        return _mcp_cache[key]
+
+    _cache_misses += 1
+    result = _mcp_call(tool_name, arguments)
+
+    if result is not None:
+        _cb_record_success()
+    else:
+        _cb_record_failure()
+
+    # Only cache successful results (None = failure, don't cache)
+    if result is not None:
+        if len(_mcp_cache) >= _CACHE_MAX:
+            # Evict oldest entry (insertion-order in Python 3.7+)
+            _mcp_cache.pop(next(iter(_mcp_cache)))
+        _mcp_cache[key] = result
+
+    return result
+
+
+def reset_mcp_cache() -> None:
+    """Clear the per-run MCP query cache and circuit breaker.  Called between runs."""
+    global _cache_hits, _cache_misses
+    _mcp_cache.clear()
+    _cache_hits = 0
+    _cache_misses = 0
+    reset_circuit_breaker()
 
 
 def _fallback_search(query: str, top: int = 5) -> list[dict]:
@@ -164,6 +482,8 @@ def _fallback_search(query: str, top: int = 5) -> list[dict]:
             for item in data.get("results", [])[:top]
         ]
     except Exception as e:
+        _grounding_telem["rest_fallback_failures"] += 1
+        _record_error(e)
         print(f"  ⚠ Fallback search failed: {e}")
         return []
 
@@ -178,7 +498,7 @@ def search_docs(query: str, top: int = 5) -> list[dict]:
     Returns up to *top* results with title, url, excerpt.
     Falls back to public API if MCP fails.
     """
-    result = _mcp_call("microsoft_docs_search", {"query": query})
+    result = _cached_mcp_call("microsoft_docs_search", {"query": query})
     if result and isinstance(result, list):
         return result[:top]
     if result and isinstance(result, dict):
@@ -205,7 +525,7 @@ def search_code_samples(
     Search for code snippets via MCP (microsoft_code_sample_search).
     Returns up to *top* code samples.
     """
-    result = _mcp_call("microsoft_code_sample_search", {
+    result = _cached_mcp_call("microsoft_code_sample_search", {
         "query": query,
         "language": language,
     })
@@ -231,7 +551,7 @@ def fetch_doc(url: str) -> str:
     Fetch a full Learn page as markdown via MCP (microsoft_docs_fetch).
     Returns the markdown content or empty string.
     """
-    result = _mcp_call("microsoft_docs_fetch", {"url": url})
+    result = _cached_mcp_call("microsoft_docs_fetch", {"url": url})
     if result:
         return result.get("text", result.get("content", ""))
     return ""

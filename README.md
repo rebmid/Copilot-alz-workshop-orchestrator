@@ -56,7 +56,7 @@ Designed for CSA-led enterprise engagements, this system replaces slideware and 
 
 > [!IMPORTANT]
 > 🔍 **Open the interactive demo report:**
-> 👉 **[View the HTML assessment report](https://htmlpreview.github.io/?https://github.com/rebmid/Reasoning-Agent-Azure-Landing-Zone-Assessment-Advisor/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
+> 👉 **[View the HTML assessment report](https://htmlpreview.github.io/?https://github.com/rebmid/Copilot-alz-workshop-orchestrator/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
 >
 > Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
@@ -277,8 +277,8 @@ az provider register -n Microsoft.RecoveryServices
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/rebmid/Reasoning-Agent-Azure-Landing-Zone-Assessment-Advisor.git
-cd Reasoning-Agent-Azure-Landing-Zone-Assessment-Advisor
+git clone https://github.com/rebmid/Copilot-alz-workshop-orchestrator.git
+cd Copilot-alz-workshop-orchestrator
 ```
 
 ### 2. Create a virtual environment
@@ -343,7 +343,7 @@ python scan.py
 That's it. The tool will:
 
 1. Discover your Azure execution context (tenant, subscriptions, identity)
-2. Fetch the latest ALZ checklist from GitHub (~243 controls)
+2. Fetch the latest ALZ checklist from GitHub (~255 controls)
 3. Run all evaluators against your environment
 4. Score every control with weighted domain scoring
 5. Run the 11-pass AI reasoning pipeline (requires `.env` — see step 4)
@@ -374,27 +374,42 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 
 ## CLI Reference
 
+### Common Workflows
+
+```bash
+python scan.py                           # Standard assessment (live Azure)
+python scan.py --demo                    # Demo mode — no Azure connection
+python scan.py --tenant-wide             # Cross-subscription enterprise scan
+python scan.py --workshop-copilot --demo # Copilot workshop (demo)
+python scan.py --workshop-copilot        # Copilot workshop (live Azure)
+python scan.py --why Security --demo     # Why-risk causal analysis
 ```
-python scan.py                 # Standard assessment
-python scan.py --tenant-wide   # Cross-subscription enterprise scan
-```
+
+### All Flags
 
 | Flag | Description |
 |---|---|
-| `--pretty` | Pretty-print the final JSON to stdout after the run |
-| `--preflight` | Run preflight access probes and exit — validates permissions without a full assessment |
-| `--why DOMAIN` | Explain **why** a domain is the top risk — runs causal reasoning over an existing assessment |
 | `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
+| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 4 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
+| `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
+| `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
+| `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
+| `--why DOMAIN` | Explain **why** a domain is the top risk — runs 6-step causal reasoning over an existing assessment |
+| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
+| `--preflight` | Run preflight access probes and exit — validates Azure permissions without a full assessment |
+| `--validate-signals` | Probe all signal providers without scoring and exit — useful for debugging data collection |
 | `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
 | `--no-html` | Skip HTML report generation |
-| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
-| `--workshop-copilot` | Enter the interactive Copilot SDK workshop session (see below) |
+| `--pretty` | Pretty-print the final JSON to stdout after the run |
+| `--tag TAG` | Label this run snapshot (e.g. `baseline`, `sprint-3`) — appears in output filename and metadata |
 
 ---
 
 ## Copilot Workshop Session
 
-The workshop session provides an interactive, multi-turn Copilot experience with 4 guardrailed tools for running assessments, exploring findings, and generating reports.
+The workshop session provides an interactive, multi-turn Copilot experience with 4 guardrailed tools for running assessments, exploring findings, and generating customer-facing reports — all from a conversational interface.
+
+> **Key principle:** Copilot orchestrates deterministic tools. It does not score controls, mutate the environment, or fabricate data. Every response is grounded in loaded assessment evidence.
 
 ### Demo Mode (no Azure connection required)
 
@@ -431,14 +446,21 @@ python scan.py --workshop-copilot --demo
 
 ### Workshop Tools
 
-Once inside the session, you can ask the Copilot to use any of these tools:
+The session registers exactly 4 tools — no more, no less. Copilot selects tools based on your natural language prompts:
 
-| Tool | Description | Example Prompt |
-|---|---|---|
-| `run_scan` | Execute a deterministic ALZ assessment scan | *"run a scan"* |
-| `load_results` | Load a completed run into memory | *"load the latest results"* |
-| `summarize_findings` | Filter findings by design area, severity, or failure status | *"show critical Security findings"* |
-| `generate_outputs` | Produce HTML report or Excel workbook | *"generate an HTML report"* |
+| Tool | Description | Parameters | Example Prompt |
+|---|---|---|---|
+| `run_scan` | Execute a deterministic ALZ assessment scan (subprocess-isolated) | `scope` (MG ID), `tag` (label) | *"run a scan"* |
+| `load_results` | Load a completed run into memory and return structured metadata | `run_id` (default: `latest`) | *"load the latest results"* |
+| `summarize_findings` | Filter findings by design area, severity, or failure status | `design_area`, `severity`, `failed_only`, `limit` | *"show critical Security findings"* |
+| `generate_outputs` | Produce HTML report or Excel workbook from a loaded run | `formats` (`html`, `excel`) | *"generate an HTML report and Excel workbook"* |
+
+### Session Behavior
+
+- **Session cache:** After `run_scan` or `load_results`, the active run is remembered — subsequent tool calls default to it
+- **Demo enforcement:** In demo mode, `run_scan` always uses the demo fixture regardless of what the model requests
+- **Format allow-list:** Only `html` and `excel` are accepted by `generate_outputs`
+- **Path confinement:** All output files are written to `out/` — writes outside that directory are rejected at the code level
 
 ### Typical Workshop Flow
 
@@ -446,6 +468,18 @@ Once inside the session, you can ask the Copilot to use any of these tools:
 2. **"load results"** — loads the run into the session
 3. **"summarize findings"** — explore findings by design area or severity
 4. **"generate an HTML report"** — produce the customer-facing deliverable
+
+### Example Prompts
+
+```
+Workshop> run a scan
+Workshop> load the latest results
+Workshop> show me all critical failures in Security
+Workshop> what design areas have the most failures?
+Workshop> summarize the Networking findings
+Workshop> generate an HTML report and Excel workbook
+Workshop> show failed controls in Identity with severity High
+```
 
 ---
 
@@ -456,7 +490,7 @@ All outputs are written to the `out/` directory:
 | File | Description |
 |---|---|
 | `run-YYYYMMDD-HHMM.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
-| `report.html` | Interactive executive HTML report with score breakdowns and gap analysis |
+| `ALZ-Platform-Readiness-Report-{run_id}-SNNN.html` | Interactive executive HTML report with score breakdowns and gap analysis |
 | `run-YYYYMMDD-HHMM_CSA_Workbook.xlsm` | 3-sheet CSA deliverable workbook — macro-enabled (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
 | `target_architecture.json` | Target architecture recommendation — derived from scored controls and checklist alignment, with component recommendations and Learn references |
 | `preflight.json` | *(preflight mode only)* Access probe results |
@@ -482,7 +516,7 @@ All queries use `AzureCliCredential` — the same identity you authenticated wit
 
 The **Signal Bus** architecture routes collected data through registered evaluators:
 
-1. The ALZ checklist is fetched live from GitHub (~243 controls across Security, Networking, Governance, Identity, Platform, and Management domains)
+1. The ALZ checklist is fetched live from GitHub (~255 controls across Security, Networking, Governance, Identity, Data Protection, Resilience, Management, and Cost domains)
 2. Each control is matched to an evaluator (or marked `Manual` if no automated check exists)
 3. Evaluators emit `Pass`, `Fail`, `Partial`, or `Info` verdicts with evidence
 4. The **scoring engine** applies domain weights and severity multipliers to produce a composite risk score
@@ -515,7 +549,7 @@ The `AOAIClient` includes built-in resilience:
 
 ### 4. Grounding via Microsoft Learn MCP
 
-The tool uses the **official MCP Python SDK** (Streamable HTTP transport) to connect to Microsoft's documentation API at `https://learn.microsoft.com/api/mcp`:
+The tool uses the **official MCP Python SDK** (Streamable HTTP transport) to connect to Microsoft's documentation API at `https://learn.microsoft.com/api/mcp`. The MCP server is declared in both `mcp.json` (root) and `.vscode/mcp.json` for VS Code integration.
 
 | MCP Tool | Purpose |
 |---|---|
@@ -523,7 +557,12 @@ The tool uses the **official MCP Python SDK** (Streamable HTTP transport) to con
 | `microsoft_code_sample_search` | Fetches Bicep/Terraform code samples for infrastructure recommendations |
 | `microsoft_docs_fetch` | Downloads full documentation pages as markdown for deep grounding |
 
-If MCP is unreachable, a **fallback** uses the public Learn search REST API (`https://learn.microsoft.com/api/search`) to provide title + URL + description.
+**Resilience features** (implemented in `ai/mcp_retriever.py`):
+- **REST fallback** — if MCP is unreachable, falls back to the public Learn search REST API (`https://learn.microsoft.com/api/search`)
+- **Circuit breaker** — after 5 consecutive MCP failures, bypasses MCP for the remainder of the run
+- **LRU cache** — deduplicates identical (tool, query) pairs within a single run
+- **Bounded retry** — at most 1 retry for retryable errors (timeout, 429, 5xx) with jittered backoff
+- **ALZ design-area-aware queries** — every search is scoped to an official ALZ design area for authoritative results
 
 Grounding runs for:
 - Each initiative in the transformation roadmap
@@ -545,7 +584,7 @@ Grounding runs for:
 - **ALZ Design Area References** — links to official ALZ design area documentation
 - **Data Collection Provenance** — collector execution metadata and timestamps
 
-**CSA Workbook** (`CSA_Workbook_v1.xlsm`):
+**CSA Workbook** (`{run_id}_CSA_Workbook.xlsm`):
 - See [CSA Workbook Deep Dive](#csa-workbook-deep-dive) below
 
 ---
@@ -576,7 +615,7 @@ A phased transformation plan where each action item includes:
 
 ### Sheet 2: `2_Control_Details`
 
-All ~243 controls in a flat table with 19 columns:
+All ~255 controls in a flat table with 19 columns:
 
 | Column | Description |
 |---|---|
@@ -598,7 +637,7 @@ All ~243 controls in a flat table with 19 columns:
 | P: Grounded Fetch | Full-page markdown excerpt |
 | Q: Related Items | Checklist IDs of related remediation items |
 | R: Category | ALZ category |
-| S: Discussion Points | Customer discovery items mapped by control (224/243 populated) |
+| S: Discussion Points | Customer discovery items mapped by control |
 
 ---
 
@@ -660,8 +699,10 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 | Networking | 1.4× | Network segmentation is foundational |
 | Identity | 1.4× | Identity is the new perimeter |
 | Governance | 1.3× | Policy enforcement and compliance |
-| Platform | 1.2× | Landing zone structural integrity |
+| Data Protection | 1.3× | Encryption, key management, data sovereignty |
+| Resilience | 1.2× | Backup, disaster recovery, availability |
 | Management | 1.1× | Operational visibility |
+| Cost | 1.0× | Cost governance and optimization |
 
 ### Severity Weights
 
