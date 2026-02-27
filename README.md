@@ -74,7 +74,7 @@ Copilot does **not** modify scoring or Azure state.
 
 Natural-language workshop interaction driving deterministic tool execution.
 
-![Copilot Workshop Session](docs/images/000_copilot_workshop-session.png)
+![Copilot Workshop Session](docs/demo/000_copilot_workshop-session.png)
 
 ---
 
