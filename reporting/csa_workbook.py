@@ -100,6 +100,7 @@ _STATUS_MAP: dict[str, str] = {
     "NotVerified":      "Not verified",
     "SignalError":      "Not verified (Signal failure)",
     "EvaluationError":  "Not verified (Eval error)",
+    "Error":            "Not verified (Error)",
     # Legacy synonyms (workbook may receive pre-mapped values)
     "Fulfilled":    "Fulfilled",
     "Open":         "Open",
