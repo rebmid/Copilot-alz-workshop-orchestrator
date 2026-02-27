@@ -431,38 +431,74 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 
 ## CLI Reference
 
-### Common Workflows
+### Demo Mode (No Azure Required)
 
 ```bash
-python scan.py                           # Standard assessment (live Azure)
 python scan.py --demo                    # Demo mode — no Azure connection
-python scan.py --tenant-wide             # Cross-subscription enterprise scan
-python scan.py --workshop-copilot --demo # Copilot workshop (demo)
-python scan.py --workshop-copilot        # Copilot workshop (live Azure)
-python scan.py --why Security --demo     # Why-risk causal analysis
-python scan.py --workshop-copilot --demo --run-source demo   # Workshop with demo run store
-python scan.py --workshop-copilot --run-source out           # Workshop with out/ run store
 ```
 
-### All Flags
+Launch Copilot workshop (demo data):
+
+```bash
+python scan.py --workshop-copilot --demo
+python scan.py --workshop-copilot --demo --run-source demo   # Workshop with demo run store
+```
+
+---
+
+### CSA Mode (Enterprise Landing Zone Assessment)
+
+> **Recommended enterprise workflow** — scope to the customer's landing zone management group for a focused, performant assessment.
+
+#### Step 1 — Authenticate to the Customer Tenant
+
+```bash
+az login --tenant <customer-tenant-id>
+```
+
+(Optional sanity check)
+
+```bash
+az account show --output table
+```
+
+Confirm:
+- Correct tenant
+- Correct subscription context
+
+#### Step 2 — Scope to the Landing Zone Management Group
+
+> Avoid `--tenant-wide` for enterprise tenants. Instead, scope to the landing zone management group for faster, targeted assessment.
+
+```bash
+python scan.py --mg-scope <landing-zone-mg-id>
+```
+
+#### Step 3 — Launch Workshop on the Completed Run
+
+```bash
+python scan.py --workshop-copilot --run-source out
+```
+
+Workshop mode reads the existing assessment results. No re-scan required — use `load_results` to pick up where the scan left off.
+
+---
+
+### Advanced Modes (Reference Only)
 
 | Flag | Description |
 |---|---|
-| `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
-| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 6 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
-| `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
-| `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
-| `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
-| `--subscription SUB_ID` | Scope assessment to a single subscription ID — significantly faster for large tenants |
-| `--why DOMAIN` | Explain **why** a domain is the top risk — runs 6-step causal reasoning over an existing assessment |
-| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
-| `--preflight` | Run preflight access probes and exit — validates Azure permissions without a full assessment |
-| `--validate-signals` | Probe all signal providers without scoring and exit — useful for debugging data collection |
-| `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
+| `--tenant-wide` | Scan all visible subscriptions (enterprise audit mode; not recommended for large tenants) |
+| `--subscription SUB_ID` | Scope to a single subscription |
+| `--preflight` | Validate Azure access without running full assessment |
+| `--no-ai` | Skip AI reasoning passes |
 | `--no-html` | Skip HTML report generation |
-| `--pretty` | Pretty-print the final JSON to stdout after the run |
-| `--tag TAG` | Label this run snapshot (e.g. `baseline`, `sprint-3`) — appears in output filename and metadata |
-| `--run-source SOURCE` | Set the run store directory for `list_runs` and `compare_runs` — accepts `demo`, `out`, or an absolute path (default: `out`) |
+| `--validate-signals` | Probe signal providers only |
+| `--why DOMAIN` | Explain why a domain is top risk |
+| `--tag TAG` | Label run snapshot (e.g. `baseline`, `sprint-3`) |
+| `--run-source SOURCE` | Set run store directory (`demo`, `out`, or absolute path) |
+| `--on-demand INTENT` | Run targeted evaluation (e.g. `enterprise_readiness`) |
+| `--pretty` | Pretty-print final JSON to stdout |
 
 ---
 
