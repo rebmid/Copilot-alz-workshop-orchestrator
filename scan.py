@@ -685,9 +685,10 @@ def main():
     telemetry.assessment_duration_sec = round(time.perf_counter() - scan_start, 2)
     # Update telemetry in persisted JSON
     output["telemetry"] = telemetry.to_dict()
-    # Merge MCP grounding telemetry
-    from ai.mcp_retriever import get_grounding_telemetry
+    # Merge MCP grounding telemetry + status
+    from ai.mcp_retriever import get_grounding_telemetry, get_grounding_status
     output["telemetry"]["grounding"] = get_grounding_telemetry()
+    output["telemetry"]["grounding_status"] = get_grounding_status()
     with open(run_json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     with open("assessment.json", "w", encoding="utf-8") as f:
