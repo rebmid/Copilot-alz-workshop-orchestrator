@@ -61,33 +61,54 @@ Designed for CSA-led enterprise engagements, this system replaces slideware and 
 > Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
 ---
-## 📸 Demo Walkthrough
+## Demo Walkthrough – Copilot-Orchestrated ALZ Workshop
 
-### 1️⃣ Platform Snapshot
+The live workshop session below demonstrates Copilot SDK orchestration layered on top of a deterministic Azure Landing Zone assessment engine.
 
-Deterministic maturity scoring across ALZ design areas with automation coverage and enterprise readiness scoring.
+All reporting artifacts shown afterward are generated from deterministic governance logic.  
+Copilot does **not** modify scoring or Azure state.
+
+---
+
+## Live Workshop Mode – Copilot SDK Orchestration
+
+Natural-language workshop interaction driving deterministic tool execution.
+
+![Copilot Workshop Session](docs/images/000_copilot_workshop-session.png)
+
+---
+
+## Deterministic Assessment Outputs
+
+The following artifacts are generated from the authoritative governance engine after a run is completed.
+
+---
+
+### Platform Snapshot (Deterministic Output)
+
+Maturity scoring across ALZ design areas with automation coverage and enterprise readiness indicators.
 
 ![Platform Snapshot](docs/demo/report-hero.png)
 
 ---
 
-### 2️⃣ Enterprise Readiness Blockers
+### Enterprise Readiness Blockers
 
-Foundation gaps that prevent enterprise-scale adoption — derived from failed controls and dependency graph impact.
+Foundation gaps preventing enterprise-scale adoption — derived from failed controls and dependency graph impact.
 
 ![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
 
 ---
 
-### 3️⃣ Top Business Risks
+### Business Risk Prioritization
 
-Deterministically ranked business risks with root cause and score drivers.
+Deterministically ranked risks with root cause mapping and score drivers.
 
 ![Top Business Risks](docs/demo/02_top-business-risks.png)
 
 ---
 
-### 4️⃣ 30-60-90 Transformation Roadmap
+### 30-60-90 Transformation Roadmap
 
 Dependency-ordered remediation initiatives with maturity trajectory projections.
 
@@ -95,49 +116,49 @@ Dependency-ordered remediation initiatives with maturity trajectory projections.
 
 ---
 
-### 5️⃣ Design Area Breakdown
+### Design Area Breakdown
 
-ALZ design area maturity breakdown with automation %, critical failures, and control status distribution.
+ALZ design area maturity distribution with automation %, critical failures, and control state mapping.
 
 ![Design Area Breakdown](docs/demo/04_design_area_breakdown.png)
 
 ---
 
-### 6️⃣ Workshop Decision Funnel
+### Workshop Decision Funnel
 
-CSA decision framing — blockers → risks → remediation path.
+CSA decision framing: blockers → risks → remediation path.
 
 ![Workshop Decision Funnel](docs/demo/04_workshop_decision_funnel.png)
 
 ---
 
-### 7️⃣ CSA Workbook – 30-60-90 Plan
+### CSA Workbook – 30-60-90 Plan
 
-Customer-ready Excel roadmap aligned to checklist IDs and owners.
+Customer-ready Excel roadmap aligned to checklist IDs and ownership.
 
 ![Excel 30-60-90 Roadmap](docs/demo/05_excel_30_60_90_roadmap.png)
 
 ---
 
-### 8️⃣ CSA Workbook – Executive Summary
+### CSA Workbook – Executive Summary
 
-Executive framing with top risks, maturity metrics, and engagement summary.
+Executive framing with top risks and maturity metrics.
 
 ![Excel Executive Summary](docs/demo/05_excel_executive_summary.png)
 
 ---
 
-### 9️⃣ Full Checklist Control Details
+### Full Checklist Control Details
 
-Control-level scoring mapped directly to Azure Review Checklist IDs.
+Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ![Excel Control Details](docs/demo/05_excel_landing_zone_checklist_control_details.png)
 
 ---
 
-### 🔎 Execution Context
+### Execution Context (Read-Only Azure Telemetry)
 
-Assessment scope, subscriptions evaluated, and API access confirmation.
+Assessment scope, evaluated subscriptions, and RBAC posture confirmation.
 
 ![Execution Context](docs/demo/00a_execution-context.png)
 
