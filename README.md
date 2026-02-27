@@ -375,29 +375,19 @@ The tool expects a **`gpt-4.1`** deployment (or any chat-completion model) on th
 az login
 ```
 
-If you have multiple tenants, target the correct one:
-
-```bash
-# Authenticate to a specific tenant (recommended when accessing multiple directories)
-az login --tenant <tenant-id>
-
-# List all accessible subscriptions in the current tenant
-az account list --output table
-
-# Set the active subscription for the session
-az account set --subscription <subscription-id-or-name>
-
-# Confirm the active tenant and subscription
-az account show --output table
-```
+> For enterprise / multi-tenant engagements, see the **[CSA Mode](#csa-mode-enterprise-landing-zone-assessment)** workflow below — it covers tenant targeting, subscription scoping, and management-group selection.
 
 ### 6. Run the assessment
 
 ```bash
-python scan.py
+python scan.py                       # scans the default subscription
+python scan.py --demo                # demo mode — no Azure connection
+python scan.py --mg-scope <mg-id>    # scope to a management group (recommended for CSA)
 ```
 
-That's it. The tool will:
+See the **[CLI Reference](#cli-reference)** for all available modes and flags.
+
+The tool will:
 
 1. Discover your Azure execution context (tenant, subscriptions, identity)
 2. Fetch the latest ALZ checklist from GitHub (~255 controls)
