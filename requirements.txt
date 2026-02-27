@@ -11,5 +11,5 @@ openpyxl
 openai
 python-dotenv
 mcp
-
+github-copilot-sdk
  
