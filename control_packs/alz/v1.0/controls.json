@@ -1130,7 +1130,7 @@
       "caf_guidance": "Cost management",
       "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/govern/cost-management",
       "checklist_ids": [
-        "E02.02"
+        "E02.01"
       ],
       "checklist_guids": [
         "29fd366b-a180-452b-9bd7-954b7700c667"

@@ -115,12 +115,22 @@ def parse_args():
                    help="Run interactive discovery workshop to resolve Manual controls")
     p.add_argument("--mg-scope", metavar="MG_ID",
                    help="Scope assessment to subscriptions under a specific management group")
+    p.add_argument("--subscription", metavar="SUB_ID",
+                   help="Scope assessment to a single subscription ID")
     p.add_argument("--validate-signals", action="store_true",
                    help="Probe all signal providers without scoring and exit")
     p.add_argument("--tag", metavar="TAG",
                    help="Label this run snapshot (e.g. 'baseline', 'sprint-3')")
     p.add_argument("--workshop-copilot", action="store_true",
                    help="Start a Copilot SDK workshop session")
+    p.add_argument("--run-source", metavar="SOURCE", default="out",
+                   help=(
+                       "Run source for workshop mode: "
+                       "'out' (default, real runs), "
+                       "'demo' (demo fixtures), "
+                       "or an arbitrary directory path. "
+                       "--demo implicitly sets --run-source demo."
+                   ))
     return p.parse_args()
 
 
@@ -135,7 +145,9 @@ def main():
     # ── Workshop-Copilot mode (Copilot SDK session) ───────────────
     if args.workshop_copilot:
         from src.workshop_copilot import run_workshop
-        run_workshop(demo=args.demo)
+        # --demo implicitly sets --run-source demo
+        run_source = "demo" if args.demo else args.run_source
+        run_workshop(demo=args.demo, run_source=run_source)
         return
 
     print("╔══════════════════════════════════════╗")
@@ -285,7 +297,10 @@ def main():
         return
 
     # ── Subscription list ─────────────────────────────────────────
-    if args.mg_scope:
+    if args.subscription:
+        subscription_ids = [args.subscription]
+        print(f"\n  Single-subscription mode: {args.subscription}")
+    elif args.mg_scope:
         # Narrow to subscriptions under the specified management group
         import requests as _req
         _token = credential.get_token("https://management.azure.com/.default").token

@@ -187,11 +187,13 @@ Assessment scope, evaluated subscriptions, and RBAC posture confirmation.
                                         │   Copilot SDK Session     │
                                         │  (--workshop-copilot)     │
               CSA / User ◄─────────────►│                           │
-          (multi-turn conversation)     │  4 Guardrailed Tools:     │
+          (multi-turn conversation)     │  6 Guardrailed Tools:     │
                                         │   run_scan                │
                                         │   load_results            │
                                         │   summarize_findings      │
                                         │   generate_outputs        │
+                                        │   list_runs               │
+                                        │   compare_runs            │
                                         │                           │
                                         │  Session Cache · Path &   │
                                         │  Format Guardrails        │
@@ -226,7 +228,7 @@ Azure Tenant / Demo ──────────────► Deterministic 
 
 The **Copilot SDK session** (`--workshop-copilot`) adds an interactive orchestration layer on top of the deterministic engine. It does **not** replace any of the pipeline above — it exposes it through a conversational interface with strict guardrails:
 
-- **4 registered tools** — `run_scan`, `load_results`, `summarize_findings`, `generate_outputs`
+- **6 registered tools** — `run_scan`, `load_results`, `summarize_findings`, `generate_outputs`, `list_runs`, `compare_runs`
 - **Session cache** — active run is remembered across turns; no re-loading required
 - **Demo enforcement** — in demo mode, the fixture is always used regardless of model requests
 - **Path confinement** — all file writes constrained to `out/`
@@ -376,7 +378,17 @@ az login
 If you have multiple tenants, target the correct one:
 
 ```bash
+# Authenticate to a specific tenant (recommended when accessing multiple directories)
 az login --tenant <tenant-id>
+
+# List all accessible subscriptions in the current tenant
+az account list --output table
+
+# Set the active subscription for the session
+az account set --subscription <subscription-id-or-name>
+
+# Confirm the active tenant and subscription
+az account show --output table
 ```
 
 ### 6. Run the assessment
@@ -428,6 +440,8 @@ python scan.py --tenant-wide             # Cross-subscription enterprise scan
 python scan.py --workshop-copilot --demo # Copilot workshop (demo)
 python scan.py --workshop-copilot        # Copilot workshop (live Azure)
 python scan.py --why Security --demo     # Why-risk causal analysis
+python scan.py --workshop-copilot --demo --run-source demo   # Workshop with demo run store
+python scan.py --workshop-copilot --run-source out           # Workshop with out/ run store
 ```
 
 ### All Flags
@@ -435,10 +449,11 @@ python scan.py --why Security --demo     # Why-risk causal analysis
 | Flag | Description |
 |---|---|
 | `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
-| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 4 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
+| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 6 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
 | `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
 | `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
 | `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
+| `--subscription SUB_ID` | Scope assessment to a single subscription ID — significantly faster for large tenants |
 | `--why DOMAIN` | Explain **why** a domain is the top risk — runs 6-step causal reasoning over an existing assessment |
 | `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
 | `--preflight` | Run preflight access probes and exit — validates Azure permissions without a full assessment |
@@ -447,12 +462,13 @@ python scan.py --why Security --demo     # Why-risk causal analysis
 | `--no-html` | Skip HTML report generation |
 | `--pretty` | Pretty-print the final JSON to stdout after the run |
 | `--tag TAG` | Label this run snapshot (e.g. `baseline`, `sprint-3`) — appears in output filename and metadata |
+| `--run-source SOURCE` | Set the run store directory for `list_runs` and `compare_runs` — accepts `demo`, `out`, or an absolute path (default: `out`) |
 
 ---
 
 ## Copilot Workshop Session
 
-The workshop session provides an interactive, multi-turn Copilot experience with 4 guardrailed tools for running assessments, exploring findings, and generating customer-facing reports — all from a conversational interface.
+The workshop session provides an interactive, multi-turn Copilot experience with 6 guardrailed tools for running assessments, exploring findings, and generating customer-facing reports — all from a conversational interface.
 
 > **Key principle:** Copilot orchestrates deterministic tools. It does not score controls, mutate the environment, or fabricate data. Every response is grounded in loaded assessment evidence.
 
@@ -472,7 +488,13 @@ Uses the bundled demo fixture (`demo/demo_run.json`) — no Azure credentials or
 python scan.py --workshop-copilot
 ```
 
-Runs against your authenticated Azure subscription. The live scan takes 5–10 minutes depending on environment size. If `.env` is configured with Azure OpenAI credentials, the full 11-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
+Runs against your authenticated Azure subscription. If `.env` is configured with Azure OpenAI credentials, the full 11-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
+
+> **Mode:** LIVE (authenticated against your Azure subscription)
+>
+> ⚠️ A full deterministic scan against a live tenant can take 5–10 minutes depending on tenant size and subscription count.
+>
+> **Best practice:** Run `run_scan` before the workshop or during a break. Use `list_runs` + `load_results` during live facilitation.
 
 ### Prerequisites
 
@@ -491,14 +513,16 @@ python scan.py --workshop-copilot --demo
 
 ### Workshop Tools
 
-The session registers exactly 4 tools — no more, no less. Copilot selects tools based on your natural language prompts:
+The session registers exactly 6 tools. Copilot selects tools based on your natural language prompts:
 
 | Tool | Description | Parameters | Example Prompt |
 |---|---|---|---|
-| `run_scan` | Execute a deterministic ALZ assessment scan (subprocess-isolated) | `scope` (MG ID), `tag` (label) | *"run a scan"* |
+| `run_scan` | Execute a deterministic ALZ assessment scan (subprocess-isolated) | `scope` (MG ID), `subscription` (sub ID), `tag` (label) | *"run a scan"* |
 | `load_results` | Load a completed run into memory and return structured metadata | `run_id` (default: `latest`) | *"load the latest results"* |
 | `summarize_findings` | Filter findings by design area, severity, or failure status | `design_area`, `severity`, `failed_only`, `limit` | *"show critical Security findings"* |
 | `generate_outputs` | Produce HTML report or Excel workbook from a loaded run | `formats` (`html`, `excel`) | *"generate an HTML report and Excel workbook"* |
+| `list_runs` | List available assessment runs in the run store | *(none)* | *"list all runs"* |
+| `compare_runs` | Compare two assessment runs and produce a delta summary | `run_id_a`, `run_id_b` | *"compare the baseline run with the latest"* |
 
 ### Session Behavior
 
@@ -513,6 +537,8 @@ The session registers exactly 4 tools — no more, no less. Copilot selects tool
 2. **"load results"** — loads the run into the session
 3. **"summarize findings"** — explore findings by design area or severity
 4. **"generate an HTML report"** — produce the customer-facing deliverable
+5. **"list all runs"** — browse available assessment snapshots in the run store
+6. **"compare baseline with latest"** — produce a delta summary between two runs
 
 ### Example Prompts
 
@@ -524,6 +550,8 @@ Workshop> what design areas have the most failures?
 Workshop> summarize the Networking findings
 Workshop> generate an HTML report and Excel workbook
 Workshop> show failed controls in Identity with severity High
+Workshop> list all runs
+Workshop> compare the baseline run with the latest
 ```
 
 ---

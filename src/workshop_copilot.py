@@ -19,13 +19,16 @@ from copilot.types import CopilotClientOptions
 
 logger = logging.getLogger("workshop")
 
-# ── Import the 4 handler functions from the tool layer ───────────
+# ── Import handler functions from the tool layer ─────────────────
 from src.workshop_tools import (
     run_scan      as _handle_run_scan,
     load_results  as _handle_load_results,
     summarize_findings as _handle_summarize_findings,
     generate_outputs   as _handle_generate_outputs,
+    list_runs     as _handle_list_runs,
+    compare_runs  as _handle_compare_runs,
     _load_cached,
+    set_run_source_dir as _set_run_source_dir,
 )
 
 # ══════════════════════════════════════════════════════════════════
@@ -56,6 +59,8 @@ from src.workshop_tools import (
     LoadResultsParams,
     SummarizeFindingsParams,
     GenerateOutputsParams,
+    ListRunsParams,
+    CompareRunsParams,
 )
 
 
@@ -174,6 +179,30 @@ def _handler_generate_outputs(invocation) -> ToolResult:
         return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
 
 
+def _handler_list_runs(invocation) -> ToolResult:
+    print("  [tool] list_runs invoked …", flush=True)
+    try:
+        _log_tool("list_runs", None)
+        result = _handle_list_runs(ListRunsParams())
+        print(f"  [tool] list_runs completed", flush=True)
+        return ToolResult(textResultForLlm=result)
+    except Exception as exc:
+        print(f"  [tool] list_runs ERROR: {exc}", flush=True)
+        return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
+
+
+def _handler_compare_runs(invocation) -> ToolResult:
+    print("  [tool] compare_runs invoked …", flush=True)
+    try:
+        _log_tool("compare_runs", None)
+        result = _handle_compare_runs(CompareRunsParams())
+        print(f"  [tool] compare_runs completed", flush=True)
+        return ToolResult(textResultForLlm=result)
+    except Exception as exc:
+        print(f"  [tool] compare_runs ERROR: {exc}", flush=True)
+        return ToolResult(textResultForLlm=json.dumps({"error": str(exc)}))
+
+
 # ══════════════════════════════════════════════════════════════════
 # Tool registration — explicit name, schema, handler.  Nothing else.
 # ══════════════════════════════════════════════════════════════════
@@ -272,11 +301,42 @@ TOOLS = [
             "required": [],
         },
     ),
+    # ── 5. list_runs ──────────────────────────────────────────
+    Tool(
+        name="list_runs",
+        description=(
+            "List discovered assessment runs in the active run source "
+            "(newest first). Shows display name, timestamp, and role "
+            "(latest/previous). Use before compare_runs to confirm ≥2 runs exist."
+        ),
+        handler=_handler_list_runs,
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    ),
+    # ── 6. compare_runs ───────────────────────────────────────
+    Tool(
+        name="compare_runs",
+        description=(
+            "Compare the latest run against the previous run (delta analysis). "
+            "Reports score change and controls that changed status. "
+            "Delta output is written to out/deltas/. "
+            "Requires ≥2 runs in the active run source."
+        ),
+        handler=_handler_compare_runs,
+        parameters={
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    ),
 ]
 
 
 # ══════════════════════════════════════════════════════════════════
-# System prompt — scoped to exactly these 4 tools
+# System prompt — scoped to the registered tools
 # ══════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = """\
@@ -285,11 +345,13 @@ Behavior: Use tools to answer every question. Do not invent or fabricate results
 Scope: Only discuss items present in the loaded run results.
 Safety: Do not suggest or perform environment changes. All outputs go to out/ only.
 {demo_note}
-Tools (exactly 4):
+Tools:
   run_scan            — execute a deterministic ALZ scan
   load_results        — load a completed run into memory
   summarize_findings  — filter findings by design area, severity, or failure
   generate_outputs    — produce HTML or Excel artefacts from a loaded run
+  list_runs           — list discovered runs in the run source (newest first)
+  compare_runs        — compare latest vs previous run and write a delta report
 
 Constraints:
 - Call the relevant tool before answering — never guess.
@@ -303,12 +365,13 @@ Constraints:
 # Session bootstrap
 # ══════════════════════════════════════════════════════════════════
 
-async def _run(*, demo: bool = True):
+async def _run(*, demo: bool = True, run_source_dir=None):
     print("╔══════════════════════════════════════════════════╗")
     print("║   ALZ Workshop — Copilot SDK Session            ║")
     print("╠══════════════════════════════════════════════════╣")
-    print("║  4 tools registered (run_scan, load_results,    ║")
-    print("║  summarize_findings, generate_outputs)          ║")
+    print("║  6 tools registered (run_scan, load_results,    ║")
+    print("║  summarize_findings, generate_outputs,          ║")
+    print("║  list_runs, compare_runs)                       ║")
     print("║  Type 'exit' or 'quit' to end the session.      ║")
     print("╚══════════════════════════════════════════════════╝")
     print()
@@ -345,6 +408,11 @@ async def _run(*, demo: bool = True):
     # Propagate demo flag so tool handlers use the demo fixture
     global _session_demo
     _session_demo = demo
+
+    # Configure run source dir for tool handlers
+    if run_source_dir is not None:
+        _set_run_source_dir(run_source_dir)
+        print(f"  [session] run source: {run_source_dir}", flush=True)
 
     # Build system prompt with demo-mode note if applicable
     demo_note = (
@@ -408,7 +476,7 @@ async def _run(*, demo: bool = True):
 
     # Initial greeting
     await _send_and_print(
-        "Briefly introduce yourself and list the 4 tools you have available."
+        "Briefly introduce yourself and list the tools you have available."
     )
 
     # Interactive loop
@@ -430,10 +498,19 @@ async def _run(*, demo: bool = True):
     await client.stop()
 
 
-def run_workshop(*, demo: bool = True):
+def run_workshop(*, demo: bool = True, run_source: str = "out"):
     """Sync entry point called from scan.py --workshop-copilot."""
+    from src.run_store import resolve_run_source
+
+    # Resolve run source to an absolute path
     try:
-        asyncio.run(_run(demo=demo))
+        run_source_dir = resolve_run_source(run_source)
+    except FileNotFoundError as exc:
+        print(f"[error] {exc}")
+        sys.exit(1)
+
+    try:
+        asyncio.run(_run(demo=demo, run_source_dir=run_source_dir))
     except KeyboardInterrupt:
         print("\nSession interrupted.")
         sys.exit(0)
