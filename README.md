@@ -162,31 +162,55 @@ Assessment scope, subscriptions evaluated, and API access confirmation.
 > Deterministic assessment **feeds** the AI reasoning layer. Control verdicts and risk scores are final before AI executes.
 
 ```
-Azure Tenant / Demo
-        │
-        ▼
-Deterministic ALZ Assessment
-(Resource Graph + Policy + Defender)
-        │
-        ▼
-Control Scoring Engine
-        │
-        │─────── one-way feed ──────┐
-        │                           ▼
-        ├────────► CSA Workbook    AI Reasoning Engine
-        │                           │
-        │                           ▼
-        │                     MCP Grounding Layer
-        │            (Microsoft Learn retrieval + patterns)
-        │                           │
-        │                           ▼
-        │                         WHY Reasoning Layer
-        │
-        └───────────────────────────┘
-                    │
-                    ▼
-          Traceable Deliverables
+                                        ┌───────────────────────────┐
+                                        │   Copilot SDK Session     │
+                                        │  (--workshop-copilot)     │
+              CSA / User ◄─────────────►│                           │
+          (multi-turn conversation)     │  4 Guardrailed Tools:     │
+                                        │   run_scan                │
+                                        │   load_results            │
+                                        │   summarize_findings      │
+                                        │   generate_outputs        │
+                                        │                           │
+                                        │  Session Cache · Path &   │
+                                        │  Format Guardrails        │
+                                        └─────────┬─────────────────┘
+                                                  │ invokes
+                                                  ▼
+Azure Tenant / Demo ──────────────► Deterministic ALZ Assessment
+                                    (Resource Graph + Policy + Defender)
+                                                  │
+                                                  ▼
+                                        Control Scoring Engine
+                                                  │
+                                    ┌─────────────┼──── one-way feed ───┐
+                                    │             │                     ▼
+                                    │             │           AI Reasoning Engine
+                                    │             │                     │
+                                    │             │                     ▼
+                                    │             │             MCP Grounding Layer
+                                    │             │    (Microsoft Learn retrieval)
+                                    │             │                     │
+                                    │             │                     ▼
+                                    │             │             WHY Reasoning Layer
+                                    │             │                     │
+                                    │             └─────────────────────┘
+                                    │                         │
+                                    ▼                         ▼
+                              Traceable Deliverables
+                    (HTML Report · CSA Workbook · Run JSON)
 ```
+
+### Copilot SDK Layer
+
+The **Copilot SDK session** (`--workshop-copilot`) adds an interactive orchestration layer on top of the deterministic engine. It does **not** replace any of the pipeline above — it exposes it through a conversational interface with strict guardrails:
+
+- **4 registered tools** — `run_scan`, `load_results`, `summarize_findings`, `generate_outputs`
+- **Session cache** — active run is remembered across turns; no re-loading required
+- **Demo enforcement** — in demo mode, the fixture is always used regardless of model requests
+- **Path confinement** — all file writes constrained to `out/`
+- **Format allow-list** — only `html` and `excel` accepted
+- **One-way data flow preserved** — Copilot consumes deterministic results but cannot modify scores or verdicts
 
 ### Data Collection
 
