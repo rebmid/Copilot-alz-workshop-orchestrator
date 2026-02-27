@@ -122,6 +122,13 @@ class RunScanParams(BaseModel):
             "None → default Resource Graph subscription discovery."
         ),
     )
+    subscription: str | None = Field(
+        default=None,
+        description=(
+            "Single subscription ID to scope the scan to. "
+            "Faster than scanning all visible subscriptions."
+        ),
+    )
     demo: bool = Field(
         default=False,
         description="True → run in demo mode (no Azure connection).",
@@ -167,6 +174,8 @@ def run_scan(params: RunScanParams) -> str:
     cmd = [sys.executable, str(_PROJECT_ROOT / "scan.py")]
     if params.scope:
         cmd.extend(["--mg-scope", params.scope])
+    if params.subscription:
+        cmd.extend(["--subscription", params.subscription])
     if params.tag:
         cmd.extend(["--tag", params.tag])
 
@@ -180,12 +189,12 @@ def run_scan(params: RunScanParams) -> str:
         result = subprocess.run(
             cmd,
             capture_output=True,
-            timeout=600,  # 10-minute ceiling
+            timeout=900,  # 15-minute ceiling
             cwd=str(_PROJECT_ROOT),
             env={**os.environ, "PYTHONIOENCODING": "utf-8"},
         )
     except subprocess.TimeoutExpired:
-        return json.dumps({"error": "Scan timed out after 600 seconds."})
+        return json.dumps({"error": "Scan timed out after 900 seconds."})
 
     # Decode stdout/stderr from bytes to str safely
     stdout_text = (result.stdout or b"").decode("utf-8", errors="replace")
@@ -668,7 +677,7 @@ def compare_runs(params: CompareRunsParams) -> str:
         encoding="utf-8",
     )
 
-    delta_payload["delta_path"] = str(delta_path.relative_to(_PROJECT_ROOT))
+    delta_payload["delta_path"] = delta_path.relative_to(_PROJECT_ROOT).as_posix()
     return json.dumps(delta_payload, indent=2, default=str)
 
 

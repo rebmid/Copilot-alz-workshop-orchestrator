@@ -348,6 +348,10 @@ class TestResolveRunSource:
         result = resolve_run_source("demo", project_root=root)
         assert result == (root / "Demo").resolve()
 
+    @pytest.mark.skipif(
+        os.name == "nt",
+        reason="Windows NTFS is case-insensitive; cannot create both demo/ and Demo/",
+    )
     def test_demo_prefers_lowercase_over_uppercase(self, tmp_path):
         from src.run_store import resolve_run_source
         root = tmp_path / "proj"

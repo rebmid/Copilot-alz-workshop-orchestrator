@@ -115,6 +115,8 @@ def parse_args():
                    help="Run interactive discovery workshop to resolve Manual controls")
     p.add_argument("--mg-scope", metavar="MG_ID",
                    help="Scope assessment to subscriptions under a specific management group")
+    p.add_argument("--subscription", metavar="SUB_ID",
+                   help="Scope assessment to a single subscription ID")
     p.add_argument("--validate-signals", action="store_true",
                    help="Probe all signal providers without scoring and exit")
     p.add_argument("--tag", metavar="TAG",
@@ -295,7 +297,10 @@ def main():
         return
 
     # ── Subscription list ─────────────────────────────────────────
-    if args.mg_scope:
+    if args.subscription:
+        subscription_ids = [args.subscription]
+        print(f"\n  Single-subscription mode: {args.subscription}")
+    elif args.mg_scope:
         # Narrow to subscriptions under the specified management group
         import requests as _req
         _token = credential.get_token("https://management.azure.com/.default").token
