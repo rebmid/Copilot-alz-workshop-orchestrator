@@ -556,6 +556,18 @@ Workshop> compare the baseline run with the latest
 
 ---
 
+## Demo / Fixture Run (Local + CI)
+
+Run the same non-tenant command used by CI:
+
+```bash
+python scan.py --why Networking --demo --no-ai
+```
+
+This writes run outputs to `out/`. In GitHub Actions, the `Demo Fixture Artifacts` workflow uploads the full `out/` directory as the `out-artifacts` artifact, downloadable from the workflow run page under **Artifacts**.
+
+---
+
 ## Output Artifacts
 
 All outputs are written to the `out/` directory:
