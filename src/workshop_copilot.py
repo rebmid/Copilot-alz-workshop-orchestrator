@@ -96,17 +96,22 @@ def _handler_run_scan(invocation) -> ToolResult:
         _log_tool("run_scan", None, demo=params.demo, scope=params.scope)
         result = _handle_run_scan(params)
 
-        # ── Populate session cache ────────────────────────────────
+        # ── Populate session cache (only when scan is complete) ────
         try:
             payload = json.loads(result)
+            status = payload.get("status")
             rid = payload.get("run_id")
-            if rid:
+            if rid and status == "completed":
                 active_run_id = rid
                 active_results = _load_cached(rid)
+                print(f"  [tool] run_scan completed — run {rid} cached", flush=True)
+            elif status in ("started", "in_progress"):
+                print(f"  [tool] run_scan {status}", flush=True)
+            else:
+                print(f"  [tool] run_scan returned status={status}", flush=True)
         except (json.JSONDecodeError, Exception):
             pass  # scan may have returned an error — leave cache unchanged
 
-        print(f"  [tool] run_scan completed", flush=True)
         return ToolResult(textResultForLlm=result)
     except Exception as exc:
         print(f"  [tool] run_scan ERROR: {exc}", flush=True)
@@ -352,6 +357,13 @@ Tools:
   generate_outputs    — produce HTML or Excel artefacts from a loaded run
   list_runs           — list discovered runs in the run source (newest first)
   compare_runs        — compare latest vs previous run and write a delta report
+
+run_scan lifecycle (live mode):
+  - First call starts the scan in the background and returns immediately.
+  - Subsequent calls check progress: returns in_progress or completed.
+  - Once completed, the session cache is populated automatically.
+  - Use list_runs to see if a background scan is running.
+  - In demo mode, run_scan completes instantly.
 
 Constraints:
 - Call the relevant tool before answering — never guess.

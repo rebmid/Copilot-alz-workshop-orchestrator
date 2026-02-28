@@ -19,6 +19,8 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -59,6 +61,75 @@ def set_run_source_dir(path: Path | None) -> None:
 
 # Pattern for sanitising run IDs into safe filename components.
 _UNSAFE_ID_CHARS = re.compile(r"[^\w\-]")
+
+
+# ══════════════════════════════════════════════════════════════════
+# Background scan tracking (live mode only)
+# ══════════════════════════════════════════════════════════════════
+
+_active_scan: dict[str, Any] | None = None  # {process, started, before_files, stderr_path}
+_active_scan_lock = threading.Lock()
+
+
+def _collect_scan_result(
+    process: subprocess.Popen,
+    before: set[Path],
+    stderr_path: str | None = None,
+) -> str:
+    """Harvest results from a completed background scan process.
+
+    stdout is inherited (printed live to the console) so the user
+    sees real-time scan progress.  Only stderr is captured to a temp
+    file for error diagnostics if the scan fails.
+    """
+    stderr_text = ""
+    try:
+        if stderr_path and os.path.exists(stderr_path):
+            stderr_text = Path(stderr_path).read_text(encoding="utf-8", errors="replace")
+    finally:
+        if stderr_path:
+            try:
+                os.unlink(stderr_path)
+            except OSError:
+                pass
+
+    if process.returncode != 0:
+        stderr_tail = stderr_text.strip().splitlines()[-5:]
+        return json.dumps({
+            "status": "failed",
+            "error": "Scan failed",
+            "exit_code": process.returncode,
+            "detail": "\n".join(stderr_tail),
+        })
+
+    # Discover new run files produced by the scan
+    after = set(OUT_DIR.glob("run-*.json"))
+    new_files = sorted(after - before)
+
+    if not new_files:
+        return json.dumps({
+            "status": "failed",
+            "error": "Scan completed but no new run file was created.",
+        })
+
+    run_path = new_files[-1]
+    run_id = run_path.stem
+
+    # Collect all output artefacts for this run
+    output_paths = [str(run_path.relative_to(_PROJECT_ROOT))]
+    for f in OUT_DIR.iterdir():
+        if f.name.startswith(run_id) and f != run_path:
+            output_paths.append(str(f.relative_to(_PROJECT_ROOT)))
+    for f in OUT_DIR.glob(f"ALZ-Platform-Readiness-Report-{run_id}*.html"):
+        rel = str(f.relative_to(_PROJECT_ROOT))
+        if rel not in output_paths:
+            output_paths.append(rel)
+
+    return json.dumps({
+        "status": "completed",
+        "run_id": run_id,
+        "output_paths": output_paths,
+    }, indent=2)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -170,7 +241,38 @@ def run_scan(params: RunScanParams) -> str:
             "output_paths": [str(dest.relative_to(_PROJECT_ROOT))],
         }, indent=2)
 
-    # ── Live mode: shell out to scan.py ───────────────────────
+    # ── Live mode: non-blocking background scan ──────────────
+    global _active_scan
+
+    with _active_scan_lock:
+        # ── If a scan is already running, report status ───────
+        if _active_scan is not None:
+            proc = _active_scan["process"]
+            elapsed = (datetime.now(timezone.utc) - _active_scan["started"]).total_seconds()
+            elapsed_str = f"{int(elapsed // 60)}m {int(elapsed % 60)}s"
+
+            if proc.poll() is None:
+                # Still running
+                return json.dumps({
+                    "status": "in_progress",
+                    "message": (
+                        f"Scan is still running ({elapsed_str} elapsed). "
+                        "Call run_scan again to check, or use list_runs / "
+                        "load_results once it completes."
+                    ),
+                    "elapsed_seconds": round(elapsed),
+                }, indent=2)
+
+            # ── Scan finished — harvest results ──────────────
+            result_json = _collect_scan_result(
+                proc,
+                _active_scan["before_files"],
+                stderr_path=_active_scan.get("stderr_path"),
+            )
+            _active_scan = None
+            return result_json
+
+    # ── No active scan — start one ────────────────────────────
     cmd = [sys.executable, str(_PROJECT_ROOT / "scan.py")]
     if params.scope:
         cmd.extend(["--mg-scope", params.scope])
@@ -179,63 +281,45 @@ def run_scan(params: RunScanParams) -> str:
     if params.tag:
         cmd.extend(["--tag", params.tag])
 
-    # Ensure out/ exists before spawning
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Snapshot existing run files BEFORE the scan
     before = set(OUT_DIR.glob("run-*.json"))
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            timeout=900,  # 15-minute ceiling
-            cwd=str(_PROJECT_ROOT),
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-        )
-    except subprocess.TimeoutExpired:
-        return json.dumps({"error": "Scan timed out after 900 seconds."})
+    # stdout inherits from parent → scan progress prints live in
+    # the workshop terminal so the CSA can see what's happening.
+    # stderr goes to a temp file for error harvesting if scan fails.
+    # (Using pipes would deadlock on long scans that produce >64 KB.)
+    stderr_fd = tempfile.NamedTemporaryFile(
+        mode="w", suffix="_scan_stderr.log", dir=str(OUT_DIR),
+        delete=False, encoding="utf-8",
+    )
 
-    # Decode stdout/stderr from bytes to str safely
-    stdout_text = (result.stdout or b"").decode("utf-8", errors="replace")
-    stderr_text = (result.stderr or b"").decode("utf-8", errors="replace")
+    process = subprocess.Popen(
+        cmd,
+        stdout=None,   # inherit → prints live to console
+        stderr=stderr_fd,
+        cwd=str(_PROJECT_ROOT),
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+    )
 
-    if result.returncode != 0:
-        # Surface a useful error without leaking full stderr
-        stderr_tail = stderr_text.strip().splitlines()[-5:]
-        return json.dumps({
-            "error": "Scan failed",
-            "exit_code": result.returncode,
-            "detail": "\n".join(stderr_tail),
-        })
+    stderr_fd.close()  # subprocess owns the fd now
 
-    # Discover new run files produced by the scan
-    after = set(OUT_DIR.glob("run-*.json"))
-    new_files = sorted(after - before)
-
-    if not new_files:
-        return json.dumps({
-            "error": "Scan completed but no new run file was created.",
-            "stdout_tail": stdout_text.strip().splitlines()[-5:],
-        })
-
-    run_path = new_files[-1]  # latest one
-    run_id = run_path.stem     # e.g. "run-20260224-1430"
-
-    # Collect all output artefacts for this run
-    output_paths = [str(run_path.relative_to(_PROJECT_ROOT))]
-    for f in OUT_DIR.iterdir():
-        if f.name.startswith(run_id) and f != run_path:
-            output_paths.append(str(f.relative_to(_PROJECT_ROOT)))
-    # Include the HTML report (named differently)
-    for f in OUT_DIR.glob(f"ALZ-Platform-Readiness-Report-{run_id}*.html"):
-        rel = str(f.relative_to(_PROJECT_ROOT))
-        if rel not in output_paths:
-            output_paths.append(rel)
+    with _active_scan_lock:
+        _active_scan = {
+            "process": process,
+            "started": datetime.now(timezone.utc),
+            "before_files": before,
+            "cmd": cmd,
+            "stderr_path": stderr_fd.name,
+        }
 
     return json.dumps({
-        "run_id": run_id,
-        "output_paths": output_paths,
+        "status": "started",
+        "message": (
+            "Scan started in the background. A live scan typically takes "
+            "5–10 minutes depending on tenant size. "
+            "Call run_scan again to check progress, or use list_runs / "
+            "load_results once it completes."
+        ),
     }, indent=2)
 
 
@@ -529,7 +613,10 @@ class ListRunsParams(BaseModel):
 
 
 def list_runs(params: ListRunsParams) -> str:
-    """List discovered runs in the active run source (newest first)."""
+    """List discovered runs in the active run source (newest first).
+
+    Also reports whether a background scan is currently in progress.
+    """
     from src.run_store import discover_runs, sort_runs
 
     source = _run_source_dir if _run_source_dir is not None else OUT_DIR
@@ -538,7 +625,25 @@ def list_runs(params: ListRunsParams) -> str:
     except Exception as exc:
         return json.dumps({"error": str(exc)})
 
-    if not runs:
+    # ── Check for an active background scan ────────────────────
+    scan_status: dict[str, Any] | None = None
+    with _active_scan_lock:
+        if _active_scan is not None:
+            proc = _active_scan["process"]
+            elapsed = (datetime.now(timezone.utc) - _active_scan["started"]).total_seconds()
+            if proc.poll() is None:
+                scan_status = {
+                    "active": True,
+                    "elapsed_seconds": round(elapsed),
+                    "message": f"Scan in progress ({int(elapsed // 60)}m {int(elapsed % 60)}s elapsed)",
+                }
+            else:
+                scan_status = {
+                    "active": False,
+                    "message": "Background scan finished. Call run_scan to collect results.",
+                }
+
+    if not runs and scan_status is None:
         return json.dumps({
             "run_source": str(source),
             "count": 0,
@@ -556,11 +661,15 @@ def list_runs(params: ListRunsParams) -> str:
             "role": "latest" if i == 0 else ("previous" if i == 1 else None),
         })
 
-    return json.dumps({
+    result: dict[str, Any] = {
         "run_source": str(source),
         "count": len(entries),
         "runs": entries,
-    }, indent=2, default=str)
+    }
+    if scan_status is not None:
+        result["scan_in_progress"] = scan_status
+
+    return json.dumps(result, indent=2, default=str)
 
 
 # ══════════════════════════════════════════════════════════════════
