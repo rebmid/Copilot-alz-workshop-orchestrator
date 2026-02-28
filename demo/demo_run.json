@@ -3930,6 +3930,1873 @@
       "signal_used": null,
       "confidence": "Low",
       "notes": "Manual review required."
+    },
+    {
+      "control_id": "storage-posture-001",
+      "category": "Data Protection",
+      "section": "Data Protection",
+      "text": "Storage Account Posture",
+      "question": "Storage Account Posture",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 6,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "0/5 compliant (0%)",
+          "properties": {
+            "applicable": 5,
+            "compliant": 0,
+            "ratio": 0.0
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/cloud-shell-storage-westus/providers/Microsoft.Storage/storageAccounts/cs210032003a64614bb",
+          "summary": "cs210032003a64614bb: network ACL default is Allow (not restricted)",
+          "properties": {
+            "resource": "cs210032003a64614bb",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/cloud-shell-storage-westus/providers/Microsoft.Storage/storageAccounts/cs210032003a64614bb",
+            "issues": [
+              "network ACL default is Allow (not restricted)"
+            ]
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/contoso-test-finops-rg/providers/Microsoft.Storage/storageAccounts/finopshubnnkhvp4ezntjc",
+          "summary": "finopshubnnkhvp4ezntjc: HTTPS-only not enforced, network ACL default is Allow (not restricted)",
+          "properties": {
+            "resource": "finopshubnnkhvp4ezntjc",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/contoso-test-finops-rg/providers/Microsoft.Storage/storageAccounts/finopshubnnkhvp4ezntjc",
+            "issues": [
+              "HTTPS-only not enforced",
+              "network ACL default is Allow (not restricted)"
+            ]
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/defend01workflow_group/providers/Microsoft.Storage/storageAccounts/defend01workflowgroa970",
+          "summary": "defend01workflowgroa970: network ACL default is Allow (not restricted)",
+          "properties": {
+            "resource": "defend01workflowgroa970",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/defend01workflow_group/providers/Microsoft.Storage/storageAccounts/defend01workflowgroa970",
+            "issues": [
+              "network ACL default is Allow (not restricted)"
+            ]
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-admin-0390_ai/providers/Microsoft.Storage/storageAccounts/stadmin7388a813465865068",
+          "summary": "stadmin7388a813465865068: network ACL default is Allow (not restricted)",
+          "properties": {
+            "resource": "stadmin7388a813465865068",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-admin-0390_ai/providers/Microsoft.Storage/storageAccounts/stadmin7388a813465865068",
+            "issues": [
+              "network ACL default is Allow (not restricted)"
+            ]
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-defenderautomation-west/providers/Microsoft.Storage/storageAccounts/defenderautomation",
+          "summary": "defenderautomation: network ACL default is Allow (not restricted)",
+          "properties": {
+            "resource": "defenderautomation",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-defenderautomation-west/providers/Microsoft.Storage/storageAccounts/defenderautomation",
+            "issues": [
+              "network ACL default is Allow (not restricted)"
+            ]
+          }
+        }
+      ],
+      "signal_used": "resource_graph:storage_posture",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": 0.0,
+      "notes": "Storage accounts: only 0/5 compliant (0%). Majority of resources are non-compliant.",
+      "checklist_ids": [
+        "G04.01",
+        "G04.02"
+      ],
+      "checklist_guids": [
+        "b03ed428-4617-4067-a787-85468b9ccf3f",
+        "159aac9f-863f-4f48-82cf-00c28fa97a0e"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0/5 compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0/5 compliant (0%)",
+          "type": "coverage"
+        },
+        {
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/cloud-shell-storage-westus/providers/Microsoft.Storage/storageAccounts/cs210032003a64614bb",
+          "summary": "cs210032003a64614bb: network ACL default is Allow (not restricted)",
+          "type": "finding"
+        },
+        {
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/contoso-test-finops-rg/providers/Microsoft.Storage/storageAccounts/finopshubnnkhvp4ezntjc",
+          "summary": "finopshubnnkhvp4ezntjc: HTTPS-only not enforced, network ACL default is Allow (not restricted)",
+          "type": "finding"
+        }
+      ]
+    },
+    {
+      "control_id": "keyvault-posture-001",
+      "category": "Data Protection",
+      "section": "Data Protection",
+      "text": "Key Vault Posture",
+      "question": "Key Vault Posture",
+      "severity": "High",
+      "status": "Partial",
+      "evidence_count": 2,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "1/2 compliant (50%)",
+          "properties": {
+            "applicable": 2,
+            "compliant": 1,
+            "ratio": 0.5
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-admin-0390_ai/providers/Microsoft.KeyVault/vaults/kv-admin738813465865068",
+          "summary": "kv-admin738813465865068: purge protection disabled, RBAC auth not enabled (using vault access policies)",
+          "properties": {
+            "resource": "kv-admin738813465865068",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-admin-0390_ai/providers/Microsoft.KeyVault/vaults/kv-admin738813465865068",
+            "issues": [
+              "purge protection disabled",
+              "RBAC auth not enabled (using vault access policies)"
+            ]
+          }
+        }
+      ],
+      "signal_used": "resource_graph:keyvault_posture",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": 0.5,
+      "notes": "Key Vaults: 1/2 compliant (50%). 1 resource(s) need remediation.",
+      "checklist_ids": [
+        "G02.01",
+        "G02.03"
+      ],
+      "checklist_guids": [
+        "5017f154-e3ab-4369-9829-e7e316183687",
+        "2ba52752-6944-4008-ae7d-7e4843276d8b"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 50.0,
+      "coverage_display": "1/2 compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "1/2 compliant (50%)",
+          "type": "coverage"
+        },
+        {
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-admin-0390_ai/providers/Microsoft.KeyVault/vaults/kv-admin738813465865068",
+          "summary": "kv-admin738813465865068: purge protection disabled, RBAC auth not enabled (using vault access policies)",
+          "type": "finding"
+        }
+      ]
+    },
+    {
+      "control_id": "sql-posture-001",
+      "category": "Data Protection",
+      "section": "Data Protection",
+      "text": "SQL Server Posture",
+      "question": "SQL Server Posture",
+      "severity": "Info",
+      "status": "NotApplicable",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "resource_graph:sql_posture",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": null,
+      "notes": "No SQL servers resources found — control not applicable.",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "appservice-posture-001",
+      "category": "Data Protection",
+      "section": "Data Protection",
+      "text": "App Service Posture",
+      "question": "App Service Posture",
+      "severity": "Medium",
+      "status": "SignalError",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "resource_graph:app_service_posture",
+      "confidence": "Low",
+      "confidence_score": 0.0,
+      "coverage_ratio": null,
+      "notes": "All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-02-28T01:42:26.1602889Z, correlationId = d15a3acc-9b7e-4c51-8c72-2fe00cb52b48.\nCode: BadRequest\nMessage: Please provide below info when asking for support: timestamp = 2026-02-28T01:4",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "private-endpoint-001",
+      "category": "Data Protection",
+      "section": "Data Protection",
+      "text": "Private Endpoint Coverage",
+      "question": "Private Endpoint Coverage",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "0/10 compliant (0%)",
+          "properties": {
+            "applicable": 10,
+            "compliant": 0,
+            "ratio": 0.0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:private_endpoints",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": 0.0,
+      "notes": "PaaS private endpoints: only 0/10 compliant (0%). Majority of resources are non-compliant.",
+      "checklist_ids": [
+        "D08.02"
+      ],
+      "checklist_guids": [
+        "e43a58a9-c229-49c4-b7b5-7d0c655562f2"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0/10 compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0/10 compliant (0%)",
+          "type": "coverage"
+        }
+      ]
+    },
+    {
+      "control_id": "acr-posture-001",
+      "category": "Data Protection",
+      "section": "Data Protection",
+      "text": "Container Registry Posture",
+      "question": "Container Registry Posture",
+      "severity": "Medium",
+      "status": "Fail",
+      "evidence_count": 2,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "0/1 compliant (0%)",
+          "properties": {
+            "applicable": 1,
+            "compliant": 0,
+            "ratio": 0.0
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.ContainerRegistry/registries/beelinkacr01",
+          "summary": "beelinkacr01: Basic SKU (no geo-replication, no private link), admin user enabled, public network access enabled",
+          "properties": {
+            "resource": "beelinkacr01",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.ContainerRegistry/registries/beelinkacr01",
+            "issues": [
+              "Basic SKU (no geo-replication, no private link)",
+              "admin user enabled",
+              "public network access enabled"
+            ]
+          }
+        }
+      ],
+      "signal_used": "resource_graph:acr_posture",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": 0.0,
+      "notes": "Container Registries: only 0/1 compliant (0%). Majority of resources are non-compliant.",
+      "checklist_ids": [
+        "G03.05"
+      ],
+      "checklist_guids": [
+        "77425f48-ecba-43a0-aeac-a3ac733ccc6a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0/1 compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0/1 compliant (0%)",
+          "type": "coverage"
+        },
+        {
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/MyIoTHubRG/providers/Microsoft.ContainerRegistry/registries/beelinkacr01",
+          "summary": "beelinkacr01: Basic SKU (no geo-replication, no private link), admin user enabled, public network access enabled",
+          "type": "finding"
+        }
+      ]
+    },
+    {
+      "control_id": "backup-coverage-001",
+      "category": "Resilience",
+      "section": "Resilience",
+      "text": "VM Backup Coverage",
+      "question": "VM Backup Coverage",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 2,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "0/1 VMs protected (0%)",
+          "properties": {
+            "applicable": 1,
+            "compliant": 0,
+            "ratio": 0.0
+          }
+        },
+        {
+          "type": "finding",
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/myiothubrg/providers/Microsoft.Compute/virtualMachines/defenderforIot",
+          "summary": "VM 'defenderforIot' has no backup",
+          "properties": {
+            "name": "defenderforIot",
+            "id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/myiothubrg/providers/Microsoft.Compute/virtualMachines/defenderforIot",
+            "resourceGroup": "myiothubrg"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:backup_coverage",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": 0.0,
+      "notes": "Backup coverage: only 0/1 VMs protected (0%).",
+      "checklist_ids": [
+        "F04.02"
+      ],
+      "checklist_guids": [
+        "f625ca44-e569-45f2-823a-ce8cb12308ca"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0/1 compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0/1 VMs protected (0%)",
+          "type": "coverage"
+        },
+        {
+          "resource_id": "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/myiothubrg/providers/Microsoft.Compute/virtualMachines/defenderforIot",
+          "summary": "VM 'defenderforIot' has no backup",
+          "type": "finding"
+        }
+      ]
+    },
+    {
+      "control_id": "resource-lock-001",
+      "category": "Governance",
+      "section": "Governance",
+      "text": "Resource Lock Coverage",
+      "question": "Resource Lock Coverage",
+      "severity": "Medium",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "0/20 RGs locked (0%), 0 total locks",
+          "properties": {
+            "applicable": 20,
+            "compliant": 0,
+            "ratio": 0.0,
+            "lock_count": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:resource_locks",
+      "confidence": "High",
+      "confidence_score": 0.8,
+      "coverage_ratio": 0.0,
+      "notes": "No resource locks found. Production resources risk accidental deletion.",
+      "checklist_ids": [
+        "F01.08"
+      ],
+      "checklist_guids": [
+        "541acdce-9793-477b-adb3-751ab2ab13ad"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0/20 RGs locked (0%), 0 total locks",
+          "type": "coverage"
+        }
+      ]
+    },
+    {
+      "control_id": "rbac-hygiene-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "RBAC Hygiene",
+      "question": "RBAC Hygiene",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "27 owner(s), 151 total assignments",
+          "properties": {
+            "total_assignments": 151,
+            "owner_count": 27,
+            "contributor_count": 10,
+            "by_principal_type": {
+              "User": 42,
+              "Group": 0,
+              "ServicePrincipal": 109,
+              "Unknown": 0
+            },
+            "group_assignment_ratio": 0.0,
+            "coverage": {
+              "applicable": 3,
+              "compliant": 1,
+              "ratio": 0.3333
+            }
+          }
+        }
+      ],
+      "signal_used": "identity:rbac_hygiene",
+      "confidence": "High",
+      "confidence_score": 0.9,
+      "coverage_ratio": 0.3333,
+      "notes": "RBAC hygiene issues: 27 Owner role assignments (recommend ≤ 5); Group-based: 0% (recommend ≥ 50%).",
+      "checklist_ids": [
+        "B03.01"
+      ],
+      "checklist_guids": [
+        "348ef254-c27d-442e-abba-c7571559ab91"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 33.3,
+      "coverage_display": "33.3% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "27 owner(s), 151 total assignments",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "entra-log-availability-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "Entra ID Log Availability",
+      "question": "Entra ID Log Availability",
+      "severity": "High",
+      "status": "Partial",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "Sign-in logs: False, Audit logs: False, SP sign-in: False",
+          "properties": {
+            "diagnostic_settings_count": 2,
+            "sign_in_logs_enabled": true,
+            "audit_logs_enabled": true,
+            "sp_sign_in_logs_enabled": true,
+            "workspace_targets": [
+              "/subscriptions/f775e0e1-c710-47ae-9dee-f50a0e4a0c70/resourceGroups/rg-test-west-management/providers/Microsoft.OperationalInsights/workspaces/contoso-log-west-test"
+            ],
+            "coverage": {
+              "applicable": 3,
+              "compliant": 3,
+              "ratio": 1.0
+            }
+          }
+        }
+      ],
+      "signal_used": "identity:entra_log_availability",
+      "confidence": "High",
+      "confidence_score": 0.9,
+      "coverage_ratio": 1.0,
+      "notes": "Entra ID log gaps: Sign-in logs not forwarded to Log Analytics; Audit logs not forwarded to Log Analytics; Service principal sign-in logs not forwarded.",
+      "checklist_ids": [
+        "B03.14"
+      ],
+      "checklist_guids": [
+        "1cf0b8da-70bd-44d0-94af-8d99cfc89ae1"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 100.0,
+      "coverage_display": "100.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "Sign-in logs: False, Audit logs: False, SP sign-in: False",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "pim-usage-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "PIM Usage",
+      "question": "PIM Usage",
+      "severity": "Medium",
+      "status": "Partial",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "PIM activations: 0, break-glass detected: False",
+          "properties": {
+            "pim_activation_count": 0,
+            "has_pim_activity": false,
+            "breakglass_elevations": 0,
+            "has_breakglass_activity": false,
+            "activity_events_sampled": 100,
+            "coverage": {
+              "applicable": 2,
+              "compliant": 0,
+              "ratio": 0.0
+            }
+          }
+        }
+      ],
+      "signal_used": "identity:pim_usage",
+      "confidence": "Low",
+      "confidence_score": 0.5,
+      "coverage_ratio": 0.0,
+      "notes": "No PIM eligibility activations detected in activity log (90d). PIM may not be enabled or may require Entra P2 license.",
+      "checklist_ids": [
+        "B03.07"
+      ],
+      "checklist_guids": [
+        "14658d35-58fd-4772-99b8-21112df27ee4"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "PIM activations: 0, break-glass detected: False",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "pim-maturity-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "PIM Maturity for Privileged Roles",
+      "question": "PIM Maturity for Privileged Roles",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "Eligible ratio: 0%, 0 privileged assignment(s), 0 standing admin(s)",
+          "properties": {
+            "eligible_count": 0,
+            "active_permanent_count": 0,
+            "pim_coverage_ratio": 0.0,
+            "role_breakdown": {
+              "Global Administrator": {
+                "eligible": 0,
+                "permanent": 0
+              },
+              "Privileged Role Administrator": {
+                "eligible": 0,
+                "permanent": 0
+              }
+            },
+            "coverage": {
+              "applicable": 3,
+              "compliant": 1,
+              "ratio": 0.3333
+            }
+          }
+        }
+      ],
+      "signal_used": "identity:pim_maturity",
+      "confidence": "High",
+      "confidence_score": 0.9,
+      "coverage_ratio": 0.3333,
+      "notes": "PIM not effective: Eligible ratio 0% (recommend ≥ 80%).",
+      "checklist_ids": [
+        "B03.07"
+      ],
+      "checklist_guids": [
+        "14658d35-58fd-4772-99b8-21112df27ee4"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 33.3,
+      "coverage_display": "33.3% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "Eligible ratio: 0%, 0 privileged assignment(s), 0 standing admin(s)",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "breakglass-validation-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "Break-Glass Account Validation",
+      "question": "Break-Glass Account Validation",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "0 break-glass account(s), CA excluded=False, recently tested=False",
+          "properties": {
+            "breakglass_accounts_found": 0,
+            "bg_exists": false,
+            "excluded_from_ca": false,
+            "recent_login_test": false,
+            "coverage": {
+              "applicable": 3,
+              "compliant": 0,
+              "ratio": 0.0
+            }
+          }
+        }
+      ],
+      "signal_used": "identity:breakglass_validation",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.0,
+      "notes": "No break-glass accounts detected (naming pattern: breakglass*, emergency*, bg-*).",
+      "checklist_ids": [
+        "B03.15"
+      ],
+      "checklist_guids": [
+        "984a859c-773e-47d2-9162-3a765a917e1f"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0 break-glass account(s), CA excluded=False, recently tested=False",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "sp-owner-risk-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "Service Principal Owner Risk",
+      "question": "Service Principal Owner Risk",
+      "severity": "High",
+      "status": "Pass",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "0 SP Owner(s), 0 SP User Access Admin(s)",
+          "properties": {
+            "sp_owner_count": 0,
+            "sp_uaa_count": 0,
+            "total_risky_sp_assignments": 0,
+            "coverage": {
+              "applicable": 2,
+              "compliant": 2,
+              "ratio": 1.0
+            }
+          }
+        }
+      ],
+      "signal_used": "identity:sp_owner_risk",
+      "confidence": "High",
+      "confidence_score": 0.9,
+      "coverage_ratio": 1.0,
+      "notes": "No service principals hold Owner or User Access Administrator roles.",
+      "checklist_ids": [
+        "B03.02"
+      ],
+      "checklist_guids": [
+        "12e7f983-f630-4472-8dd6-9c5b5c2622f5"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": 100.0,
+      "coverage_display": "100.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0 SP Owner(s), 0 SP User Access Admin(s)",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "admin-ca-coverage-001",
+      "category": "Identity",
+      "section": "Identity",
+      "text": "Admin Conditional Access Coverage",
+      "question": "Admin Conditional Access Coverage",
+      "severity": "Info",
+      "status": "NotApplicable",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "identity:admin_ca_coverage",
+      "confidence": "Medium",
+      "confidence_score": 0.5,
+      "coverage_ratio": 1.0,
+      "notes": "No admin directory role members found.",
+      "checklist_ids": [
+        "B03.04"
+      ],
+      "checklist_guids": [
+        "53e8908a-e28c-484c-93b6-b7808b9fe5c4"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": 100.0,
+      "coverage_display": "100.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "nsg-coverage-001",
+      "category": "Networking",
+      "section": "Networking",
+      "text": "NSG Subnet Coverage",
+      "question": "NSG Subnet Coverage",
+      "severity": "High",
+      "status": "Partial",
+      "evidence_count": 2,
+      "evidence": [
+        {
+          "type": "coverage",
+          "resource_id": "",
+          "summary": "2/2 subnets with NSG (100%)",
+          "properties": {
+            "applicable": 2,
+            "compliant": 2,
+            "ratio": 1.0
+          }
+        },
+        {
+          "type": "anti-pattern",
+          "resource_id": "",
+          "summary": "2 NSG(s) with 0 custom rules",
+          "properties": {
+            "empty_nsg_count": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:nsg_coverage",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": 1.0,
+      "notes": "NSG coverage gaps: 2 empty NSG(s).",
+      "checklist_ids": [
+        "D09.04"
+      ],
+      "checklist_guids": [
+        "872e52e3-611c-4c58-a5a4-b1511e43a58a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 100.0,
+      "coverage_display": "100.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "2/2 subnets with NSG (100%)",
+          "type": "coverage"
+        },
+        {
+          "resource_id": "",
+          "summary": "2 NSG(s) with 0 custom rules",
+          "type": "anti-pattern"
+        }
+      ]
+    },
+    {
+      "control_id": "aks-posture-001",
+      "category": "Networking",
+      "section": "Networking",
+      "text": "AKS Cluster Posture",
+      "question": "AKS Cluster Posture",
+      "severity": "Info",
+      "status": "NotApplicable",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "resource_graph:aks_posture",
+      "confidence": "High",
+      "confidence_score": 1.0,
+      "coverage_ratio": null,
+      "notes": "No AKS clusters found — control not applicable.",
+      "checklist_ids": [
+        "D09.05"
+      ],
+      "checklist_guids": [
+        "a4d87397-48b6-462d-9d15-f512a65498f6"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "network-watcher-001",
+      "category": "Networking",
+      "section": "Networking",
+      "text": "Network Watcher Observability",
+      "question": "Network Watcher Observability",
+      "severity": "Medium",
+      "status": "Partial",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "1 watcher(s), 0 flow log v2, 0 Traffic Analytics, 0 connection monitor(s)",
+          "properties": {
+            "watcher_count": 1,
+            "watcher_regions": [
+              "eastus"
+            ],
+            "flow_log_total": 0,
+            "flow_log_v2_count": 0,
+            "traffic_analytics_count": 0,
+            "connection_monitor_count": 0,
+            "coverage": {
+              "applicable": 4,
+              "compliant": 1,
+              "ratio": 0.25
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "network:watcher_posture",
+      "confidence": "High",
+      "confidence_score": 0.9,
+      "coverage_ratio": 0.25,
+      "notes": "Network observability gaps: No NSG flow logs v2 configured; Traffic Analytics not enabled.",
+      "checklist_ids": [
+        "F01.07"
+      ],
+      "checklist_guids": [
+        "90483845-c986-4cb2-a131-56a12476e49f"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 25.0,
+      "coverage_display": "25.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "1 watcher(s), 0 flow log v2, 0 Traffic Analytics, 0 connection monitor(s)",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "monitor-workspace-topology-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "SOC Workspace Topology",
+      "question": "SOC Workspace Topology",
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "5 workspace(s), centralized=False, sentinel=False, retention=30d",
+          "properties": {
+            "workspace_count": 5,
+            "is_centralized": false,
+            "sentinel_enabled_count": 0,
+            "has_sentinel": false,
+            "cross_region_flow": true,
+            "regions": [
+              "eastus",
+              "westus"
+            ],
+            "max_retention_days": 30,
+            "coverage": {
+              "applicable": 4,
+              "compliant": 1,
+              "ratio": 0.25
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "monitor:workspace_topology",
+      "confidence": "High",
+      "confidence_score": 0.9,
+      "coverage_ratio": 0.25,
+      "notes": "Workspace topology issues: 5 workspaces — not centralized; Sentinel not enabled; Retention 30d (recommend ≥ 90).",
+      "checklist_ids": [
+        "F01.01"
+      ],
+      "checklist_guids": [
+        "67e7a8ed-4b30-4e38-a3f2-9812b2363cef"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 25.0,
+      "coverage_display": "25.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "5 workspace(s), centralized=False, sentinel=False, retention=30d",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "activity-log-analysis-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "Platform Automation Maturity",
+      "question": "Platform Automation Maturity",
+      "severity": "Info",
+      "status": "NotApplicable",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "monitor:activity_log_analysis",
+      "confidence": "Medium",
+      "confidence_score": 0.5,
+      "coverage_ratio": null,
+      "notes": "No write operations found in activity log (90d).",
+      "checklist_ids": [
+        "H01.01"
+      ],
+      "checklist_guids": [
+        "e85f4226-bf06-4e35-8a8b-7aee4d2d633a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "update-manager-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "Update Manager Posture",
+      "question": "Update Manager Posture",
+      "severity": "Medium",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "0 maintenance config(s), 0 guest assignment(s), 0 assessed machine(s), 0 critical patches",
+          "properties": {
+            "maintenance_config_count": 0,
+            "guest_assignment_count": 0,
+            "compliant_assignments": 0,
+            "assessed_machines": 0,
+            "pending_patches_critical": 0,
+            "total_vms": 1,
+            "vms_with_maintenance_config": 0,
+            "vm_maintenance_ratio": 0.0,
+            "coverage": {
+              "applicable": 5,
+              "compliant": 0,
+              "ratio": 0.0
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "manage:update_manager",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.0,
+      "notes": "Update Manager: No maintenance configurations found; No patch assessment or guest configuration detected.",
+      "checklist_ids": [
+        "F01.05"
+      ],
+      "checklist_guids": [
+        "f9887952-5d62-4688-9d70-ba6c97be9951"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 0.0,
+      "coverage_display": "0.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "0 maintenance config(s), 0 guest assignment(s), 0 assessed machine(s), 0 critical patches",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "alert-action-mapping-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "Alert to Action Group Mapping",
+      "question": "Alert to Action Group Mapping",
+      "severity": "Medium",
+      "status": "Fail",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "monitor:alert_action_mapping",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.5,
+      "notes": "No metric or scheduled query alert rules found.",
+      "checklist_ids": [
+        "F01.11",
+        "F01.15"
+      ],
+      "checklist_guids": [
+        "d5f345bf-97ab-41a7-819c-6104baa7d48c",
+        "97be9951-9048-4384-9c98-6cb2913156a1"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 50.0,
+      "coverage_display": "50.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "action-group-coverage-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "Action Group Coverage",
+      "question": "Action Group Coverage",
+      "severity": "Medium",
+      "status": "Partial",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "6 action group(s), email=False, webhook=False, automation=False",
+          "properties": {
+            "action_group_count": 6,
+            "has_email_receiver": true,
+            "has_webhook_receiver": false,
+            "has_automation_receiver": false,
+            "coverage": {
+              "applicable": 4,
+              "compliant": 3,
+              "ratio": 0.75
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "monitor:action_group_coverage",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.75,
+      "notes": "Action group gaps: No email receivers configured; No automation receivers (Logic App, Function, Webhook).",
+      "checklist_ids": [
+        "F01.11"
+      ],
+      "checklist_guids": [
+        "d5f345bf-97ab-41a7-819c-6104baa7d48c"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 75.0,
+      "coverage_display": "75.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "6 action group(s), email=False, webhook=False, automation=False",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "availability-signals-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "SLO & Availability Signals",
+      "question": "SLO & Availability Signals",
+      "severity": "Medium",
+      "status": "Partial",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "Service Health: 0, Resource Health: 1, Smart Detector: 0",
+          "properties": {
+            "service_health_alert_count": 0,
+            "resource_health_alert_count": 1,
+            "smart_detector_alert_count": 3,
+            "coverage": {
+              "applicable": 3,
+              "compliant": 2,
+              "ratio": 0.6667
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "monitor:availability_signals",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.6667,
+      "notes": "Availability gaps: No Service Health alerts configured.",
+      "checklist_ids": [
+        "F01.10"
+      ],
+      "checklist_guids": [
+        "e5695f22-23ac-4e8c-a123-08ca5017f154"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 66.7,
+      "coverage_display": "66.7% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "Service Health: 0, Resource Health: 1, Smart Detector: 0",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "change-tracking-001",
+      "category": "Management",
+      "section": "Management",
+      "text": "Change Tracking Enabled",
+      "question": "Change Tracking Enabled",
+      "severity": "Medium",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "ChangeAnalysis RP: False, CT solutions: 0, VM extensions: 0",
+          "properties": {
+            "change_analysis_registered": false,
+            "change_tracking_solution": true,
+            "change_tracking_extensions": 0,
+            "coverage": {
+              "applicable": 3,
+              "compliant": 1,
+              "ratio": 0.3333
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "monitor:change_tracking",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.3333,
+      "notes": "Change tracking not enabled: Microsoft.ChangeAnalysis resource provider not registered; No ChangeTracking solutions on Log Analytics workspaces.",
+      "checklist_ids": [
+        "F03.02"
+      ],
+      "checklist_guids": [
+        "da6e55d7-d8a2-4adb-817d-6326af625ca4"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 33.3,
+      "coverage_display": "33.3% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "ChangeAnalysis RP: False, CT solutions: 0, VM extensions: 0",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "cost-management-001",
+      "category": "Cost",
+      "section": "Cost",
+      "text": "Cost Management Posture",
+      "question": "Cost Management Posture",
+      "severity": "Medium",
+      "status": "Pass",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "1 budget(s), notifications=True, 2 cost alert(s), reservations=False",
+          "properties": {
+            "budget_count": 1,
+            "has_budget_notifications": true,
+            "cost_alert_count": 2,
+            "has_reservations": false,
+            "coverage": {
+              "applicable": 4,
+              "compliant": 3,
+              "ratio": 0.75
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "cost:management_posture",
+      "confidence": "Medium",
+      "confidence_score": 0.8,
+      "coverage_ratio": 0.75,
+      "notes": "Cost governance: 1 budget(s) with alerts.",
+      "checklist_ids": [
+        "A02.03"
+      ],
+      "checklist_guids": [
+        "32952499-58c8-4e6f-ada5-972e67893d55"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": 75.0,
+      "coverage_display": "75.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "1 budget(s), notifications=True, 2 cost alert(s), reservations=False",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "cost-forecast-001",
+      "category": "Cost",
+      "section": "Cost",
+      "text": "Cost Forecast Accuracy",
+      "question": "Cost Forecast Accuracy",
+      "severity": "Medium",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "metric",
+          "resource_id": "",
+          "summary": "Actual: $991, Forecast: $0, Delta: 0.0%, Predictability: 0.00",
+          "properties": {
+            "actual_cost_prev_month": 991.187994356149,
+            "forecast_cost": 0.0,
+            "forecast_delta_ratio": 0.0,
+            "cost_predictability": 0.0,
+            "coverage": {
+              "applicable": 3,
+              "compliant": 1,
+              "ratio": 0.3333
+            },
+            "_subscription_id": "f775e0e1-c710-47ae-9dee-f50a0e4a0c70"
+          }
+        }
+      ],
+      "signal_used": "cost:forecast_accuracy",
+      "confidence": "Medium",
+      "confidence_score": 0.7,
+      "coverage_ratio": 0.3333,
+      "notes": "Cost predictability low: 0% — forecast diverged 0.0% from actual.",
+      "checklist_ids": [
+        "E02.01"
+      ],
+      "checklist_guids": [
+        "29fd366b-a180-452b-9bd7-954b7700c667"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 1,
+      "subscription_count_noncompliant": 1,
+      "coverage_pct": 33.3,
+      "coverage_display": "33.3% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "Platform Governance Gap",
+      "sample_evidence": [
+        {
+          "resource_id": "",
+          "summary": "Actual: $991, Forecast: $0, Delta: 0.0%, Predictability: 0.00",
+          "type": "metric"
+        }
+      ]
+    },
+    {
+      "control_id": "idle-resources-001",
+      "category": "Cost",
+      "section": "Cost",
+      "text": "Idle Resource Detection",
+      "question": "Idle Resource Detection",
+      "severity": "Info",
+      "status": "NotApplicable",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": "cost:idle_resources",
+      "confidence": "Medium",
+      "confidence_score": 0.5,
+      "coverage_ratio": 1.0,
+      "notes": "No VMs found in scope — idle resource check N/A.",
+      "checklist_ids": [
+        "A03.05"
+      ],
+      "checklist_guids": [
+        "5cf9f485-2784-49b3-9824-75d9b8bdb57b"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": 100.0,
+      "coverage_display": "100.0% compliant",
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "1770a2ac-c194-4e5c-ade4-82939d38a510",
+      "category": "Identity and Access Management",
+      "section": "Identity and Access Management",
+      "text": "Identify and restrict platform administrators in line with sovereignty requirements (for example, EU‑only, UK‑only, or country‑specific privileged roles).",
+      "question": "Identify and restrict platform administrators in line with sovereignty requirements (for example, EU‑only, UK‑only, or country‑specific privileged roles).",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "B05.01"
+      ],
+      "checklist_guids": [
+        "1770a2ac-c194-4e5c-ade4-82939d38a510"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "914b8cb7-c2f6-40fa-ae18-81c049e0cb5a",
+      "category": "Resource Organization",
+      "section": "Resource Organization",
+      "text": "For Sovereign Landing Zone, use the management group structure for Public, Confidential Corp, and Confidential Online.",
+      "question": "For Sovereign Landing Zone, use the management group structure for Public, Confidential Corp, and Confidential Online.",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "C04.01"
+      ],
+      "checklist_guids": [
+        "914b8cb7-c2f6-40fa-ae18-81c049e0cb5a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "51a1e9e9-a49a-40b2-87b9-ff753bc6de86",
+      "category": "Resource Organization",
+      "section": "Resource Organization",
+      "text": "Define data classification levels used in your organization.",
+      "question": "Define data classification levels used in your organization.",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "C04.02"
+      ],
+      "checklist_guids": [
+        "51a1e9e9-a49a-40b2-87b9-ff753bc6de86"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "a89153d8-18b2-4caf-bc19-850fc8fba00f",
+      "category": "Resource Organization",
+      "section": "Resource Organization",
+      "text": "Use tags to capture sovereign workload metadata such as data classification.",
+      "question": "Use tags to capture sovereign workload metadata such as data classification.",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "C04.03"
+      ],
+      "checklist_guids": [
+        "a89153d8-18b2-4caf-bc19-850fc8fba00f"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "821a568d-c632-4693-ba76-e2751de35050",
+      "category": "Network Topology and Connectivity",
+      "section": "Network Topology and Connectivity",
+      "text": "Is there a requirement to encrypt traffic over the ExpressRoute?",
+      "question": "Is there a requirement to encrypt traffic over the ExpressRoute?",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "D02.01"
+      ],
+      "checklist_guids": [
+        "821a568d-c632-4693-ba76-e2751de35050"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "4cc8ca4e-a503-4bac-9b1e-82283a711043",
+      "category": "Network Topology and Connectivity",
+      "section": "Network Topology and Connectivity",
+      "text": "Do any interconnects (ExpressRoute, MPLS etc) traverse borders or different countries?",
+      "question": "Do any interconnects (ExpressRoute, MPLS etc) traverse borders or different countries?",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "D06.26"
+      ],
+      "checklist_guids": [
+        "4cc8ca4e-a503-4bac-9b1e-82283a711043"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "8b517d94-c9d0-42c4-9803-d93ed0a46bc0",
+      "category": "Network Topology and Connectivity",
+      "section": "Network Topology and Connectivity",
+      "text": "Ensure VNet peering's do not enable traffic to leave approved regions.",
+      "question": "Ensure VNet peering's do not enable traffic to leave approved regions.",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "D06.27"
+      ],
+      "checklist_guids": [
+        "8b517d94-c9d0-42c4-9803-d93ed0a46bc0"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "bfaf7b7a-9e6c-4840-a2bd-2c524326bdf6",
+      "category": "Governance",
+      "section": "Governance",
+      "text": "For landing zone services (Databases, Storage, Containers, Analytics, AI), ensure the data‑processing locations and feature availabilities are acceptable within permitted regions or sovereignty constraints.",
+      "question": "For landing zone services (Databases, Storage, Containers, Analytics, AI), ensure the data‑processing locations and feature availabilities are acceptable within permitted regions or sovereignty constraints.",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "E03.05"
+      ],
+      "checklist_guids": [
+        "bfaf7b7a-9e6c-4840-a2bd-2c524326bdf6"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "3105633e-b168-4ce0-a016-5f10e7cdea5a",
+      "category": "Governance",
+      "section": "Governance",
+      "text": "Have jurisdiction constraints been established for vendor remote access and managed services personnel?",
+      "question": "Have jurisdiction constraints been established for vendor remote access and managed services personnel?",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "E03.06"
+      ],
+      "checklist_guids": [
+        "3105633e-b168-4ce0-a016-5f10e7cdea5a"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "77cf1acd-16b4-4092-8d30-6ec9579854ce",
+      "category": "Governance",
+      "section": "Governance",
+      "text": "Do you require Azure confidential computing for sensitive workloads?",
+      "question": "Do you require Azure confidential computing for sensitive workloads?",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "E03.07"
+      ],
+      "checklist_guids": [
+        "77cf1acd-16b4-4092-8d30-6ec9579854ce"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "b48ade7f-50be-4d2e-9866-d57b17942fc2",
+      "category": "Security",
+      "section": "Security",
+      "text": "Do you have a sovereignty requirement to use customer-managed keys?",
+      "question": "Do you have a sovereignty requirement to use customer-managed keys?",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "G02.11"
+      ],
+      "checklist_guids": [
+        "b48ade7f-50be-4d2e-9866-d57b17942fc2"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "31e77d70-f001-455b-93aa-6d05eea10968",
+      "category": "Security",
+      "section": "Security",
+      "text": "Are TLS version requirements enforced through Azure Policy?",
+      "question": "Are TLS version requirements enforced through Azure Policy?",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "G04.03"
+      ],
+      "checklist_guids": [
+        "31e77d70-f001-455b-93aa-6d05eea10968"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
+    },
+    {
+      "control_id": "047c91e2-6bb4-4a42-a0ef-ab06ad0062c9",
+      "category": "Platform Automation and DevOps",
+      "section": "Platform Automation and DevOps",
+      "text": "Ensure build agents, package registries and image bases reside within your data sovereignty region.",
+      "question": "Ensure build agents, package registries and image bases reside within your data sovereignty region.",
+      "severity": "Medium",
+      "status": "Manual",
+      "evidence_count": 0,
+      "evidence": [],
+      "signal_used": null,
+      "confidence": "Low",
+      "notes": "Manual review required.",
+      "checklist_ids": [
+        "H05.01"
+      ],
+      "checklist_guids": [
+        "047c91e2-6bb4-4a42-a0ef-ab06ad0062c9"
+      ],
+      "subscriptions_assessed": 1,
+      "subscription_count_total": 1,
+      "subscriptions_affected": 0,
+      "subscription_count_noncompliant": 0,
+      "coverage_pct": null,
+      "coverage_display": null,
+      "scope_level": "Tenant",
+      "scope_pattern": "None",
+      "sample_evidence": []
     }
   ],
   "customer_questions": [

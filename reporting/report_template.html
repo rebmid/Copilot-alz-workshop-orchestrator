@@ -485,9 +485,28 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
 <section id="design-areas">
   <h2>&sect; 4 &mdash; Design Area Breakdown</h2>
 
+  <!-- ALZ Checklist ID Legend -->
+  {% if checklist_legend %}
+  <details style="margin-bottom:1.5rem">
+    <summary style="cursor:pointer;font-weight:600;font-size:.9rem;color:var(--muted)">
+      ALZ Checklist ID Legend (A&ndash;H)
+    </summary>
+    <div style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.75rem 0">
+      {% for entry in checklist_legend %}
+      <span style="background:var(--bg-card);border:1px solid var(--border);border-radius:4px;padding:.25rem .6rem;font-size:.8rem">
+        <strong style="color:var(--accent)">{{ entry.letter }}</strong> &mdash; {{ entry.design_area }}
+      </span>
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
   {% for area in design_areas %}
   <details {% if loop.index <= 2 %}open{% endif %}>
     <summary>
+      {% if area.legend_letter %}
+      <span class="badge" style="background:var(--accent);color:#fff;min-width:1.4rem;text-align:center;margin-right:.4rem">{{ area.legend_letter }}</span>
+      {% endif %}
       <span style="flex:1">{{ area.section }}</span>
       <span class="badge badge-{{ area.confidence|lower }}">{{ area.confidence }} conf</span>
       <span style="font-size:.8rem;color:var(--muted)">

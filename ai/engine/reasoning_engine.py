@@ -63,13 +63,16 @@ class ReasoningEngine:
       0. ALZ checklist grounding (deterministic)
       1. Roadmap + Initiatives         (roadmap prompt)
       2. Executive briefing             (exec prompt)
-      3. Implementation Decision        (MCP + implementation_decision prompt) ← NEW
-      4. Sequence Justification         (sequence_justification prompt)        ← NEW
+      3. Implementation Decision        (MCP + implementation_decision prompt)
+      4. Sequence Justification         (sequence_justification prompt)
       5. Enterprise readiness           (readiness prompt)
       6. Smart questions                (smart_questions prompt)
       7. Implementation backlog         (implementation prompt × N)
       8. Learn reference grounding      (MCP retriever)
       9. Target architecture            (target_architecture prompt)
+     10. Critical Issues                (critical_issues prompt)
+     3b. Governance Intelligence Synthesis (governance_intelligence prompt)
+     12. Blocker Resolution Summary     (blocker_resolution prompt)
 
     The provider is model-agnostic — swap AOAIReasoningProvider for
     PhiReasoningProvider or MockReasoningProvider in one line.
@@ -127,7 +130,7 @@ class ReasoningEngine:
             Skip the per-initiative implementation pass (saves tokens).
         """
         system = self.prompts.system
-        total_passes = 11
+        total_passes = 12
 
         # ── 0. ALZ checklist grounding context ────────────────────
         # Inject official ALZ design area references + checklist items
@@ -540,6 +543,53 @@ class ReasoningEngine:
             print(f"  ⚠ maturity_trajectory failed: {e}")
             det_trajectory = {}
 
+        # ── Layer 3b. Governance Intelligence Synthesis ───────────
+        # AI-powered strategic synthesis across all deterministic
+        # models.  Consumes dep_graph, risk_impact, transform_opt,
+        # det_trajectory, implementation_decisions, and executive
+        # to produce cross-cutting governance insights.
+        governance_intelligence: dict = {}
+        if dep_graph and risk_impact and items:
+            print(f"  [3b/{total_passes}] Synthesising governance intelligence …")
+            gov_context = {
+                "design_area_maturity": assessment.get("design_area_maturity", []),
+                "scoring": assessment.get("scoring", {}),
+                "execution_context": assessment.get("execution_context", {}),
+                "signal_confidence": assessment.get("signal_confidence", {}),
+            }
+            gov_raw = self._safe_run(
+                system,
+                self.prompts.governance_intelligence(
+                    dep_graph,
+                    risk_impact,
+                    transform_opt,
+                    det_trajectory,
+                    implementation_decisions,
+                    executive or {},
+                    gov_context,
+                ),
+                label="Governance Intelligence",
+                max_tokens=8000,
+            )
+            governance_intelligence = gov_raw.get("governance_intelligence", gov_raw)
+            # Guard: strip any AI-hallucinated checklist IDs
+            _valid_cids = {i.get("checklist_id") for i in items if i.get("checklist_id")}
+            for rec in governance_intelligence.get("strategic_governance_recommendations", []):
+                rec["prerequisite_items"] = [
+                    c for c in rec.get("prerequisite_items", [])
+                    if c in _valid_cids
+                ]
+            for team_rec in governance_intelligence.get("operating_model_alignment", {}).get("platform_team_recommendations", []):
+                team_rec["critical_items"] = [
+                    c for c in team_rec.get("critical_items", [])
+                    if c in _valid_cids
+                ]
+            _gov_recs = len(governance_intelligence.get("strategic_governance_recommendations", []))
+            _gov_insights = len(governance_intelligence.get("cross_cutting_insights", []))
+            print(f"        → {_gov_recs} strategic recommendation(s), {_gov_insights} cross-cutting insight(s)")
+        else:
+            print(f"  [3b/{total_passes}] Governance Intelligence skipped (insufficient deterministic models).")
+
         # Deterministic blocker → item resolution
         try:
             blocker_item_mapping = resolve_blockers_to_items(
@@ -555,13 +605,13 @@ class ReasoningEngine:
             from engine.id_rewriter import patch_blocker_items
             patch_blocker_items(readiness, blocker_item_mapping)
 
-        # ── 11. Blocker Resolution Summary ────────────────────────
+        # ── 12. Blocker Resolution Summary ────────────────────────
         # Uses existing blocker_item_mapping + dep_graph + trajectory.
         # AI narrates structural fixes and maturity lift — must NOT
         # invent checklist IDs or change control statuses.
         blocker_resolution: list[dict] | dict = []
         if blocker_item_mapping and _blockers:
-            print(f"  [11/{total_passes}] Generating blocker resolution summary ({len(blocker_item_mapping)} blockers) …")
+            print(f"  [12/{total_passes}] Generating blocker resolution summary ({len(blocker_item_mapping)} blockers) …")
             # Build compact item summaries (checklist_id, title, controls only)
             _item_summaries = [
                 {
@@ -616,7 +666,7 @@ class ReasoningEngine:
             }
             print(f"        → {len(_br_items)} blocker resolution(s)")
         else:
-            print(f"  [11/{total_passes}] Blocker Resolution skipped (no blocker mapping).")
+            print(f"  [12/{total_passes}] Blocker Resolution skipped (no blocker mapping).")
             blocker_resolution = {"blocker_resolution": [], "resolution_summary": {}}
 
         # ── Pipeline integrity validation ──────────────────────────
@@ -671,6 +721,8 @@ class ReasoningEngine:
             "transform_optimization": transform_opt,
             "deterministic_trajectory": det_trajectory,
             "blocker_item_mapping": blocker_item_mapping,
+            # Layer 3b: Governance Intelligence Synthesis (AI-powered)
+            "governance_intelligence": governance_intelligence,
             "critical_issues": critical_issues,
             "blocker_resolution": blocker_resolution,
             # Pipeline structural integrity violations
@@ -711,6 +763,7 @@ class ReasoningEngine:
               f"{len(engagement_recommendations)} engagement recs, "
               f"{len(smart_questions)} questions, "
               f"{len(implementation_backlog)} implementation plans, "
+              f"governance intelligence {'synthesised' if governance_intelligence else 'skipped'}, "
               f"target architecture {'generated' if target_arch else 'skipped'}")
 
         return output

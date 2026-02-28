@@ -431,7 +431,12 @@ Launch Copilot workshop (demo data):
 
 ```bash
 python scan.py --workshop-copilot --demo
-python scan.py --workshop-copilot --demo --run-source demo   # Workshop with demo run store
+```
+
+Launch Copilot workshop (live Azure environment):
+
+```bash
+python scan.py --workshop-copilot
 ```
 
 ---
@@ -471,26 +476,6 @@ python scan.py --workshop-copilot --run-source out
 ```
 
 Workshop mode reads the existing assessment results. No re-scan required — use `load_results` to pick up where the scan left off.
-
----
-
-### Advanced Modes (Reference Only)
-
-| Flag | Description |
-|---|---|
-| `--tenant-wide` | Scan all visible subscriptions (enterprise audit mode; not recommended for large tenants) |
-| `--subscription SUB_ID` | Scope to a single subscription |
-| `--preflight` | Validate Azure access without running full assessment |
-| `--no-ai` | Skip AI reasoning passes |
-| `--no-html` | Skip HTML report generation |
-| `--validate-signals` | Probe signal providers only |
-| `--why DOMAIN` | Explain why a domain is top risk |
-| `--tag TAG` | Label run snapshot (e.g. `baseline`, `sprint-3`) |
-| `--run-source SOURCE` | Set run store directory (`demo`, `out`, or absolute path) |
-| `--on-demand INTENT` | Run targeted evaluation (e.g. `enterprise_readiness`) |
-| `--pretty` | Pretty-print final JSON to stdout |
-
----
 
 ## Copilot Workshop Session
 

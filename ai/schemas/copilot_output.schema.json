@@ -334,6 +334,89 @@
           }
         }
       }
+    },
+
+    "governance_intelligence": {
+      "type": "object",
+      "description": "Layer 3b — AI-synthesised governance intelligence from all deterministic decision engine outputs. Cross-cutting strategic insights that span individual models.",
+      "required": ["governance_posture", "policy_as_code_readiness", "operating_model_alignment", "compliance_synthesis", "strategic_governance_recommendations", "cross_cutting_insights"],
+      "properties": {
+        "governance_posture": {
+          "type": "object",
+          "required": ["current_state", "target_state", "governance_debt_rating"],
+          "properties": {
+            "current_state": { "type": "string" },
+            "target_state": { "type": "string" },
+            "governance_debt_rating": { "type": "string", "enum": ["Critical", "High", "Medium", "Low"] }
+          }
+        },
+        "policy_as_code_readiness": {
+          "type": "object",
+          "required": ["current_coverage_assessment", "recommended_policy_initiatives", "automation_gaps", "estimated_policy_coverage_post_90_days"],
+          "properties": {
+            "current_coverage_assessment": { "type": "string" },
+            "recommended_policy_initiatives": { "type": "array", "items": { "type": "string" } },
+            "automation_gaps": { "type": "array", "items": { "type": "string" } },
+            "estimated_policy_coverage_post_90_days": { "type": "string" }
+          }
+        },
+        "operating_model_alignment": {
+          "type": "object",
+          "required": ["platform_team_recommendations", "operating_model_maturity", "recommended_evolution"],
+          "properties": {
+            "platform_team_recommendations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["role", "current_gap", "post_remediation_capability", "critical_items"],
+                "properties": {
+                  "role": { "type": "string" },
+                  "current_gap": { "type": "string" },
+                  "post_remediation_capability": { "type": "string" },
+                  "critical_items": { "type": "array", "items": { "type": "string" } }
+                }
+              }
+            },
+            "operating_model_maturity": { "type": "string", "enum": ["Centralized", "Federated", "Hybrid"] },
+            "recommended_evolution": { "type": "string" }
+          }
+        },
+        "compliance_synthesis": {
+          "type": "object",
+          "required": ["regulatory_readiness_gaps", "audit_trail_assessment", "guardrail_coverage"],
+          "properties": {
+            "regulatory_readiness_gaps": { "type": "array", "items": { "type": "string" } },
+            "audit_trail_assessment": { "type": "string" },
+            "guardrail_coverage": { "type": "string" }
+          }
+        },
+        "strategic_governance_recommendations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["recommendation", "rationale", "prerequisite_items", "expected_governance_outcome", "priority"],
+            "properties": {
+              "recommendation": { "type": "string" },
+              "rationale": { "type": "string" },
+              "prerequisite_items": { "type": "array", "items": { "type": "string" } },
+              "expected_governance_outcome": { "type": "string" },
+              "priority": { "type": "string", "enum": ["Immediate", "Short-term", "Medium-term"] }
+            }
+          }
+        },
+        "cross_cutting_insights": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["insight", "evidence", "implication"],
+            "properties": {
+              "insight": { "type": "string" },
+              "evidence": { "type": "string" },
+              "implication": { "type": "string" }
+            }
+          }
+        }
+      }
     }
   }
 }

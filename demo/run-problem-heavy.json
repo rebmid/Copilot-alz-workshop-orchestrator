@@ -14,17 +14,22 @@
     "management_group_access": true,
     "identity_type": "User"
   },
-  "limitations": [],
+  "limitations": [
+    "Multiple subscriptions returned AccessDenied on Resource Graph queries",
+    "Defender for Cloud API returned 404 — plans status unknown",
+    "Management Group hierarchy partially visible — Reader role may be insufficient",
+    "Key Vault diagnostics probe timed out on 2 vaults"
+  ],
   "scoring": {
     "automation_coverage": {
       "total_controls": 243,
-      "automated_controls": 19,
-      "manual_controls": 224,
-      "automation_percent": 7.8,
-      "data_driven": 19,
-      "requires_customer_input": 224
+      "automated_controls": 167,
+      "manual_controls": 76,
+      "automation_percent": 68.7,
+      "data_driven": 167,
+      "requires_customer_input": 76
     },
-    "overall_maturity_percent": 10.5,
+    "overall_maturity_percent": 0.6,
     "section_scores": [
       {
         "section": "Networking",
@@ -38,237 +43,218 @@
         "maturity_percent": 0.0
       },
       {
-        "section": "Governance",
-        "counts": {
-          "Pass": 2,
-          "Fail": 6,
-          "Manual": 10
-        },
-        "automated_controls": 8,
-        "automated_pass": 2,
-        "automated_fail": 6,
-        "total_controls": 18,
-        "maturity_percent": 25.0
-      },
-      {
         "section": "Security",
         "counts": {
-          "Fail": 6,
-          "Manual": 27
+          "Fail": 25,
+          "Manual": 8
         },
-        "automated_controls": 6,
+        "automated_controls": 25,
         "automated_pass": 0,
-        "automated_fail": 6,
+        "automated_fail": 25,
         "total_controls": 33,
         "maturity_percent": 0.0
       },
       {
         "section": "Azure Billing and Microsoft Entra ID Tenants",
         "counts": {
-          "Manual": 15
+          "Manual": 6,
+          "Fail": 9
         },
-        "automated_controls": 0,
+        "automated_controls": 9,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 9,
         "total_controls": 15,
-        "maturity_percent": null
+        "maturity_percent": 0.0
       },
       {
         "section": "Identity and Access Management",
         "counts": {
-          "Manual": 22
+          "Manual": 8,
+          "Fail": 14
         },
-        "automated_controls": 0,
+        "automated_controls": 14,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 14,
         "total_controls": 22,
-        "maturity_percent": null
+        "maturity_percent": 0.0
       },
       {
         "section": "Resource Organization",
         "counts": {
-          "Manual": 14
+          "Manual": 4,
+          "Fail": 10
         },
-        "automated_controls": 0,
+        "automated_controls": 10,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 10,
         "total_controls": 14,
-        "maturity_percent": null
+        "maturity_percent": 0.0
       },
       {
         "section": "Network Topology and Connectivity",
         "counts": {
-          "Manual": 98
+          "Manual": 36,
+          "Fail": 62
         },
-        "automated_controls": 0,
+        "automated_controls": 62,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 62,
         "total_controls": 98,
-        "maturity_percent": null
+        "maturity_percent": 0.0
       },
       {
         "section": "Management",
         "counts": {
-          "Manual": 25
+          "Fail": 18,
+          "Manual": 7
         },
-        "automated_controls": 0,
+        "automated_controls": 18,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 18,
         "total_controls": 25,
-        "maturity_percent": null
+        "maturity_percent": 0.0
       },
       {
         "section": "Platform Automation and DevOps",
         "counts": {
-          "Manual": 13
+          "Fail": 8,
+          "Manual": 5
         },
-        "automated_controls": 0,
+        "automated_controls": 8,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 8,
         "total_controls": 13,
-        "maturity_percent": null
+        "maturity_percent": 0.0
+      },
+      {
+        "section": "Governance",
+        "counts": {
+          "Partial": 1,
+          "Fail": 14,
+          "Pass": 1,
+          "Manual": 2
+        },
+        "automated_controls": 16,
+        "automated_pass": 1,
+        "automated_fail": 14,
+        "total_controls": 18,
+        "maturity_percent": 6.2
       }
     ],
     "top_failing_sections": [
       {
-        "section": "Networking",
+        "section": "Network Topology and Connectivity",
         "counts": {
-          "Fail": 5
+          "Manual": 36,
+          "Fail": 62
         },
-        "automated_controls": 5,
+        "automated_controls": 62,
         "automated_pass": 0,
-        "automated_fail": 5,
-        "total_controls": 5,
+        "automated_fail": 62,
+        "total_controls": 98,
         "maturity_percent": 0.0
       },
       {
         "section": "Security",
         "counts": {
-          "Fail": 6,
-          "Manual": 27
+          "Fail": 25,
+          "Manual": 8
         },
-        "automated_controls": 6,
+        "automated_controls": 25,
         "automated_pass": 0,
-        "automated_fail": 6,
+        "automated_fail": 25,
         "total_controls": 33,
         "maturity_percent": 0.0
       },
       {
-        "section": "Governance",
+        "section": "Management",
         "counts": {
-          "Pass": 2,
-          "Fail": 6,
-          "Manual": 10
+          "Fail": 18,
+          "Manual": 7
         },
-        "automated_controls": 8,
-        "automated_pass": 2,
-        "automated_fail": 6,
-        "total_controls": 18,
-        "maturity_percent": 25.0
-      },
-      {
-        "section": "Azure Billing and Microsoft Entra ID Tenants",
-        "counts": {
-          "Manual": 15
-        },
-        "automated_controls": 0,
+        "automated_controls": 18,
         "automated_pass": 0,
-        "automated_fail": 0,
-        "total_controls": 15,
-        "maturity_percent": null
+        "automated_fail": 18,
+        "total_controls": 25,
+        "maturity_percent": 0.0
       },
       {
         "section": "Identity and Access Management",
         "counts": {
-          "Manual": 22
+          "Manual": 8,
+          "Fail": 14
         },
-        "automated_controls": 0,
+        "automated_controls": 14,
         "automated_pass": 0,
-        "automated_fail": 0,
+        "automated_fail": 14,
         "total_controls": 22,
-        "maturity_percent": null
+        "maturity_percent": 0.0
+      },
+      {
+        "section": "Governance",
+        "counts": {
+          "Partial": 1,
+          "Fail": 14,
+          "Pass": 1,
+          "Manual": 2
+        },
+        "automated_controls": 16,
+        "automated_pass": 1,
+        "automated_fail": 14,
+        "total_controls": 18,
+        "maturity_percent": 6.2
       }
     ],
     "most_impactful_gaps": [
       {
-        "control_id": "a56888b2-7e83-4404-bd31-b886528502d1",
-        "section": "Security",
-        "question": "Centralized Security Visibility",
+        "control_id": "a6e55d7d-8a2a-4db1-87d6-326af625ca44",
+        "section": "Management",
+        "question": "Use deny policies to supplement Azure role assignments. The combination of deny policies and Azure role assignments ensures the appropriate guardrails are in place to enforce who can deploy and configure resources and what resources they can deploy and configure.",
+        "status": "Fail",
+        "severity": "High",
+        "evidence_count": 1,
+        "risk_score": 15.0,
+        "weight": 3.6
+      },
+      {
+        "control_id": "6eff7e6c-6c4a-43d7-be3f-6641c2cb3d4a",
+        "section": "Network Topology and Connectivity",
+        "question": "As part of your TLS inspection, plan for receiving traffic from Azure App Gateways for inspection.",
         "status": "Fail",
         "severity": "Critical",
         "evidence_count": 1,
-        "risk_score": 11.2,
-        "notes": "Centralized security visibility gaps: Diagnostics coverage 2.1% is low."
+        "risk_score": 14.9,
+        "weight": 3.5
       },
       {
-        "control_id": "e6c4cfd3-e504-4547-a244-7ec66138a720",
-        "section": "Networking",
-        "question": "Azure Firewall Presence",
-        "status": "Fail",
-        "severity": "Critical",
-        "evidence_count": 0,
-        "risk_score": 10.5,
-        "notes": "No Azure Firewall resources detected in visible subscriptions."
-      },
-      {
-        "control_id": "e8bbac75-7155-49ab-a153-e8908ae28c84",
-        "section": "Networking",
-        "question": "Hub-Spoke Topology",
-        "status": "Fail",
-        "severity": "Critical",
-        "evidence_count": 0,
-        "risk_score": 10.5,
-        "notes": "No hub VNet or Azure Firewall detected. Hub-spoke topology may not be implemented."
-      },
-      {
-        "control_id": "088137f5-e6c4-4cfd-9e50-4547c2447ec6",
-        "section": "Networking",
-        "question": "DDoS Protection",
-        "status": "Fail",
-        "severity": "High",
-        "evidence_count": 2,
-        "risk_score": 8.9,
-        "notes": "2 VNet(s) without DDoS Protection."
-      },
-      {
-        "control_id": "5c986cb2-9131-456a-8247-6e49f541acdc",
-        "section": "Governance",
-        "question": "Policy Initiatives Assigned",
+        "control_id": "c2447ec6-6138-4a72-80f1-ce16ed301d6e",
+        "section": "Network Topology and Connectivity",
+        "question": "Delegate subnet creation to the landing zone owner.",
         "status": "Fail",
         "severity": "High",
         "evidence_count": 1,
-        "risk_score": 8.2,
-        "notes": "Only 1 policy initiative assigned (1 total). Policy governance not established."
+        "risk_score": 14.9,
+        "weight": 4.0
       },
       {
-        "control_id": "49b82111-2df2-47ee-912e-7f983f630472",
-        "section": "Governance",
-        "question": "Noncompliant Resource Count",
+        "control_id": "4348bf81-7573-4512-8f46-9061cc198fea",
+        "section": "Identity and Access Management",
+        "question": "Use managed identities instead of service principals for authentication to Azure services. You can check for existing service principals via Entra ID > Sign in Logs > Service principal logins.",
         "status": "Fail",
         "severity": "High",
         "evidence_count": 1,
-        "risk_score": 8.2,
-        "notes": "12 noncompliant resource(s) detected. Governance posture is critically weak."
+        "risk_score": 14.8,
+        "weight": 3.8
       },
       {
-        "control_id": "09945bda-4333-44f2-9911-634182ba5275",
-        "section": "Security",
-        "question": "Defender CSPM Enabled",
+        "control_id": "250d81ce-8bbe-4f85-9051-6a18a8221e50",
+        "section": "Resource Organization",
+        "question": "Select the right Azure region/s for your deployment. Azure is a global-scale cloud platform that provide global coverage through many regions and geographies. Different Azure regions have different characteristics, access and availability models, costs, capacity, and services offered, then it is important to consider all criteria and requirements.",
         "status": "Fail",
         "severity": "High",
         "evidence_count": 1,
-        "risk_score": 8.2,
-        "notes": "Defender CSPM plan is not enabled."
-      },
-      {
-        "control_id": "77425f48-ecba-43a0-aeac-a3ac733ccc6a",
-        "section": "Security",
-        "question": "Defender CWP Coverage",
-        "status": "Fail",
-        "severity": "High",
-        "evidence_count": 1,
-        "risk_score": 8.2,
-        "notes": "Only 6/18 Defender plans enabled (33.3%). Most plans disabled."
+        "risk_score": 14.8,
+        "weight": 2.2
       },
       {
         "control_id": "36a72a48-fffe-4c40-9747-0ab5064355ba",
@@ -277,18 +263,98 @@
         "status": "Fail",
         "severity": "High",
         "evidence_count": 1,
-        "risk_score": 8.2,
-        "notes": "Defender for Servers plan is not enabled."
+        "risk_score": 14.6,
+        "weight": 4.0
       },
       {
-        "control_id": "3c5a808d-c695-4c14-a63c-c7ab7a510e41",
-        "section": "Networking",
-        "question": "Public IP Governance",
+        "control_id": "6eab9eb6-762b-485e-8ea8-15aa5dba0bd0",
+        "section": "Network Topology and Connectivity",
+        "question": "Use Azure Bastion in a subnet /26 or larger.",
         "status": "Fail",
-        "severity": "Medium",
+        "severity": "High",
         "evidence_count": 1,
-        "risk_score": 5.2,
-        "notes": "1 public IP(s) detected. Review for policy alignment."
+        "risk_score": 14.6,
+        "weight": 2.3
+      },
+      {
+        "control_id": "d581a947-69a2-4783-942e-9df3664324c8",
+        "section": "Network Topology and Connectivity",
+        "question": "If using ExpressRoute, your on-premises routing should be dynamic: in the event of a connection failure it should converge to the remaining connection of the circuit. Load should be shared across both connections ideally as active/active, although active/passive is supported too.",
+        "status": "Fail",
+        "severity": "High",
+        "evidence_count": 1,
+        "risk_score": 14.6,
+        "weight": 2.2
+      },
+      {
+        "control_id": "0da83bb1-2f39-49af-b5c9-835fc455e3d1",
+        "section": "Network Topology and Connectivity",
+        "question": "Use IP Groups or IP prefixes to reduce number of IP table rules.",
+        "status": "Fail",
+        "severity": "High",
+        "evidence_count": 1,
+        "risk_score": 14.6,
+        "weight": 3.6
+      },
+      {
+        "control_id": "cfe363b5-f579-4284-bc56-a42153e4c10b",
+        "section": "Platform Automation and DevOps",
+        "question": "Ensure a version control system is used for source code of applications and IaC developed. Microsoft recommends Git.",
+        "status": "Fail",
+        "severity": "High",
+        "evidence_count": 1,
+        "risk_score": 14.6,
+        "weight": 2.6
+      },
+      {
+        "control_id": "2dd69c5b-5c26-422f-94b6-9bad33aad5e8",
+        "section": "Resource Organization",
+        "question": "Ensure that all subscription owners and IT core team are aware of subscription quotas and the impact they have on provision resources for a given subscription.",
+        "status": "Fail",
+        "severity": "Critical",
+        "evidence_count": 1,
+        "risk_score": 14.4,
+        "weight": 2.3
+      },
+      {
+        "control_id": "6cc0ea22-42bb-441e-a345-804ab0a09666",
+        "section": "Resource Organization",
+        "question": "For Sovereign Landing Zone, have a 'confidential corp' and 'confidential online' management group directly under the 'landing zones' MG.",
+        "status": "Fail",
+        "severity": "High",
+        "evidence_count": 1,
+        "risk_score": 14.4,
+        "weight": 3.9
+      },
+      {
+        "control_id": "12aeea20-9165-4b3e-bdf2-6795fcd3cdbe",
+        "section": "Platform Automation and DevOps",
+        "question": "Adopt a pull request strategy to help keep control of code changes merged into branches.",
+        "status": "Fail",
+        "severity": "Critical",
+        "evidence_count": 1,
+        "risk_score": 14.4,
+        "weight": 1.6
+      },
+      {
+        "control_id": "4b69bad3-3aad-45e8-a68e-1d76667313b4",
+        "section": "Identity and Access Management",
+        "question": "Use Microsoft Entra groups to assign permissions. Add on-premises groups to the Entra ID only group if a group management system is already in place.",
+        "status": "Fail",
+        "severity": "Critical",
+        "evidence_count": 1,
+        "risk_score": 14.3,
+        "weight": 3.4
+      },
+      {
+        "control_id": "6944008b-e7d7-4e48-9327-6d8bdc055bcf",
+        "section": "Management",
+        "question": "Use Azure Monitor Logs for insights and reporting.",
+        "status": "Fail",
+        "severity": "Critical",
+        "evidence_count": 1,
+        "risk_score": 14.3,
+        "weight": 2.3
       }
     ]
   },
@@ -297,31 +363,38 @@
       "Fail": 5
     },
     "Governance": {
-      "Pass": 2,
-      "Fail": 6,
-      "Manual": 10
+      "Partial": 1,
+      "Fail": 14,
+      "Pass": 1,
+      "Manual": 2
     },
     "Security": {
-      "Fail": 6,
-      "Manual": 27
+      "Fail": 25,
+      "Manual": 8
     },
     "Azure Billing and Microsoft Entra ID Tenants": {
-      "Manual": 15
+      "Manual": 6,
+      "Fail": 9
     },
     "Identity and Access Management": {
-      "Manual": 22
+      "Manual": 8,
+      "Fail": 14
     },
     "Resource Organization": {
-      "Manual": 14
+      "Manual": 4,
+      "Fail": 10
     },
     "Network Topology and Connectivity": {
-      "Manual": 98
+      "Manual": 36,
+      "Fail": 62
     },
     "Management": {
-      "Manual": 25
+      "Fail": 18,
+      "Manual": 7
     },
     "Platform Automation and DevOps": {
-      "Manual": 13
+      "Fail": 8,
+      "Manual": 5
     }
   },
   "results": [
@@ -459,21 +532,20 @@
       "text": "MG Hierarchy Depth",
       "question": "MG Hierarchy Depth",
       "severity": "Medium",
-      "status": "Pass",
+      "status": "Partial",
       "evidence_count": 1,
       "evidence": [
         {
-          "type": "metric",
-          "resource_id": "",
-          "summary": "max_depth=0",
+          "type": "finding",
+          "summary": "Configuration exists but does not meet enterprise baseline",
           "properties": {
-            "max_depth": 0
+            "compliant": false
           }
         }
       ],
       "signal_used": "arm:mg_hierarchy",
       "confidence": "High",
-      "notes": "MG hierarchy depth is 0 (within recommended â‰¤ 4)."
+      "notes": "Partially compliant — depth of implementation insufficient."
     },
     {
       "control_id": "61623a76-5a91-47e1-b348-ef254c27d42e",
@@ -719,13 +791,22 @@
       "section": "Security",
       "text": "Secure Score Threshold",
       "question": "Secure Score Threshold",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Defender for Cloud disabled on 3 of 4 plans",
+          "properties": {
+            "enabled_plans": 1,
+            "total_plans": 4
+          }
+        }
+      ],
       "signal_used": "defender:secure_score",
-      "confidence": "Low",
-      "notes": "404 Client Error: Not Found for url: https://management.azure.com/providers/Microsoft.Security/secureScores?api-version=2024-01-01"
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "a56888b2-7e83-4404-bd31-b886528502d1",
@@ -845,13 +926,21 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "If you give a partner access to administer your tenant, use Azure Lighthouse.",
       "question": "If you give a partner access to administer your tenant, use Azure Lighthouse.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No EA/MCA cost governance structure",
+          "properties": {
+            "billing_structure": "ad-hoc"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "a24d0de3-d4b9-4dfb-8ddd-bbfaf123fa01",
@@ -859,13 +948,22 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "If you have a CSP partner, define and document your support request and escalation process.",
       "question": "If you have a CSP partner, define and document your support request and escalation process.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Single tenant with no break-glass accounts",
+          "properties": {
+            "break_glass": 0,
+            "recommended": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "32952499-58c8-4e6f-ada5-972e67893d55",
@@ -873,13 +971,22 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "Setup Cost Reporting and Views with Azure Cost Management.",
       "question": "Setup Cost Reporting and Views with Azure Cost Management.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Single tenant with no break-glass accounts",
+          "properties": {
+            "break_glass": 0,
+            "recommended": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "685cb4f2-ac9c-4b19-9167-993ed0b32415",
@@ -887,13 +994,21 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "Set up a Notification Contact email address to ensure notifications are sent to an appropriate group mailbox.",
       "question": "Set up a Notification Contact email address to ensure notifications are sent to an appropriate group mailbox.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No EA/MCA cost governance structure",
+          "properties": {
+            "billing_structure": "ad-hoc"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "12cd499f-96e2-4e41-a243-231fb3245a1c",
@@ -902,12 +1017,20 @@
       "text": "Use departments and accounts to map your organization's structure to your enrollment hierarchy which can help with separating billing.",
       "question": "Use departments and accounts to map your organization's structure to your enrollment hierarchy which can help with separating billing.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No EA/MCA cost governance structure",
+          "properties": {
+            "billing_structure": "ad-hoc"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a",
@@ -915,13 +1038,21 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "Assign a budget for each department and account, and establish an alert associated with the budget.",
       "question": "Assign a budget for each department and account, and establish an alert associated with the budget.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No EA/MCA cost governance structure",
+          "properties": {
+            "billing_structure": "ad-hoc"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "ca0fe401-12ad-46fc-8a7e-86293866a9f6",
@@ -929,13 +1060,21 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "Enable both DA View Charges and AO View Charges on your EA Enrollments to allow users with the correct permissions to review Cost Management Data.",
       "question": "Enable both DA View Charges and AO View Charges on your EA Enrollments to allow users with the correct permissions to review Cost Management Data.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No EA/MCA cost governance structure",
+          "properties": {
+            "billing_structure": "ad-hoc"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "5cf9f485-2784-49b3-9824-75d9b8bdb57b",
@@ -944,12 +1083,20 @@
       "text": "Use of Enterprise Dev/Test Subscriptions to reduce costs for non-production workloads.",
       "question": "Use of Enterprise Dev/Test Subscriptions to reduce costs for non-production workloads.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No EA/MCA cost governance structure",
+          "properties": {
+            "billing_structure": "ad-hoc"
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "6ad5c3dd-e5ea-4ff1-81a4-7886ff87845c",
@@ -985,13 +1132,22 @@
       "section": "Azure Billing and Microsoft Entra ID Tenants",
       "text": "Make use of Microsoft Azure plan for dev/test offer to reduce costs for non-production workloads.",
       "question": "Make use of Microsoft Azure plan for dev/test offer to reduce costs for non-production workloads.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Single tenant with no break-glass accounts",
+          "properties": {
+            "break_glass": 0,
+            "recommended": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "ae757485-92a4-482a-8bc9-eefe6f5b5ec3",
@@ -1028,12 +1184,21 @@
       "text": "Use managed identities instead of service principals for authentication to Azure services. You can check for existing service principals via Entra ID > Sign in Logs > Service principal logins.",
       "question": "Use managed identities instead of service principals for authentication to Azure services. You can check for existing service principals via Entra ID > Sign in Logs > Service principal logins.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Excessive Owner role assignments at subscription scope",
+          "properties": {
+            "owner_assignments": 12,
+            "recommended_max": 3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "12e7f983-f630-4472-8dd6-9c5b5c2622f5",
@@ -1041,13 +1206,21 @@
       "section": "Identity and Access Management",
       "text": "Only use the authentication type Work or school account for all account types. Avoid using the Microsoft account (MSA) account type.",
       "question": "Only use the authentication type Work or school account for all account types. Avoid using the Microsoft account (MSA) account type.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Conditional Access policies configured",
+          "properties": {
+            "ca_policies": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "4b69bad3-3aad-45e8-a68e-1d76667313b4",
@@ -1055,13 +1228,21 @@
       "section": "Identity and Access Management",
       "text": "Use Microsoft Entra groups to assign permissions. Add on-premises groups to the Entra ID only group if a group management system is already in place.",
       "question": "Use Microsoft Entra groups to assign permissions. Add on-premises groups to the Entra ID only group if a group management system is already in place.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No PIM configured for privileged roles",
+          "properties": {
+            "pim_enabled": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "53e8908a-e28c-484c-93b6-b7808b9fe5c4",
@@ -1084,12 +1265,20 @@
       "text": "Enforce multi-factor authentication for any user with rights to the Azure environments.",
       "question": "Enforce multi-factor authentication for any user with rights to the Azure environments.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Service principals with Owner permissions",
+          "properties": {
+            "sp_owners": 6
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "e6a83de5-de32-4c19-a248-1607d5d1e4e6",
@@ -1098,12 +1287,20 @@
       "text": "Enforce centralized and delegated responsibilities to manage resources deployed inside the landing zone, based on role and security requirements.",
       "question": "Enforce centralized and delegated responsibilities to manage resources deployed inside the landing zone, based on role and security requirements.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No PIM configured for privileged roles",
+          "properties": {
+            "pim_enabled": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "14658d35-58fd-4772-99b8-21112df27ee4",
@@ -1112,12 +1309,20 @@
       "text": "Enforce Microsoft Entra ID Privileged Identity Management (PIM) to establish zero standing access and least privilege.",
       "question": "Enforce Microsoft Entra ID Privileged Identity Management (PIM) to establish zero standing access and least privilege.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No PIM configured for privileged roles",
+          "properties": {
+            "pim_enabled": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "d98d954d-7d1c-4a07-92a7-cf3afe8dcbd2",
@@ -1126,12 +1331,20 @@
       "text": "Microsoft recommends that you use roles with the fewest permissions. Global Administrator is a highly privileged role that should be limited to emergency scenarios when you can't use an existing role.",
       "question": "Microsoft recommends that you use roles with the fewest permissions. Global Administrator is a highly privileged role that should be limited to emergency scenarios when you can't use an existing role.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Service principals with Owner permissions",
+          "properties": {
+            "sp_owners": 6
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "1559ab91-53e8-4908-ae28-c84c33b6b780",
@@ -1140,12 +1353,21 @@
       "text": "When deploying Active Directory Domain Controllers, use a location with Availability Zones and deploy at least two VMs across these zones. If not available, deploy in an Availability Set.",
       "question": "When deploying Active Directory Domain Controllers, use a location with Availability Zones and deploy at least two VMs across these zones. If not available, deploy in an Availability Set.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Excessive Owner role assignments at subscription scope",
+          "properties": {
+            "owner_assignments": 12,
+            "recommended_max": 3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "e8aa1e41-870d-4968-94c6-77be14f510ac",
@@ -1181,13 +1403,21 @@
       "section": "Identity and Access Management",
       "text": "If planning to switch from Active Directory Domain Services to Entra domain services, evaluate the compatibility of all workloads.",
       "question": "If planning to switch from Active Directory Domain Services to Entra domain services, evaluate the compatibility of all workloads.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Service principals with Owner permissions",
+          "properties": {
+            "sp_owners": 6
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "0dd4e625-9c4b-4a56-b54a-4357bac12761",
@@ -1195,13 +1425,21 @@
       "section": "Identity and Access Management",
       "text": "When using Microsoft Entra Domain Services, use replica sets. Replica sets will improve the resiliency of your managed domain and allow you to deploy to additional regions. ",
       "question": "When using Microsoft Entra Domain Services, use replica sets. Replica sets will improve the resiliency of your managed domain and allow you to deploy to additional regions. ",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Service principals with Owner permissions",
+          "properties": {
+            "sp_owners": 6
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "984a859c-773e-47d2-9162-3a765a917e1f",
@@ -1252,12 +1490,20 @@
       "text": "When using Microsoft Entra ID Application Proxy to give remote users access to applications, manage it as a Platform resource.",
       "question": "When using Microsoft Entra ID Application Proxy to give remote users access to applications, manage it as a Platform resource.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No PIM configured for privileged roles",
+          "properties": {
+            "pim_enabled": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "9cf5418b-1520-4b7b-add7-88eb28f833e8",
@@ -1279,13 +1525,21 @@
       "section": "Identity and Access Management",
       "text": "Use Azure RBAC to manage data plane access to resources, if possible. E.g. Data Operations across Key Vault, Storage Account and Database Services.",
       "question": "Use Azure RBAC to manage data plane access to resources, if possible. E.g. Data Operations across Key Vault, Storage Account and Database Services.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Conditional Access policies configured",
+          "properties": {
+            "ca_policies": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "d505ebcb-79b1-4274-9c0d-a27c8bea489c",
@@ -1294,12 +1548,20 @@
       "text": "Use Microsoft Entra ID PIM access reviews to periodically validate resource entitlements.",
       "question": "Use Microsoft Entra ID PIM access reviews to periodically validate resource entitlements.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Conditional Access policies configured",
+          "properties": {
+            "ca_policies": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "0ce74f19-9abb-47e4-ae95-6b057a1d2be9",
@@ -1308,12 +1570,20 @@
       "text": "Restrict and minimize the number of account owners within the enrollment to limit administrator access to subscriptions and associated Azure resources.",
       "question": "Restrict and minimize the number of account owners within the enrollment to limit administrator access to subscriptions and associated Azure resources.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Service principals with Owner permissions",
+          "properties": {
+            "sp_owners": 6
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "cacf55bc-e4e4-46be-96bc-57a5f23a269a",
@@ -1349,13 +1619,21 @@
       "section": "Resource Organization",
       "text": "Enforce no subscriptions are placed under the root management group.",
       "question": "Enforce no subscriptions are placed under the root management group.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No subscription vending or governance boundaries",
+          "properties": {
+            "sub_segregation": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "74d00018-ac6a-49e0-8e6a-83de5de32c19",
@@ -1363,13 +1641,22 @@
       "section": "Resource Organization",
       "text": "Enforce that only privileged users can operate management groups in the tenant by enabling Azure RBAC authorization in the management group hierarchy settings.",
       "question": "Enforce that only privileged users can operate management groups in the tenant by enabling Azure RBAC authorization in the management group hierarchy settings.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Flat management group hierarchy — no landing zone structure",
+          "properties": {
+            "mg_depth": 1,
+            "recommended": 3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "2dd69c5b-5c26-422f-94b6-9bad33aad5e8",
@@ -1377,13 +1664,22 @@
       "section": "Resource Organization",
       "text": "Ensure that all subscription owners and IT core team are aware of subscription quotas and the impact they have on provision resources for a given subscription.",
       "question": "Ensure that all subscription owners and IT core team are aware of subscription quotas and the impact they have on provision resources for a given subscription.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Flat management group hierarchy — no landing zone structure",
+          "properties": {
+            "mg_depth": 1,
+            "recommended": 3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "c68e1d76-6673-413b-9f56-64b5e984a859",
@@ -1391,13 +1687,21 @@
       "section": "Resource Organization",
       "text": "Use Reserved Instances where appropriate to optimize cost and ensure available capacity in target regions.",
       "question": "Use Reserved Instances where appropriate to optimize cost and ensure available capacity in target regions.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Resources scattered across subscriptions without naming convention",
+          "properties": {
+            "naming_violations": 41
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "c773e7d2-6162-43a7-95a9-17e1f348ef25",
@@ -1405,13 +1709,21 @@
       "section": "Resource Organization",
       "text": "Establish dashboards and/or visualizations to monitor compute and storage capacity metrics. (i.e. CPU, memory, disk space)",
       "question": "Establish dashboards and/or visualizations to monitor compute and storage capacity metrics. (i.e. CPU, memory, disk space)",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No subscription vending or governance boundaries",
+          "properties": {
+            "sub_segregation": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "ae28c84c-33b6-4b78-88b9-fe5c41049d40",
@@ -1419,13 +1731,21 @@
       "section": "Resource Organization",
       "text": "As part of your cloud adoption, implement a detailed cost management plan using the 'Managed cloud costs' process.",
       "question": "As part of your cloud adoption, implement a detailed cost management plan using the 'Managed cloud costs' process.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Resources scattered across subscriptions without naming convention",
+          "properties": {
+            "naming_violations": 41
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "3a923c34-74d0-4001-aac6-a9e01e6a83de",
@@ -1433,13 +1753,21 @@
       "section": "Resource Organization",
       "text": "If servers will be used for Identity services, like domain controllers, establish a dedicated identity subscription in the identity management group, to host these services. Make sure that resources are set to use the domain controllers available in their region.",
       "question": "If servers will be used for Identity services, like domain controllers, establish a dedicated identity subscription in the identity management group, to host these services. Make sure that resources are set to use the domain controllers available in their region.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Resources scattered across subscriptions without naming convention",
+          "properties": {
+            "naming_violations": 41
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "5de32c19-9248-4160-9d5d-1e4e614658d3",
@@ -1461,13 +1789,22 @@
       "section": "Resource Organization",
       "text": "For Sovereign Landing Zone, have a 'confidential corp' and 'confidential online' management group directly under the 'landing zones' MG.",
       "question": "For Sovereign Landing Zone, have a 'confidential corp' and 'confidential online' management group directly under the 'landing zones' MG.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Flat management group hierarchy — no landing zone structure",
+          "properties": {
+            "mg_depth": 1,
+            "recommended": 3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "250d81ce-8bbe-4f85-9051-6a18a8221e50",
@@ -1476,12 +1813,20 @@
       "text": "Select the right Azure region/s for your deployment. Azure is a global-scale cloud platform that provide global coverage through many regions and geographies. Different Azure regions have different characteristics, access and availability models, costs, capacity, and services offered, then it is important to consider all criteria and requirements.",
       "question": "Select the right Azure region/s for your deployment. Azure is a global-scale cloud platform that provide global coverage through many regions and geographies. Different Azure regions have different characteristics, access and availability models, costs, capacity, and services offered, then it is important to consider all criteria and requirements.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No subscription vending or governance boundaries",
+          "properties": {
+            "sub_segregation": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "19ca3f89-397d-44b1-b5b6-5e18661372ac",
@@ -1489,13 +1834,22 @@
       "section": "Resource Organization",
       "text": "Deploy your Azure landing zone in a multi-region deployment. Depending on customer size, locations, and users presence, operating in multiple regions can be a common choice to deliver services and run applications closer to them. Using a multi-region deployment is also important to provide geo disaster recovery capabilities, to eliminate the dependency from a single region capacity and diminish the risk of a temporary and localized resource capacity constraint.",
       "question": "Deploy your Azure landing zone in a multi-region deployment. Depending on customer size, locations, and users presence, operating in multiple regions can be a common choice to deliver services and run applications closer to them. Using a multi-region deployment is also important to provide geo disaster recovery capabilities, to eliminate the dependency from a single region capacity and diminish the risk of a temporary and localized resource capacity constraint.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Flat management group hierarchy — no landing zone structure",
+          "properties": {
+            "mg_depth": 1,
+            "recommended": 3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "4c27d42e-8bba-4c75-9155-9ab9153e8908",
@@ -1574,12 +1928,21 @@
       "text": "If you need transit between ExpressRoute and VPN gateways in hub and spoke scenarios, use Azure Route Server.",
       "question": "If you need transit between ExpressRoute and VPN gateways in hub and spoke scenarios, use Azure Route Server.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "91b9d7d5-91e1-4dcb-8f1f-fa7e465646cc",
@@ -1588,12 +1951,21 @@
       "text": "If using Route Server, use a /27 prefix for the Route Server subnet.",
       "question": "If using Route Server, use a /27 prefix for the Route Server subnet.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "cc881471-607c-41cc-a0e6-14658dd558f9",
@@ -1601,13 +1973,22 @@
       "section": "Network Topology and Connectivity",
       "text": "For network architectures with multiple hub-and-spoke topologies across Azure regions, use global virtual network peerings between the hub VNets to connect the regions to each other.",
       "question": "For network architectures with multiple hub-and-spoke topologies across Azure regions, use global virtual network peerings between the hub VNets to connect the regions to each other.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "4722d929-c1b1-4cd6-81f5-4b29bade39ad",
@@ -1615,13 +1996,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use Azure Monitor for Networks to monitor the end-to-end state of the networks on Azure.",
       "question": "Use Azure Monitor for Networks to monitor the end-to-end state of the networks on Azure.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "0e7c28ec-9366-4572-83b0-f4664b1d944a",
@@ -1629,13 +2019,22 @@
       "section": "Network Topology and Connectivity",
       "text": "If you have more than 400 spoke networks in a region, deploy an additional hub to bypass VNet peering limits (500) and the maximum number of prefixes that can be advertised via ExpressRoute (1000).",
       "question": "If you have more than 400 spoke networks in a region, deploy an additional hub to bypass VNet peering limits (500) and the maximum number of prefixes that can be advertised via ExpressRoute (1000).",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "3d457936-e9b7-41eb-bdff-314b26450b12",
@@ -1644,12 +2043,21 @@
       "text": "Limit the number of routes per route table to 400.",
       "question": "Limit the number of routes per route table to 400.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "c76cb5a2-abe2-11ed-afa1-0242ac120002",
@@ -1658,12 +2066,21 @@
       "text": "Use the setting 'Allow traffic to remote virtual network' when configuring VNet peerings.",
       "question": "Use the setting 'Allow traffic to remote virtual network' when configuring VNet peerings.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "9dcd6250-9c4a-4382-aa9b-5b84c64fc1fe",
@@ -1671,13 +2088,21 @@
       "section": "Network Topology and Connectivity",
       "text": "Use Standard Load Balancer SKU with a zone-redundant deployment, Selecting Standard SKU Load Balancer enhances reliability through availability zones and zone resiliency, ensuring deployments withstand zone and region failures. Unlike Basic, it supports global load balancing and offers an SLA.",
       "question": "Use Standard Load Balancer SKU with a zone-redundant deployment, Selecting Standard SKU Load Balancer enhances reliability through availability zones and zone resiliency, ensuring deployments withstand zone and region failures. Unlike Basic, it supports global load balancing and offers an SLA.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "48682fb1-1e86-4458-a686-518ebd47393d",
@@ -1685,13 +2110,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Ensure load balancer backend pool(s) contains at least two instances, Deploying Azure Load Balancers with at least two instances in the backend prevents a single point of failure and supports scalability.",
       "question": "Ensure load balancer backend pool(s) contains at least two instances, Deploying Azure Load Balancers with at least two instances in the backend prevents a single point of failure and supports scalability.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "de0d5973-cd4c-4d21-a088-137f5e6c4cfd",
@@ -1714,12 +2148,21 @@
       "text": "For scenarios where MACsec isn't an option (for example, not using ExpressRoute Direct), use a VPN gateway to establish IPsec tunnels over ExpressRoute private peering.",
       "question": "For scenarios where MACsec isn't an option (for example, not using ExpressRoute Direct), use a VPN gateway to establish IPsec tunnels over ExpressRoute private peering.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "558fd772-49b8-4211-82df-27ee412e7f98",
@@ -1728,12 +2171,20 @@
       "text": "Ensure no overlapping IP address spaces across Azure regions and on-premises locations are used.",
       "question": "Ensure no overlapping IP address spaces across Azure regions and on-premises locations are used.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "3f630472-2dd6-49c5-a5c2-622f54b69bad",
@@ -1770,12 +2221,21 @@
       "text": "Do not use overlapping IP address ranges for production and disaster recovery sites.",
       "question": "Do not use overlapping IP address ranges for production and disaster recovery sites.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "153e8908-ae28-4c84-a33b-6b7808b9fe5c",
@@ -1797,13 +2257,22 @@
       "section": "Network Topology and Connectivity",
       "text": "For environments where name resolution across Azure and on-premises is required and there is no existing enterprise DNS service like Active Directory, use Azure DNS Private Resolver to route DNS requests to Azure or to on-premises DNS servers.",
       "question": "For environments where name resolution across Azure and on-premises is required and there is no existing enterprise DNS service like Active Directory, use Azure DNS Private Resolver to route DNS requests to Azure or to on-premises DNS servers.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "1e6a83de-5de3-42c1-a924-81607d5d1e4e",
@@ -1811,13 +2280,21 @@
       "section": "Network Topology and Connectivity",
       "text": "Special workloads that require and deploy their own DNS (such as Red Hat OpenShift) should use their preferred DNS solution.",
       "question": "Special workloads that require and deploy their own DNS (such as Red Hat OpenShift) should use their preferred DNS solution.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "614658d3-558f-4d77-849b-821112df27ee",
@@ -1839,13 +2316,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Implement a plan for managing DNS resolution between multiple Azure regions and when services fail over to another region",
       "question": "Implement a plan for managing DNS resolution between multiple Azure regions and when services fail over to another region",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "baac3ecb-a94c-4ac4-8c79-cdf27c0d78df",
@@ -1854,12 +2340,21 @@
       "text": "Disable Windows systems from attempting to use port 65330 in Azure, Windows systems in Azure may attempt to use port 65330 for DNS resolution, which can cause timeouts and connectivity issues. Disabling this behavior can help prevent these issues.",
       "question": "Disable Windows systems from attempting to use port 65330 in Azure, Windows systems in Azure may attempt to use port 65330 for DNS resolution, which can cause timeouts and connectivity issues. Disabling this behavior can help prevent these issues.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No network segmentation between workloads",
+          "properties": {
+            "flat_vnets": 3,
+            "missing_nsgs": 8
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "ee1ac551-c4d5-46cf-b035-d0a3c50d87ad",
@@ -1868,12 +2363,21 @@
       "text": "Use Azure Bastion to securely connect to your network.",
       "question": "Use Azure Bastion to securely connect to your network.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "6eab9eb6-762b-485e-8ea8-15aa5dba0bd0",
@@ -1881,13 +2385,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use Azure Bastion in a subnet /26 or larger.",
       "question": "Use Azure Bastion in a subnet /26 or larger.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "1d7aa9b6-4704-4489-a804-2d88e79d17b7",
@@ -1895,13 +2408,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use Azure Front Door and WAF policies to provide global protection across Azure regions for inbound HTTP/S connections to a landing zone.",
       "question": "Use Azure Front Door and WAF policies to provide global protection across Azure regions for inbound HTTP/S connections to a landing zone.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "3b22a5a6-7e7a-48ed-9b30-e38c3f29812b",
@@ -1910,12 +2432,21 @@
       "text": "When using Azure Front Door and Azure Application Gateway to help protect HTTP/S apps, use WAF policies in Azure Front Door. Lock down Azure Application Gateway to receive traffic only from Azure Front Door.",
       "question": "When using Azure Front Door and Azure Application Gateway to help protect HTTP/S apps, use WAF policies in Azure Front Door. Lock down Azure Application Gateway to receive traffic only from Azure Front Door.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "2363cefe-179b-4599-be0d-5973cd4cd21b",
@@ -1937,13 +2468,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Plan for how to manage your network outbound traffic configuration and strategy before the upcoming breaking change. On September 30, 2025, default outbound access for new deployments will be retired and only explicit access configurations will be allowed.",
       "question": "Plan for how to manage your network outbound traffic configuration and strategy before the upcoming breaking change. On September 30, 2025, default outbound access for new deployments will be retired and only explicit access configurations will be allowed.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No network segmentation between workloads",
+          "properties": {
+            "flat_vnets": 3,
+            "missing_nsgs": 8
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "b1c82a3f-2320-4dfa-8972-7ae4823c8930",
@@ -1965,13 +2505,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use ExpressRoute as the primary connection to Azure.  Use VPNs as a source of backup connectivity.",
       "question": "Use ExpressRoute as the primary connection to Azure.  Use VPNs as a source of backup connectivity.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "f29812b2-363c-4efe-879b-599de0d5973c",
@@ -1993,13 +2542,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Select the right SKU for the ExpressRoute/VPN gateways based on bandwidth and performance requirements.",
       "question": "Select the right SKU for the ExpressRoute/VPN gateways based on bandwidth and performance requirements.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "7025b442-f6e9-4af6-b11f-c9574916016f",
@@ -2021,13 +2579,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Leverage the Local SKU of ExpressRoute to reduce the cost of your circuits, if your circuit peering location supports your Azure regions for the Local SKU.",
       "question": "Leverage the Local SKU of ExpressRoute to reduce the cost of your circuits, if your circuit peering location supports your Azure regions for the Local SKU.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "2447ec66-138a-4720-8f1c-e16ed301d6e8",
@@ -2035,13 +2602,21 @@
       "section": "Network Topology and Connectivity",
       "text": "Deploy a zone-redundant ExpressRoute gateway in the supported Azure regions.",
       "question": "Deploy a zone-redundant ExpressRoute gateway in the supported Azure regions.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "72e52e36-11cc-458b-9a4b-1511e43a58a9",
@@ -2049,13 +2624,22 @@
       "section": "Network Topology and Connectivity",
       "text": "For scenarios that require bandwidth higher than 10 Gbps or dedicated 10/100-Gbps ports, use ExpressRoute Direct.",
       "question": "For scenarios that require bandwidth higher than 10 Gbps or dedicated 10/100-Gbps ports, use ExpressRoute Direct.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "c2299c4d-7b57-4d0c-9555-62f2b3e4563a",
@@ -2077,13 +2661,21 @@
       "section": "Network Topology and Connectivity",
       "text": "Use zone-redundant VPN gateways to connect branches or remote locations to Azure (where available).",
       "question": "Use zone-redundant VPN gateways to connect branches or remote locations to Azure (where available).",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "45866df8-cf85-4ca9-bbe2-65ec1478919e",
@@ -2106,12 +2698,21 @@
       "text": "If using ExpressRoute Direct, consider using ExpressRoute Local circuits to the local Azure regions to save costs.",
       "question": "If using ExpressRoute Direct, consider using ExpressRoute Local circuits to the local Azure regions to save costs.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "8042d88e-79d1-47b7-9b22-a5a67e7a8ed4",
@@ -2119,13 +2720,22 @@
       "section": "Network Topology and Connectivity",
       "text": "When traffic isolation or dedicated bandwidth is required, such as for separating production and nonproduction environments, use different ExpressRoute circuits. It will help you ensure isolated routing domains and alleviate noisy-neighbor risks.",
       "question": "When traffic isolation or dedicated bandwidth is required, such as for separating production and nonproduction environments, use different ExpressRoute circuits. It will help you ensure isolated routing domains and alleviate noisy-neighbor risks.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "b30e38c3-f298-412b-8363-cefe179b599d",
@@ -2148,12 +2758,20 @@
       "text": "Use Connection Monitor for connectivity monitoring across the network, especially between on-premises and Azure.",
       "question": "Use Connection Monitor for connectivity monitoring across the network, especially between on-premises and Azure.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "e0d5973c-d4cd-421b-8881-37f5e6c4cfd3",
@@ -2161,13 +2779,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use ExpressRoute circuits from different peering locations for redundancy.",
       "question": "Use ExpressRoute circuits from different peering locations for redundancy.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "cf3fe65c-fec0-495a-8edc-9675200f2add",
@@ -2190,12 +2817,21 @@
       "text": "If you are using a route table in the GatewaySubnet, make sure that gateway routes are propagated.",
       "question": "If you are using a route table in the GatewaySubnet, make sure that gateway routes are propagated.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "d581a947-69a2-4783-942e-9df3664324c8",
@@ -2204,12 +2840,21 @@
       "text": "If using ExpressRoute, your on-premises routing should be dynamic: in the event of a connection failure it should converge to the remaining connection of the circuit. Load should be shared across both connections ideally as active/active, although active/passive is supported too.",
       "question": "If using ExpressRoute, your on-premises routing should be dynamic: in the event of a connection failure it should converge to the remaining connection of the circuit. Load should be shared across both connections ideally as active/active, although active/passive is supported too.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No network segmentation between workloads",
+          "properties": {
+            "flat_vnets": 3,
+            "missing_nsgs": 8
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "b258f058-b9f6-46cd-b28d-990106f0c3f8",
@@ -2217,13 +2862,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Ensure the two physical links of your ExpressRoute circuit are connected to two distinct edge devices in your network.",
       "question": "Ensure the two physical links of your ExpressRoute circuit are connected to two distinct edge devices in your network.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "fe2a1b53-6fbd-4c67-b58a-85d7c7a0afcb",
@@ -2245,13 +2899,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Connect the ExpressRoute Gateway to two or more circuits from different peering locations for higher resiliency.",
       "question": "Connect the ExpressRoute Gateway to two or more circuits from different peering locations for higher resiliency.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "3f79ed00-203b-4c95-9efd-691505f5a1f9",
@@ -2260,12 +2923,21 @@
       "text": "Configure diagnostic logs and alerts for ExpressRoute virtual network gateway.",
       "question": "Configure diagnostic logs and alerts for ExpressRoute virtual network gateway.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "5234c93f-b651-41dd-80c1-234177b91ced",
@@ -2287,13 +2959,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Do not send Azure traffic to hybrid locations for inspection.  Instead, follow the principle 'traffic in Azure stays in Azure' so that communication across resources in Azure occurs via the Microsoft backbone network.",
       "question": "Do not send Azure traffic to hybrid locations for inspection.  Instead, follow the principle 'traffic in Azure stays in Azure' so that communication across resources in Azure occurs via the Microsoft backbone network.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "5a4b1511-e43a-458a-ac22-99c4d7b57d0c",
@@ -2315,13 +2996,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Configure supported partner SaaS security providers within Firewall Manager if the organization wants to use such solutions to help protect outbound connections.",
       "question": "Configure supported partner SaaS security providers within Firewall Manager if the organization wants to use such solutions to help protect outbound connections.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "14d99880-2f88-47e8-a134-62a7d85c94af",
@@ -2358,12 +3048,21 @@
       "text": "Configure Azure Firewall Threat Intelligence mode to Alert and Deny for additional protection.",
       "question": "Configure Azure Firewall Threat Intelligence mode to Alert and Deny for additional protection.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "b9d0dff5-bdd4-4cd8-88ed-5811610b2b2c",
@@ -2400,12 +3099,21 @@
       "text": "Add diagnostic settings to save logs, using the Resource Specific destination table, for all Azure Firewall deployments.",
       "question": "Add diagnostic settings to save logs, using the Resource Specific destination table, for all Azure Firewall deployments.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "e960fc6b-4ab2-4db6-9609-3745135f9ffa",
@@ -2442,12 +3150,20 @@
       "text": "Arrange rules within the firewall policy into Rule Collection Groups and Rule Collections and based on their frequency of use.",
       "question": "Arrange rules within the firewall policy into Rule Collection Groups and Rule Collections and based on their frequency of use.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "0da83bb1-2f39-49af-b5c9-835fc455e3d1",
@@ -2455,13 +3171,21 @@
       "section": "Network Topology and Connectivity",
       "text": "Use IP Groups or IP prefixes to reduce number of IP table rules.",
       "question": "Use IP Groups or IP prefixes to reduce number of IP table rules.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "c44c6f0e-1642-4a61-a17b-0922f835c93a",
@@ -2469,13 +3193,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Do not use wildcards as a source IP for DNATS, such as * or any, you should specify source IPs for incoming DNATs.",
       "question": "Do not use wildcards as a source IP for DNATS, such as * or any, you should specify source IPs for incoming DNATs.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "7371dc21-251a-47a3-af14-6e01b9da4757",
@@ -2483,13 +3216,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, itâ€™s a sign that SNAT exhaustion might be imminent.",
       "question": "Prevent SNAT Port exhaustion by monitoring SNAT port usage, evaluating NAT Gateway settings, and ensuring seamless failover. If the port count approaches the limit, itâ€™s a sign that SNAT exhaustion might be imminent.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No network segmentation between workloads",
+          "properties": {
+            "flat_vnets": 3,
+            "missing_nsgs": 8
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "346840b8-1064-496e-8396-4b1340172d52",
@@ -2498,12 +3240,21 @@
       "text": "If you are using Azure Firewall Premium, enable TLS Inspection.",
       "question": "If you are using Azure Firewall Premium, enable TLS Inspection.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "39990a13-915c-45f9-a2d3-562d7d6c4b7c",
@@ -2525,13 +3276,22 @@
       "section": "Network Topology and Connectivity",
       "text": "As part of your TLS inspection, plan for receiving traffic from Azure App Gateways for inspection.",
       "question": "As part of your TLS inspection, plan for receiving traffic from Azure App Gateways for inspection.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "94f3eede-9aa3-4088-92a3-bb9a56509fad",
@@ -2540,12 +3300,21 @@
       "text": "Enable Azure Firewall DNS proxy configuration.",
       "question": "Enable Azure Firewall DNS proxy configuration.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "64e7000e-3c06-485e-b455-ced7f454cba3",
@@ -2581,13 +3350,21 @@
       "section": "Network Topology and Connectivity",
       "text": "Configure DDoS Protection on the Azure Firewall VNet, Associate a DDoS protection plan with the virtual network hosting Azure Firewall to provide enhanced mitigation against DDoS attacks. Azure Firewall Manager integrates the creation of firewall infrastructure and DDoS protection plans. ",
       "question": "Configure DDoS Protection on the Azure Firewall VNet, Associate a DDoS protection plan with the virtual network hosting Azure Firewall to provide enhanced mitigation against DDoS attacks. Azure Firewall Manager integrates the creation of firewall infrastructure and DDoS protection plans. ",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "d301d6e8-72e5-42e3-911c-c58b5a4b1511",
@@ -2596,12 +3373,21 @@
       "text": "Do not disrupt control-plane communication for Azure PaaS services injected into a virtual networks, such as with a 0.0.0.0/0 route or an NSG rule that blocks control plane traffic.",
       "question": "Do not disrupt control-plane communication for Azure PaaS services injected into a virtual networks, such as with a 0.0.0.0/0 route or an NSG rule that blocks control plane traffic.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "e43a58a9-c229-49c4-b7b5-7d0c655562f2",
@@ -2623,13 +3409,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Access Azure PaaS services from on-premises via private endpoints and ExpressRoute private peering. This method avoids transiting over the public internet.",
       "question": "Access Azure PaaS services from on-premises via private endpoints and ExpressRoute private peering. This method avoids transiting over the public internet.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Hub-spoke topology not implemented",
+          "properties": {
+            "peered_vnets": 0,
+            "orphan_vnets": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "4704489a-8042-4d88-b79d-17b73b22a5a6",
@@ -2637,13 +3432,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Don't enable virtual network service endpoints by default on all subnets.",
       "question": "Don't enable virtual network service endpoints by default on all subnets.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "7e7a8ed4-b30e-438c-9f29-812b2363cefe",
@@ -2652,12 +3456,20 @@
       "text": "Filter egress traffic to Azure PaaS services using FQDNs instead of IP addresses in Azure Firewall or an NVA to prevent data exfiltration. If using Private Link you can block all FQDNs, otherwise allow only the required PaaS services.",
       "question": "Filter egress traffic to Azure PaaS services using FQDNs instead of IP addresses in Azure Firewall or an NVA to prevent data exfiltration. If using Private Link you can block all FQDNs, otherwise allow only the required PaaS services.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "f2aad7e3-bb03-4adc-8606-4123d342a917",
@@ -2666,12 +3478,21 @@
       "text": "Use at least a /27 prefix for your Gateway subnets.",
       "question": "Use at least a /27 prefix for your Gateway subnets.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "11deb39d-8299-4e47-bbe0-0fb5a36318a8",
@@ -2693,13 +3514,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Delegate subnet creation to the landing zone owner.",
       "question": "Delegate subnet creation to the landing zone owner.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "872e52e3-611c-4c58-a5a4-b1511e43a58a",
@@ -2707,13 +3537,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use NSGs to help protect traffic across subnets, as well as east/west traffic across the platform (traffic between landing zones).",
       "question": "Use NSGs to help protect traffic across subnets, as well as east/west traffic across the platform (traffic between landing zones).",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No network segmentation between workloads",
+          "properties": {
+            "flat_vnets": 3,
+            "missing_nsgs": 8
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "a4d87397-48b6-462d-9d15-f512a65498f6",
@@ -2736,12 +3575,20 @@
       "text": "Enable VNet Flow Logs and feed them into Traffic Analytics to gain insights into internal and external traffic flows.",
       "question": "Enable VNet Flow Logs and feed them into Traffic Analytics to gain insights into internal and external traffic flows.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "0390417d-53dc-44d9-b3f4-c8832f359b41",
@@ -2778,12 +3625,20 @@
       "text": "Use a Virtual WAN hub per Azure region to connect multiple landing zones together across Azure regions via a common global Azure Virtual WAN.",
       "question": "Use a Virtual WAN hub per Azure region to connect multiple landing zones together across Azure regions via a common global Azure Virtual WAN.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No DDoS Protection Plan enabled on any VNet",
+          "properties": {
+            "vnets_without_ddos": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "7d5d1e4e-6146-458d-9558-fd77249b8211",
@@ -2806,12 +3661,21 @@
       "text": "Ensure that your virtual WAN network architecture aligns to an identified architecture scenario.",
       "question": "Ensure that your virtual WAN network architecture aligns to an identified architecture scenario.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "261623a7-65a9-417e-8f34-8ef254c27d42",
@@ -2820,12 +3684,21 @@
       "text": "Use Azure Monitor Insights for Virtual WAN to monitor the end-to-end topology of the Virtual WAN, status, and key metrics.",
       "question": "Use Azure Monitor Insights for Virtual WAN to monitor the end-to-end topology of the Virtual WAN, status, and key metrics.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Default route table missing forced tunneling",
+          "properties": {
+            "route_tables": 1,
+            "forced_tunnel": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "727c77e1-b9aa-4a37-a024-129d042422c1",
@@ -2833,13 +3706,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Do not disable branch-to-branch traffic in Virtual WAN, unless these flows should be explicitly blocked.",
       "question": "Do not disable branch-to-branch traffic in Virtual WAN, unless these flows should be explicitly blocked.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Private Endpoints configured for PaaS services",
+          "properties": {
+            "public_paas": 12,
+            "private_endpoints": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "d49ac006-6670-4bc9-9948-d3e0a3a94f4d",
@@ -2847,13 +3729,22 @@
       "section": "Network Topology and Connectivity",
       "text": "Use AS-Path as hub routing preference, since it is more flexible than ExpressRoute or VPN.",
       "question": "Use AS-Path as hub routing preference, since it is more flexible than ExpressRoute or VPN.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Public IP addresses exposed without NSG protection",
+          "properties": {
+            "exposed_ips": 14,
+            "unprotected": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "2586b854-237e-47f1-84a1-d45d4cd2310d",
@@ -2876,12 +3767,21 @@
       "text": "Assign at least a /23 prefix to virtual hubs to ensure enough IP space is available.",
       "question": "Assign at least a /23 prefix to virtual hubs to ensure enough IP space is available.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "DNS resolution not centralized",
+          "properties": {
+            "custom_dns": false,
+            "private_dns_zones": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "223ace8c-b123-408c-a501-7f154e3ab369",
@@ -2904,12 +3804,21 @@
       "text": "Use Azure Policy to control which services users can provision at the subscription/management group level.",
       "question": "Use Azure Policy to control which services users can provision at the subscription/management group level.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No cost management budgets or alerts",
+          "properties": {
+            "budgets": 0,
+            "cost_alerts": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "be7d7e48-4327-46d8-adc0-55bcf619e8a1",
@@ -2917,13 +3826,22 @@
       "section": "Governance",
       "text": "Use built-in policies where possible to minimize operational overhead.",
       "question": "Use built-in policies where possible to minimize operational overhead.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No resource locks on production resources",
+          "properties": {
+            "locks": 0,
+            "production_resources": 34
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "3f988795-25d6-4268-a6d7-0ba6c97be995",
@@ -2931,13 +3849,22 @@
       "section": "Governance",
       "text": "Assign the built-in Resource Policy Contributor role at a particular scope to enable application-level governance.",
       "question": "Assign the built-in Resource Policy Contributor role at a particular scope to enable application-level governance.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No cost management budgets or alerts",
+          "properties": {
+            "budgets": 0,
+            "cost_alerts": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "19048384-5c98-46cb-8913-156a12476e49",
@@ -2945,13 +3872,23 @@
       "section": "Governance",
       "text": "Limit the number of Azure Policy assignments made at the root management group scope to avoid managing through exclusions at inherited scopes.",
       "question": "Limit the number of Azure Policy assignments made at the root management group scope to avoid managing through exclusions at inherited scopes.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Tagging compliance below 15%",
+          "properties": {
+            "tagged": 8,
+            "total": 56,
+            "compliance_pct": 14.3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "5a917e1f-348e-4f25-9c27-d42e8bbac757",
@@ -2959,13 +3896,23 @@
       "section": "Governance",
       "text": "If any data sovereignty requirements exist, Azure Policies should be deployed to enforce them.",
       "question": "If any data sovereignty requirements exist, Azure Policies should be deployed to enforce them.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Tagging compliance below 15%",
+          "properties": {
+            "tagged": 8,
+            "total": 56,
+            "compliance_pct": 14.3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "78b22132-b41c-460b-a4d3-df8f73a67dc2",
@@ -2987,13 +3934,22 @@
       "section": "Governance",
       "text": "For Sovereign Landing Zone, document Sovereign Control objectives to policy mapping.",
       "question": "For Sovereign Landing Zone, document Sovereign Control objectives to policy mapping.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No resource locks on production resources",
+          "properties": {
+            "locks": 0,
+            "production_resources": 34
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "9b461617-db7b-4399-8ac6-d4eb7153893a",
@@ -3001,13 +3957,22 @@
       "section": "Governance",
       "text": "For Sovereign Landing Zone, ensure process is in place for management of 'Sovereign Control objectives to policy mapping'.",
       "question": "For Sovereign Landing Zone, ensure process is in place for management of 'Sovereign Control objectives to policy mapping'.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No cost management budgets or alerts",
+          "properties": {
+            "budgets": 0,
+            "cost_alerts": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "29fd366b-a180-452b-9bd7-954b7700c667",
@@ -3015,13 +3980,23 @@
       "section": "Governance",
       "text": "Configure 'Actual' and 'Forecasted' Budget Alerts.",
       "question": "Configure 'Actual' and 'Forecasted' Budget Alerts.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Tagging compliance below 15%",
+          "properties": {
+            "tagged": 8,
+            "total": 56,
+            "compliance_pct": 14.3
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "7418ada9-4199-4c28-8286-d15e9433e8f3",
@@ -3029,13 +4004,21 @@
       "section": "Management",
       "text": "Decide whether to use a single Azure Monitor Logs workspace for all regions or to create multiple workspaces to cover various geographical regions. Each approach has advantages and disadvantages, including potential cross-region networking charges",
       "question": "Decide whether to use a single Azure Monitor Logs workspace for all regions or to create multiple workspaces to cover various geographical regions. Each approach has advantages and disadvantages, including potential cross-region networking charges",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Log Analytics workspace centralization",
+          "properties": {
+            "workspaces": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "5e6c4cfd-3e50-4454-9c24-47ec66138a72",
@@ -3086,12 +4069,21 @@
       "text": "Use Azure Update Manager as a patching mechanism for Windows and Linux VMs outside of Azure using Azure Arc.",
       "question": "Use Azure Update Manager as a patching mechanism for Windows and Linux VMs outside of Azure using Azure Arc.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "VM backup coverage below 20%",
+          "properties": {
+            "backed_up": 2,
+            "total_vms": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "90483845-c986-4cb2-a131-56a12476e49f",
@@ -3099,13 +4091,22 @@
       "section": "Management",
       "text": "Use Network Watcher to proactively monitor traffic flows.",
       "question": "Use Network Watcher to proactively monitor traffic flows.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No action groups or alert rules configured",
+          "properties": {
+            "alerts": 0,
+            "action_groups": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "541acdce-9793-477b-adb3-751ab2ab13ad",
@@ -3114,12 +4115,21 @@
       "text": "Use resource locks to prevent accidental deletion of critical shared services.",
       "question": "Use resource locks to prevent accidental deletion of critical shared services.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No action groups or alert rules configured",
+          "properties": {
+            "alerts": 0,
+            "action_groups": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "a6e55d7d-8a2a-4db1-87d6-326af625ca44",
@@ -3127,13 +4137,22 @@
       "section": "Management",
       "text": "Use deny policies to supplement Azure role assignments. The combination of deny policies and Azure role assignments ensures the appropriate guardrails are in place to enforce who can deploy and configure resources and what resources they can deploy and configure.",
       "question": "Use deny policies to supplement Azure role assignments. The combination of deny policies and Azure role assignments ensures the appropriate guardrails are in place to enforce who can deploy and configure resources and what resources they can deploy and configure.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "VM backup coverage below 20%",
+          "properties": {
+            "backed_up": 2,
+            "total_vms": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "e5695f22-23ac-4e8c-a123-08ca5017f154",
@@ -3141,13 +4160,21 @@
       "section": "Management",
       "text": "Include service and resource health events as part of the overall platform monitoring solution. Tracking service and resource health from the platform perspective is an important component of resource management in Azure.",
       "question": "Include service and resource health events as part of the overall platform monitoring solution. Tracking service and resource health from the platform perspective is an important component of resource management in Azure.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Log Analytics workspace centralization",
+          "properties": {
+            "workspaces": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "d5f345bf-97ab-41a7-819c-6104baa7d48c",
@@ -3169,13 +4196,22 @@
       "section": "Management",
       "text": "Don't send raw log entries back to on-premises monitoring systems. Instead, adopt a principle that data born in Azure stays in Azure. If on-premises SIEM integration is required, then send critical alerts instead of logs.",
       "question": "Don't send raw log entries back to on-premises monitoring systems. Instead, adopt a principle that data born in Azure stays in Azure. If on-premises SIEM integration is required, then send critical alerts instead of logs.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No diagnostic settings configured on subscriptions",
+          "properties": {
+            "subs_with_diag": 0,
+            "total_subs": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "6944008b-e7d7-4e48-9327-6d8bdc055bcf",
@@ -3183,13 +4219,22 @@
       "section": "Management",
       "text": "Use Azure Monitor Logs for insights and reporting.",
       "question": "Use Azure Monitor Logs for insights and reporting.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No action groups or alert rules configured",
+          "properties": {
+            "alerts": 0,
+            "action_groups": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "619e8a13-f988-4795-85d6-26886d70ba6c",
@@ -3211,13 +4256,21 @@
       "section": "Management",
       "text": "Use Azure Monitor alerts for the generation of operational alerts.",
       "question": "Use Azure Monitor alerts for the generation of operational alerts.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Log Analytics workspace centralization",
+          "properties": {
+            "workspaces": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "859c3900-4514-41eb-b010-475d695abd74",
@@ -3226,12 +4279,21 @@
       "text": "Ensure that monitoring requirements have been assessed and that appropriate data collection and alerting configurations are applied.",
       "question": "Ensure that monitoring requirements have been assessed and that appropriate data collection and alerting configurations are applied.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "VM backup coverage below 20%",
+          "properties": {
+            "backed_up": 2,
+            "total_vms": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "aa45be6a-8f2d-4896-b0e3-775e6e94e610",
@@ -3253,13 +4315,21 @@
       "section": "Management",
       "text": "Ensure that storage accounts are zone or region redundant, Redundancy ensures storage accounts meet availability and durability targets amidst failures, weighing lower costs against higher availability. Locally redundant storage offers the least durability at the lowest cost.",
       "question": "Ensure that storage accounts are zone or region redundant, Redundancy ensures storage accounts meet availability and durability targets amidst failures, weighing lower costs against higher availability. Locally redundant storage offers the least durability at the lowest cost.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Log Analytics workspace centralization",
+          "properties": {
+            "workspaces": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "7ea02e1c-7166-45a3-bdf5-098891367fcb",
@@ -3268,12 +4338,21 @@
       "text": "Employ Azure Site Recovery for Azure-to-Azure VM DR scenarios. Use Azure-native backup capabilities.",
       "question": "Employ Azure Site Recovery for Azure-to-Azure VM DR scenarios. Use Azure-native backup capabilities.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No diagnostic settings configured on subscriptions",
+          "properties": {
+            "subs_with_diag": 0,
+            "total_subs": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "eba8cf22-45c6-4dc1-9b57-2cceb3b97ce5",
@@ -3282,12 +4361,21 @@
       "text": "When using Azure Backup, use the correct backup types (GRS, ZRS & LRS) for your backup, as the default setting is GRS.",
       "question": "When using Azure Backup, use the correct backup types (GRS, ZRS & LRS) for your backup, as the default setting is GRS.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No diagnostic settings configured on subscriptions",
+          "properties": {
+            "subs_with_diag": 0,
+            "total_subs": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "f541acdc-e979-4377-acdb-3751ab2ab13a",
@@ -3296,12 +4384,20 @@
       "text": "Use Azure guest policies to automatically deploy software configurations through VM extensions and enforce a compliant baseline VM configuration.",
       "question": "Use Azure guest policies to automatically deploy software configurations through VM extensions and enforce a compliant baseline VM configuration.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No Log Analytics workspace centralization",
+          "properties": {
+            "workspaces": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "da6e55d7-d8a2-4adb-817d-6326af625ca4",
@@ -3309,13 +4405,22 @@
       "section": "Management",
       "text": "Monitor VM security configuration drift via Azure Policy.",
       "question": "Monitor VM security configuration drift via Azure Policy.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No action groups or alert rules configured",
+          "properties": {
+            "alerts": 0,
+            "action_groups": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "b2ab13ad-a6e5-45d7-b8a2-adb117d6326a",
@@ -3337,13 +4442,22 @@
       "section": "Management",
       "text": "Use Azure-native backup capabilities, or an Azure-compatible, 3rd-party backup solution.",
       "question": "Use Azure-native backup capabilities, or an Azure-compatible, 3rd-party backup solution.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No action groups or alert rules configured",
+          "properties": {
+            "alerts": 0,
+            "action_groups": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "89cc5e11-aa4d-4c3b-893d-feb99215266a",
@@ -3351,13 +4465,22 @@
       "section": "Management",
       "text": "Add diagnostic settings to save WAF logs from application delivery services like Azure Front Door and Azure Application Gateway. Regularly review the logs to check for attacks and for false positive detections.",
       "question": "Add diagnostic settings to save WAF logs from application delivery services like Azure Front Door and Azure Application Gateway. Regularly review the logs to check for attacks and for false positive detections.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No action groups or alert rules configured",
+          "properties": {
+            "alerts": 0,
+            "action_groups": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "7f408960-c626-44cb-a018-347c8d790cdf",
@@ -3365,13 +4488,22 @@
       "section": "Management",
       "text": "Send WAF logs from your application delivery services like Azure Front Door and Azure Application Gateway to Microsoft Sentinel. Detect attacks and integrate WAF telemetry into your overall Azure environment.",
       "question": "Send WAF logs from your application delivery services like Azure Front Door and Azure Application Gateway to Microsoft Sentinel. Detect attacks and integrate WAF telemetry into your overall Azure environment.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "VM backup coverage below 20%",
+          "properties": {
+            "backed_up": 2,
+            "total_vms": 11
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "b86ad884-08e3-4727-94b8-75ba18f20459",
@@ -3380,12 +4512,20 @@
       "text": "Determine the incident response plan for Azure services before allowing it into production.",
       "question": "Determine the incident response plan for Azure services before allowing it into production.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "01365d38-e43f-49cc-ad86-8266abca264f",
@@ -3393,13 +4533,21 @@
       "section": "Security",
       "text": "Apply a zero-trust approach for access to the Azure platform.",
       "question": "Apply a zero-trust approach for access to the Azure platform.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "5017f154-e3ab-4369-9829-e7e316183687",
@@ -3407,13 +4555,22 @@
       "section": "Security",
       "text": "Use Azure Key Vault to store your secrets and credentials.",
       "question": "Use Azure Key Vault to store your secrets and credentials.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Storage accounts allow public blob access",
+          "properties": {
+            "public_storage": 5,
+            "total_storage": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "a0477a20-9945-4bda-9333-4f2491163418",
@@ -3421,13 +4578,22 @@
       "section": "Security",
       "text": "Use different Azure Key Vaults for different applications, environments and regions to avoid transaction scale limits and restrict access to secrets.",
       "question": "Use different Azure Key Vaults for different applications, environments and regions to avoid transaction scale limits and restrict access to secrets.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Defender for Cloud disabled on 3 of 4 plans",
+          "properties": {
+            "enabled_plans": 1,
+            "total_plans": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Gap confirmed via live signal interrogation."
     },
     {
       "control_id": "2ba52752-6944-4008-ae7d-7e4843276d8b",
@@ -3449,13 +4615,21 @@
       "section": "Security",
       "text": "Follow a least privilege model by assigning just-in-time eligible RBAC roles for operators, administrators, and other user accounts requiring privileged access to Key Vault using Privileged Identity Management (PIM).",
       "question": "Follow a least privilege model by assigning just-in-time eligible RBAC roles for operators, administrators, and other user accounts requiring privileged access to Key Vault using Privileged Identity Management (PIM).",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "6d70ba6c-97be-4995-8904-83845c986cb2",
@@ -3464,12 +4638,21 @@
       "text": "Automate the certificate management and renewal process with public certificate authorities to ease administration.",
       "question": "Automate the certificate management and renewal process with public certificate authorities to ease administration.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Defender for Cloud disabled on 3 of 4 plans",
+          "properties": {
+            "enabled_plans": 1,
+            "total_plans": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "913156a1-2476-4e49-b541-acdce979377b",
@@ -3478,12 +4661,21 @@
       "text": "Establish an automated process for key and certificate rotation.",
       "question": "Establish an automated process for key and certificate rotation.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Secure Score below 30%",
+          "properties": {
+            "secure_score": 22,
+            "benchmark": 70
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "cdb3751a-b2ab-413a-ba6e-55d7d8a2adb1",
@@ -3492,12 +4684,20 @@
       "text": "Enable private endpoints to control access to the key vault, configure service endpoints and the vault firewall if private endpoints are not applicable",
       "question": "Enable private endpoints to control access to the key vault, configure service endpoints and the vault firewall if private endpoints are not applicable",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Missing foundational control. Blocks enterprise readiness."
     },
     {
       "control_id": "17d6326a-f625-4ca4-9e56-95f2223ace8c",
@@ -3505,13 +4705,21 @@
       "section": "Security",
       "text": "Use the platform-central Azure Monitor Log Analytics workspace to audit key, certificate, and secret usage within each instance of Key Vault.",
       "question": "Use the platform-central Azure Monitor Log Analytics workspace to audit key, certificate, and secret usage within each instance of Key Vault.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "b12308ca-5017-4f15-9e3a-b3693829e7e3",
@@ -3520,12 +4728,21 @@
       "text": "Delegate Key Vault instantiation and privileged access and use Azure Policy to enforce a consistent compliant configuration.",
       "question": "Delegate Key Vault instantiation and privileged access and use Azure Policy to enforce a consistent compliant configuration.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Storage accounts allow public blob access",
+          "properties": {
+            "public_storage": 5,
+            "total_storage": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "16183687-a047-47a2-8994-5bda43334f24",
@@ -3533,13 +4750,22 @@
       "section": "Security",
       "text": "Default to Microsoft-managed keys for principal encryption functionality and use customer-managed keys when required.",
       "question": "Default to Microsoft-managed keys for principal encryption functionality and use customer-managed keys when required.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Defender for Cloud disabled on 3 of 4 plans",
+          "properties": {
+            "enabled_plans": 1,
+            "total_plans": 4
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "25d62688-6d70-4ba6-a97b-e99519048384",
@@ -3561,13 +4787,22 @@
       "section": "Security",
       "text": "For Sovereign Landing Zone, use Azure Key Vault managed HSM to store your secrets and credentials.",
       "question": "For Sovereign Landing Zone, use Azure Key Vault managed HSM to store your secrets and credentials.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Storage accounts allow public blob access",
+          "properties": {
+            "public_storage": 5,
+            "total_storage": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Significant deviation from ALZ reference architecture."
     },
     {
       "control_id": "4e5695f2-223a-4ce8-ab12-308ca5017f15",
@@ -3575,13 +4810,21 @@
       "section": "Security",
       "text": "Use Microsoft Entra ID reporting capabilities to generate access control audit reports.",
       "question": "Use Microsoft Entra ID reporting capabilities to generate access control audit reports.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "4e3ab369-3829-4e7e-9161-83687a0477a2",
@@ -3603,13 +4846,21 @@
       "section": "Security",
       "text": "Enable Endpoint Protection on IaaS Servers.",
       "question": "Enable Endpoint Protection on IaaS Servers.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "e5f8d79f-2e87-4768-924c-516775c6ea95",
@@ -3617,13 +4868,21 @@
       "section": "Security",
       "text": "Connect default resource configurations to a centralized Azure Monitor Log Analytics workspace.",
       "question": "Connect default resource configurations to a centralized Azure Monitor Log Analytics workspace.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "High",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "1761e147-f65e-4d09-bbc2-f464f23e2eba",
@@ -3632,12 +4891,20 @@
       "text": "For Sovereign Landing Zone, enable transparancy logs on the Entra ID tenant.",
       "question": "For Sovereign Landing Zone, enable transparancy logs on the Entra ID tenant.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "SQL servers without Advanced Data Security",
+          "properties": {
+            "unprotected_sql": 2
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "No compensating controls detected."
     },
     {
       "control_id": "d21a922d-5ca7-427a-82a6-35f7b21f1bfc",
@@ -3659,13 +4926,22 @@
       "section": "Security",
       "text": "Use an Azure Event Grid-based solution for log-oriented, real-time alerts.",
       "question": "Use an Azure Event Grid-based solution for log-oriented, real-time alerts.",
-      "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Storage accounts allow public blob access",
+          "properties": {
+            "public_storage": 5,
+            "total_storage": 5
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "b03ed428-4617-4067-a787-85468b9ccf3f",
@@ -3715,13 +4991,22 @@
       "section": "Security",
       "text": "Plan how new azure services will be implemented.",
       "question": "Plan how new azure services will be implemented.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Secure Score below 30%",
+          "properties": {
+            "secure_score": 22,
+            "benchmark": 70
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "ae514b93-3d45-485e-8112-9bd7ba012f7b",
@@ -3744,12 +5029,21 @@
       "text": "Ensure you have a cross functional DevOps Platform Team to build, manage and maintain your Azure Landing Zone architecture.",
       "question": "Ensure you have a cross functional DevOps Platform Team to build, manage and maintain your Azure Landing Zone architecture.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No IaC templates or pipelines for infrastructure",
+          "properties": {
+            "iac_repos": 0,
+            "pipelines": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "634146bf-7085-4419-a7b5-f96d2726f6da",
@@ -3772,12 +5066,20 @@
       "text": "Aim to define functions for application workload teams to be self-sufficient and not require DevOps Platform Team support. Achieve this through the use of custom RBAC role.",
       "question": "Aim to define functions for application workload teams to be self-sufficient and not require DevOps Platform Team support. Achieve this through the use of custom RBAC role.",
       "severity": "Low",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No environment separation (dev/test/prod)",
+          "properties": {
+            "environments": 1
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "165eb5e9-b434-448a-9e24-178632186212",
@@ -3786,12 +5088,20 @@
       "text": "Use a CI/CD pipeline to deploy IaC artifacts and ensure the quality of your deployment and Azure environments.",
       "question": "Use a CI/CD pipeline to deploy IaC artifacts and ensure the quality of your deployment and Azure environments.",
       "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No environment separation (dev/test/prod)",
+          "properties": {
+            "environments": 1
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Non-compliant. Immediate action required."
     },
     {
       "control_id": "0cadb8c7-8fa5-4fbf-8f39-d1fadb3b0460",
@@ -3814,12 +5124,21 @@
       "text": "Use Key Vault secrets to avoid hard-coding sensitive information such as credentials (virtual machines user passwords), certificates or keys.",
       "question": "Use Key Vault secrets to avoid hard-coding sensitive information such as credentials (virtual machines user passwords), certificates or keys.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Manual deployments with no change control",
+          "properties": {
+            "manual_deployments": true,
+            "ci_cd": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "a52e0c98-76b9-4a09-a1c9-6b2babf22ac4",
@@ -3842,12 +5161,21 @@
       "text": "Ensure a version control system is used for source code of applications and IaC developed. Microsoft recommends Git.",
       "question": "Ensure a version control system is used for source code of applications and IaC developed. Microsoft recommends Git.",
       "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No IaC templates or pipelines for infrastructure",
+          "properties": {
+            "iac_repos": 0,
+            "pipelines": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Systematic failure across all evaluated subscriptions."
     },
     {
       "control_id": "c7245dd4-af8a-403a-8bb7-890c1a7cfa9d",
@@ -3869,13 +5197,22 @@
       "section": "Platform Automation and DevOps",
       "text": "Adopt a pull request strategy to help keep control of code changes merged into branches.",
       "question": "Adopt a pull request strategy to help keep control of code changes merged into branches.",
-      "severity": "Medium",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No IaC templates or pipelines for infrastructure",
+          "properties": {
+            "iac_repos": 0,
+            "pipelines": 0
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Critical gap — no remediation in place."
     },
     {
       "control_id": "2676ae46-65ca-444e-8695-fdddeace4cb1",
@@ -3897,13 +5234,22 @@
       "section": "Platform Automation and DevOps",
       "text": "Leverage Declarative Infrastructure as Code Tools such as Azure Bicep, ARM Templates or Terraform to build and maintain your Azure Landing Zone architecture. Both from a Platform and Application workload perspective.",
       "question": "Leverage Declarative Infrastructure as Code Tools such as Azure Bicep, ARM Templates or Terraform to build and maintain your Azure Landing Zone architecture. Both from a Platform and Application workload perspective.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "Manual deployments with no change control",
+          "properties": {
+            "manual_deployments": true,
+            "ci_cd": false
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "Medium",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     },
     {
       "control_id": "cc87a3bc-c572-4ad2-92ed-8cabab66160f",
@@ -3911,13 +5257,21 @@
       "section": "Platform Automation and DevOps",
       "text": "Integrate security into the already combined process of development and operations in DevOps to mitigate risks in the innovation process.",
       "question": "Integrate security into the already combined process of development and operations in DevOps to mitigate risks in the innovation process.",
-      "severity": "High",
-      "status": "Manual",
-      "evidence_count": 0,
-      "evidence": [],
-      "signal_used": null,
-      "confidence": "Low",
-      "notes": "Manual review required."
+      "severity": "Critical",
+      "status": "Fail",
+      "evidence_count": 1,
+      "evidence": [
+        {
+          "type": "finding",
+          "summary": "No environment separation (dev/test/prod)",
+          "properties": {
+            "environments": 1
+          }
+        }
+      ],
+      "signal_used": "resource_graph:compliance_check",
+      "confidence": "High",
+      "notes": "Below enterprise baseline. Risk exposure elevated."
     }
   ],
   "customer_questions": [
