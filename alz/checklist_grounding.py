@@ -227,6 +227,65 @@ def validate_checklist_coverage(
     return violations
 
 
+# ── Legend-aware ID validation ────────────────────────────────────
+
+def validate_checklist_id_legend_alignment(
+    controls_json: dict[str, dict] | None = None,
+) -> list[dict[str, str]]:
+    """Check that each control's checklist_ids letter prefix is consistent
+    with the control's design_area (via the ALZ checklist legend).
+
+    Cross-area references are common and valid (e.g. governance controls
+    referencing C-prefix/Resource-Organization items).  This function
+    returns an *informational* list of such cross-references, not errors.
+
+    Returns
+    -------
+    list[dict]
+        Each entry: ``{"control_id", "design_area", "checklist_id",
+        "control_area", "checklist_area"}``.
+    """
+    from schemas.taxonomy import (
+        CHECKLIST_LETTER_TO_DESIGN_AREA,
+        SECTION_TO_DESIGN_AREA,
+        DESIGN_AREA_SECTION,
+    )
+
+    if controls_json is None:
+        controls_json = _load_controls_json()
+
+    cross_refs: list[dict[str, str]] = []
+    for cid, ctrl in controls_json.items():
+        slug = ctrl.get("design_area", "")
+        display_section = DESIGN_AREA_SECTION.get(slug, slug)
+        official_area = SECTION_TO_DESIGN_AREA.get(display_section, display_section)
+
+        for chk_id in ctrl.get("checklist_ids", []):
+            letter = chk_id[0] if chk_id else ""
+            letter_area = CHECKLIST_LETTER_TO_DESIGN_AREA.get(letter, "")
+            if letter_area and letter_area != official_area:
+                cross_refs.append({
+                    "control_id": cid,
+                    "design_area": slug,
+                    "checklist_id": chk_id,
+                    "control_area": official_area,
+                    "checklist_area": letter_area,
+                })
+    return cross_refs
+
+
+def checklist_id_for_area(design_area: str) -> str:
+    """Return the checklist letter prefix for an official ALZ design area.
+
+    >>> checklist_id_for_area("Security")
+    'G'
+    >>> checklist_id_for_area("Network Topology and Connectivity")
+    'D'
+    """
+    from schemas.taxonomy import DESIGN_AREA_TO_CHECKLIST_LETTER
+    return DESIGN_AREA_TO_CHECKLIST_LETTER.get(design_area, "?")
+
+
 # ── Control-pack-level validation ─────────────────────────────────
 
 def validate_controls_checklist_mapping(

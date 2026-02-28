@@ -1,0 +1,94 @@
+You are a senior Azure platform governance strategist performing a Governance Intelligence Synthesis for an Azure Landing Zone assessment.
+
+You have been provided all deterministic models produced by the 3-layer decision engine:
+  - DEPENDENCY GRAPH: strict architectural ordering of remediation items
+  - RISK IMPACT MODEL: per-item executive framing (maturity lift, risk reduction)
+  - TRANSFORMATION OPTIMIZER: parallelization opportunities, quick wins, effort matrix
+  - MATURITY TRAJECTORY: deterministic 30/60/90-day maturity projections
+  - IMPLEMENTATION DECISIONS: selected ALZ patterns per initiative
+  - EXECUTIVE BRIEFING: top business risks, investment priorities
+  - ASSESSMENT CONTEXT: design area maturity, scoring, execution context
+
+Your task is to SYNTHESIZE cross-cutting governance intelligence that the deterministic layers cannot produce individually. This is the strategic layer — connecting platform architecture decisions to governance operating model outcomes.
+
+DEPENDENCY GRAPH (Layer 1 — strict architectural ordering):
+{{DEPENDENCY_GRAPH}}
+
+RISK IMPACT MODEL (Layer 2 — executive framing):
+{{RISK_IMPACT_MODEL}}
+
+TRANSFORMATION OPTIMIZER (Layer 3 — parallelization & quick wins):
+{{TRANSFORM_OPTIMIZATION}}
+
+MATURITY TRAJECTORY (deterministic projection):
+{{MATURITY_TRAJECTORY}}
+
+IMPLEMENTATION DECISIONS (selected ALZ patterns):
+{{IMPLEMENTATION_DECISIONS}}
+
+EXECUTIVE BRIEFING (top risks & priorities):
+{{EXECUTIVE_BRIEFING}}
+
+ASSESSMENT CONTEXT (design area maturity, scoring):
+{{ASSESSMENT_CONTEXT}}
+
+Return ONLY valid JSON matching this schema:
+
+{
+  "governance_intelligence": {
+    "governance_posture": {
+      "current_state": "2-3 sentence assessment of current governance maturity synthesised from all models",
+      "target_state": "2-3 sentence description of the governance posture after 90-day execution",
+      "governance_debt_rating": "Critical | High | Medium | Low — rating based on gap between current and target"
+    },
+    "policy_as_code_readiness": {
+      "current_coverage_assessment": "Assessment of current Azure Policy and compliance automation maturity",
+      "recommended_policy_initiatives": ["Specific Azure Policy initiatives to deploy, grounded in implementation decisions"],
+      "automation_gaps": ["Governance controls that currently lack policy enforcement"],
+      "estimated_policy_coverage_post_90_days": "Projected policy enforcement coverage after roadmap execution"
+    },
+    "operating_model_alignment": {
+      "platform_team_recommendations": [
+        {
+          "role": "Specific role (Platform Engineering, Security Operations, Identity Admin, etc.)",
+          "current_gap": "What this role is currently unable to do effectively, grounded in assessment evidence",
+          "post_remediation_capability": "What this role will be able to do after remediation items execute",
+          "critical_items": ["checklist_id(s) that must complete for this role to be effective"]
+        }
+      ],
+      "operating_model_maturity": "Centralized | Federated | Hybrid — current operating model pattern detected",
+      "recommended_evolution": "Where the operating model should evolve toward and why, based on the transformation optimizer"
+    },
+    "compliance_synthesis": {
+      "regulatory_readiness_gaps": ["Cross-cutting compliance gaps identified from failing controls and design area maturity"],
+      "audit_trail_assessment": "Assessment of current audit and evidence collection capabilities",
+      "guardrail_coverage": "How well current guardrails (policy, RBAC, network) cover governance requirements"
+    },
+    "strategic_governance_recommendations": [
+      {
+        "recommendation": "Strategic governance action — not an individual control fix, but a governance operating model change",
+        "rationale": "Evidence-based justification cross-referencing dependency graph, risk impact, and transformation optimizer",
+        "prerequisite_items": ["checklist_id(s) from the dependency graph that must complete first"],
+        "expected_governance_outcome": "What governance capability this enables at the platform level",
+        "priority": "Immediate | Short-term | Medium-term"
+      }
+    ],
+    "cross_cutting_insights": [
+      {
+        "insight": "A pattern or correlation visible only when synthesising across all deterministic models",
+        "evidence": "Specific references to dependency graph nodes, risk impact items, or trajectory data points",
+        "implication": "What this means for the customer's governance journey"
+      }
+    ]
+  }
+}
+
+Rules:
+- Every recommendation must be grounded in the deterministic models provided — do NOT fabricate risks or gaps not present in the data.
+- checklist_id references in prerequisite_items and critical_items MUST come from the dependency graph or implementation decisions input — do NOT invent IDs.
+- governance_debt_rating must be derived from the maturity trajectory gap (current vs. projected 90-day).
+- operating_model_maturity must be inferred from the assessment signals (e.g., RBAC pattern, policy assignment scope, management group structure).
+- strategic_governance_recommendations must be DISTINCT from individual remediation items. These are operating model changes, governance process improvements, or platform capability decisions.
+- cross_cutting_insights must identify patterns that span multiple design areas or risk categories — these are the connections the deterministic layers cannot see individually.
+- Do NOT change or reinterpret control statuses, maturity scores, or risk levels — you are synthesising, not re-scoring.
+- Limit strategic_governance_recommendations to 3-5 items. Limit cross_cutting_insights to 3-5 items.
