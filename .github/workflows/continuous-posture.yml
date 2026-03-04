@@ -1,0 +1,68 @@
+name: Continuous ALZ Posture
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  assess:
+    runs-on: ubuntu-latest
+    env:
+      HAS_AZURE_CREDS: ${{ secrets.AZURE_CLIENT_ID != '' && secrets.AZURE_TENANT_ID != '' && secrets.AZURE_SUBSCRIPTION_ID != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Azure login (optional, read-only)
+        if: env.HAS_AZURE_CREDS == 'true'
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Run deterministic ALZ assessment
+        run: |
+          set -euo pipefail
+          if [ "${HAS_AZURE_CREDS}" = "true" ]; then
+            python scan.py --no-ai
+          else
+            echo "Azure credentials not configured. Attempting demo assessment command."
+            if ! python scan.py --demo --no-ai; then
+              echo "Demo command unavailable in this runner; using deterministic demo fixture as current artifact."
+              mkdir -p out
+              cp demo/demo_run.json assessment.json
+              cp demo/demo_run.json out/run-demo.json
+            fi
+          fi
+
+      - name: Build deterministic delta summary
+        run: |
+          python scripts/delta_summary.py \
+            --previous demo/demo_run.json \
+            --current assessment.json \
+            --output out/delta-summary.md
+
+      - name: Upload assessment artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: continuous-posture-${{ github.run_number }}
+          if-no-files-found: error
+          path: |
+            assessment.json
+            out/**

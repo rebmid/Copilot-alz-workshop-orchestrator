@@ -128,3 +128,26 @@ class PromptPack:
             .replace("{{DEPENDENCY_GRAPH}}", json.dumps(dependency_graph, indent=2))
             .replace("{{MATURITY_TRAJECTORY}}", json.dumps(maturity_trajectory, indent=2))
         )
+
+    def governance_intelligence(
+        self,
+        dependency_graph: dict,
+        risk_impact: dict,
+        transform_optimization: dict,
+        maturity_trajectory: dict,
+        implementation_decisions: list[dict],
+        executive: dict,
+        assessment_context: dict,
+    ) -> str:
+        import json
+        tpl = _load("governance_intelligence.txt")
+        return (
+            tpl
+            .replace("{{DEPENDENCY_GRAPH}}", json.dumps(dependency_graph, indent=2))
+            .replace("{{RISK_IMPACT_MODEL}}", json.dumps(risk_impact, indent=2))
+            .replace("{{TRANSFORM_OPTIMIZATION}}", json.dumps(transform_optimization, indent=2))
+            .replace("{{MATURITY_TRAJECTORY}}", json.dumps(maturity_trajectory, indent=2))
+            .replace("{{IMPLEMENTATION_DECISIONS}}", json.dumps(implementation_decisions, indent=2))
+            .replace("{{EXECUTIVE_BRIEFING}}", json.dumps(executive, indent=2))
+            .replace("{{ASSESSMENT_CONTEXT}}", json.dumps(assessment_context, indent=2))
+        )

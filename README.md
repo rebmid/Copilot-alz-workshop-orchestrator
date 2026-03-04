@@ -61,33 +61,54 @@ Designed for CSA-led enterprise engagements, this system replaces slideware and 
 > Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
 ---
-## 📸 Demo Walkthrough
+## Demo Walkthrough – Copilot-Orchestrated ALZ Workshop
 
-### 1️⃣ Platform Snapshot
+The live workshop session below demonstrates Copilot SDK orchestration layered on top of a deterministic Azure Landing Zone assessment engine.
 
-Deterministic maturity scoring across ALZ design areas with automation coverage and enterprise readiness scoring.
+All reporting artifacts shown afterward are generated from deterministic governance logic.  
+Copilot does **not** modify scoring or Azure state.
+
+---
+
+## Live Workshop Mode – Copilot SDK Orchestration
+
+Natural-language workshop interaction driving deterministic tool execution.
+
+![Copilot Workshop Session](docs/demo/000_copilot_workshop-session.png)
+
+---
+
+## Deterministic Assessment Outputs
+
+The following artifacts are generated from the authoritative governance engine after a run is completed.
+
+---
+
+### Platform Snapshot (Deterministic Output)
+
+Maturity scoring across ALZ design areas with automation coverage and enterprise readiness indicators.
 
 ![Platform Snapshot](docs/demo/report-hero.png)
 
 ---
 
-### 2️⃣ Enterprise Readiness Blockers
+### Enterprise Readiness Blockers
 
-Foundation gaps that prevent enterprise-scale adoption — derived from failed controls and dependency graph impact.
+Foundation gaps preventing enterprise-scale adoption — derived from failed controls and dependency graph impact.
 
 ![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
 
 ---
 
-### 3️⃣ Top Business Risks
+### Business Risk Prioritization
 
-Deterministically ranked business risks with root cause and score drivers.
+Deterministically ranked risks with root cause mapping and score drivers.
 
 ![Top Business Risks](docs/demo/02_top-business-risks.png)
 
 ---
 
-### 4️⃣ 30-60-90 Transformation Roadmap
+### 30-60-90 Transformation Roadmap
 
 Dependency-ordered remediation initiatives with maturity trajectory projections.
 
@@ -95,49 +116,49 @@ Dependency-ordered remediation initiatives with maturity trajectory projections.
 
 ---
 
-### 5️⃣ Design Area Breakdown
+### Design Area Breakdown
 
-ALZ design area maturity breakdown with automation %, critical failures, and control status distribution.
+ALZ design area maturity distribution with automation %, critical failures, and control state mapping.
 
 ![Design Area Breakdown](docs/demo/04_design_area_breakdown.png)
 
 ---
 
-### 6️⃣ Workshop Decision Funnel
+### Workshop Decision Funnel
 
-CSA decision framing — blockers → risks → remediation path.
+CSA decision framing: blockers → risks → remediation path.
 
 ![Workshop Decision Funnel](docs/demo/04_workshop_decision_funnel.png)
 
 ---
 
-### 7️⃣ CSA Workbook – 30-60-90 Plan
+### CSA Workbook – 30-60-90 Plan
 
-Customer-ready Excel roadmap aligned to checklist IDs and owners.
+Customer-ready Excel roadmap aligned to checklist IDs and ownership.
 
 ![Excel 30-60-90 Roadmap](docs/demo/05_excel_30_60_90_roadmap.png)
 
 ---
 
-### 8️⃣ CSA Workbook – Executive Summary
+### CSA Workbook – Executive Summary
 
-Executive framing with top risks, maturity metrics, and engagement summary.
+Executive framing with top risks and maturity metrics.
 
 ![Excel Executive Summary](docs/demo/05_excel_executive_summary.png)
 
 ---
 
-### 9️⃣ Full Checklist Control Details
+### Full Checklist Control Details
 
-Control-level scoring mapped directly to Azure Review Checklist IDs.
+Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ![Excel Control Details](docs/demo/05_excel_landing_zone_checklist_control_details.png)
 
 ---
 
-### 🔎 Execution Context
+### Execution Context (Read-Only Azure Telemetry)
 
-Assessment scope, subscriptions evaluated, and API access confirmation.
+Assessment scope, evaluated subscriptions, and RBAC posture confirmation.
 
 ![Execution Context](docs/demo/00a_execution-context.png)
 
@@ -162,31 +183,57 @@ Assessment scope, subscriptions evaluated, and API access confirmation.
 > Deterministic assessment **feeds** the AI reasoning layer. Control verdicts and risk scores are final before AI executes.
 
 ```
-Azure Tenant / Demo
-        │
-        ▼
-Deterministic ALZ Assessment
-(Resource Graph + Policy + Defender)
-        │
-        ▼
-Control Scoring Engine
-        │
-        │─────── one-way feed ──────┐
-        │                           ▼
-        ├────────► CSA Workbook    AI Reasoning Engine
-        │                           │
-        │                           ▼
-        │                     MCP Grounding Layer
-        │            (Microsoft Learn retrieval + patterns)
-        │                           │
-        │                           ▼
-        │                         WHY Reasoning Layer
-        │
-        └───────────────────────────┘
-                    │
-                    ▼
-          Traceable Deliverables
+                                        ┌───────────────────────────┐
+                                        │   Copilot SDK Session     │
+                                        │  (--workshop-copilot)     │
+              CSA / User ◄─────────────►│                           │
+          (multi-turn conversation)     │  6 Guardrailed Tools:     │
+                                        │   run_scan                │
+                                        │   load_results            │
+                                        │   summarize_findings      │
+                                        │   generate_outputs        │
+                                        │   list_runs               │
+                                        │   compare_runs            │
+                                        │                           │
+                                        │  Session Cache · Path &   │
+                                        │  Format Guardrails        │
+                                        └─────────┬─────────────────┘
+                                                  │ invokes
+                                                  ▼
+Azure Tenant / Demo ──────────────► Deterministic ALZ Assessment
+                                    (Resource Graph + Policy + Defender)
+                                                  │
+                                                  ▼
+                                        Control Scoring Engine
+                                                  │
+                                    ┌─────────────┼──── one-way feed ───┐
+                                    │             │                     ▼
+                                    │             │           AI Reasoning Engine
+                                    │             │                     │
+                                    │             │                     ▼
+                                    │             │             MCP Grounding Layer
+                                    │             │    (Microsoft Learn retrieval)
+                                    │             │                     │
+                                    │             │                     ▼
+                                    │             │             WHY Reasoning Layer
+                                    │             │                     │
+                                    │             └─────────────────────┘
+                                    │                         │
+                                    ▼                         ▼
+                              Traceable Deliverables
+                    (HTML Report · CSA Workbook · Run JSON)
 ```
+
+### Copilot SDK Layer
+
+The **Copilot SDK session** (`--workshop-copilot`) adds an interactive orchestration layer on top of the deterministic engine. It does **not** replace any of the pipeline above — it exposes it through a conversational interface with strict guardrails:
+
+- **6 registered tools** — `run_scan`, `load_results`, `summarize_findings`, `generate_outputs`, `list_runs`, `compare_runs`
+- **Session cache** — active run is remembered across turns; no re-loading required
+- **Demo enforcement** — in demo mode, the fixture is always used regardless of model requests
+- **Path confinement** — all file writes constrained to `out/`
+- **Format allow-list** — only `html` and `excel` accepted
+- **One-way data flow preserved** — Copilot consumes deterministic results but cannot modify scores or verdicts
 
 ### Data Collection
 
@@ -328,19 +375,19 @@ The tool expects a **`gpt-4.1`** deployment (or any chat-completion model) on th
 az login
 ```
 
-If you have multiple tenants, target the correct one:
-
-```bash
-az login --tenant <tenant-id>
-```
+> For enterprise / multi-tenant engagements, see the **[CSA Mode](#csa-mode-enterprise-landing-zone-assessment)** workflow below — it covers tenant targeting, subscription scoping, and management-group selection.
 
 ### 6. Run the assessment
 
 ```bash
-python scan.py
+python scan.py                       # scans the default subscription
+python scan.py --demo                # demo mode — no Azure connection
+python scan.py --mg-scope <mg-id>    # scope to a management group (recommended for CSA)
 ```
 
-That's it. The tool will:
+See the **[CLI Reference](#cli-reference)** for all available modes and flags.
+
+The tool will:
 
 1. Discover your Azure execution context (tenant, subscriptions, identity)
 2. Fetch the latest ALZ checklist from GitHub (~255 controls)
@@ -390,7 +437,7 @@ python scan.py --why Security --demo     # Why-risk causal analysis
 | Flag | Description |
 |---|---|
 | `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
-| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 4 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
+| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 6 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
 | `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
 | `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
 | `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
@@ -405,9 +452,45 @@ python scan.py --why Security --demo     # Why-risk causal analysis
 
 ---
 
+### CSA Mode (Enterprise Landing Zone Assessment)
+
+> **Recommended enterprise workflow** — scope to the customer's landing zone management group for a focused, performant assessment.
+
+#### Step 1 — Authenticate to the Customer Tenant
+
+```bash
+az login --tenant <customer-tenant-id>
+```
+
+(Optional sanity check)
+
+```bash
+az account show --output table
+```
+
+Confirm:
+- Correct tenant
+- Correct subscription context
+
+#### Step 2 — Scope to the Landing Zone Management Group
+
+> Avoid `--tenant-wide` for enterprise tenants. Instead, scope to the landing zone management group for faster, targeted assessment.
+
+```bash
+python scan.py --mg-scope <landing-zone-mg-id>
+```
+
+#### Step 3 — Launch Workshop on the Completed Run
+
+```bash
+python scan.py --workshop-copilot --run-source out
+```
+
+Workshop mode reads the existing assessment results. No re-scan required — use `load_results` to pick up where the scan left off.
+
 ## Copilot Workshop Session
 
-The workshop session provides an interactive, multi-turn Copilot experience with 4 guardrailed tools for running assessments, exploring findings, and generating customer-facing reports — all from a conversational interface.
+The workshop session provides an interactive, multi-turn Copilot experience with 6 guardrailed tools for running assessments, exploring findings, and generating customer-facing reports — all from a conversational interface.
 
 > **Key principle:** Copilot orchestrates deterministic tools. It does not score controls, mutate the environment, or fabricate data. Every response is grounded in loaded assessment evidence.
 
@@ -427,7 +510,13 @@ Uses the bundled demo fixture (`demo/demo_run.json`) — no Azure credentials or
 python scan.py --workshop-copilot
 ```
 
-Runs against your authenticated Azure subscription. The live scan takes 5–10 minutes depending on environment size. If `.env` is configured with Azure OpenAI credentials, the full 11-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
+Runs against your authenticated Azure subscription. If `.env` is configured with Azure OpenAI credentials, the full 11-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
+
+> **Mode:** LIVE (authenticated against your Azure subscription)
+>
+> ⚠️ A full deterministic scan against a live tenant can take 5–10 minutes depending on tenant size and subscription count.
+>
+> **Best practice:** Run `run_scan` before the workshop or during a break. Use `list_runs` + `load_results` during live facilitation.
 
 ### Prerequisites
 
@@ -446,14 +535,16 @@ python scan.py --workshop-copilot --demo
 
 ### Workshop Tools
 
-The session registers exactly 4 tools — no more, no less. Copilot selects tools based on your natural language prompts:
+The session registers exactly 6 tools. Copilot selects tools based on your natural language prompts:
 
 | Tool | Description | Parameters | Example Prompt |
 |---|---|---|---|
-| `run_scan` | Execute a deterministic ALZ assessment scan (subprocess-isolated) | `scope` (MG ID), `tag` (label) | *"run a scan"* |
+| `run_scan` | Execute a deterministic ALZ assessment scan (subprocess-isolated) | `scope` (MG ID), `subscription` (sub ID), `tag` (label) | *"run a scan"* |
 | `load_results` | Load a completed run into memory and return structured metadata | `run_id` (default: `latest`) | *"load the latest results"* |
 | `summarize_findings` | Filter findings by design area, severity, or failure status | `design_area`, `severity`, `failed_only`, `limit` | *"show critical Security findings"* |
 | `generate_outputs` | Produce HTML report or Excel workbook from a loaded run | `formats` (`html`, `excel`) | *"generate an HTML report and Excel workbook"* |
+| `list_runs` | List available assessment runs in the run store | *(none)* | *"list all runs"* |
+| `compare_runs` | Compare two assessment runs and produce a delta summary | `run_id_a`, `run_id_b` | *"compare the baseline run with the latest"* |
 
 ### Session Behavior
 
@@ -468,6 +559,22 @@ The session registers exactly 4 tools — no more, no less. Copilot selects tool
 2. **"load results"** — loads the run into the session
 3. **"summarize findings"** — explore findings by design area or severity
 4. **"generate an HTML report"** — produce the customer-facing deliverable
+5. **"list all runs"** — browse available assessment snapshots in the run store
+6. **"compare baseline with latest"** — produce a delta summary between two runs
+
+### Example Prompts
+
+```
+Workshop> run a scan
+Workshop> load the latest results
+Workshop> show me all critical failures in Security
+Workshop> what design areas have the most failures?
+Workshop> summarize the Networking findings
+Workshop> generate an HTML report and Excel workbook
+Workshop> show failed controls in Identity with severity High
+Workshop> list all runs
+Workshop> compare the baseline run with the latest
+```
 
 ### Example Prompts
 
@@ -741,6 +848,61 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 | `az: command not found` | Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) |
 | Slow execution | Large tenants take longer. Use `--tenant-wide` only when needed. AI passes add ~60-90s. |
 | Workshop session: `GITHUB_TOKEN` errors | Set `GITHUB_TOKEN` env var with a personal access token, or run `gh auth login` |
+
+## Deployment
+
+This tool is designed to run **locally** on a CSA's workstation — it is not a hosted service.
+
+### Running in CI/CD
+
+If you want to run assessments in a pipeline (e.g., scheduled governance scans):
+
+```bash
+# Authenticate with a service principal
+az login --service-principal -u $APP_ID -p $SECRET --tenant $TENANT_ID
+
+# Run assessment with no interactive prompts
+python scan.py --no-ai --no-html
+```
+
+> **Note:** The Copilot workshop session (`--workshop-copilot`) requires an interactive terminal and a GitHub token — it is not suitable for headless/CI execution.
+
+---
+
+## Responsible AI
+
+### Transparency
+
+- **AI does not score controls.** All control verdicts (`Pass`, `Fail`, `Partial`, `Manual`) are computed deterministically from live Azure telemetry before AI executes. The AI reasoning engine is a **consumer** of scored evidence — it cannot modify or override deterministic results.
+- **AI-generated content is clearly scoped.** The 11-pass reasoning pipeline produces advisory content (roadmaps, executive briefings, risk narratives). These outputs are labeled as AI-generated in the report and are always traceable to the underlying control evidence.
+- **Microsoft Learn grounding.** Remediation recommendations are grounded in official Microsoft documentation via MCP retrieval — not synthesized from training data alone.
+
+### Limitations
+
+- **Automation coverage is partial.** Typically 20–30% of ALZ checklist controls have automated evaluators. The remaining controls are marked `Manual` and require customer conversation to resolve. The tool does not guess or infer results for manual controls.
+- **AI reasoning depends on model quality.** The advisory output (roadmaps, risk narratives, smart questions) is generated by Azure OpenAI and may contain inaccuracies, incomplete reasoning, or hallucinated references — even with grounding. CSAs should review AI output before presenting to customers.
+- **Point-in-time snapshot.** Assessment results reflect the Azure environment state at scan time. They do not represent continuous compliance and may become stale.
+- **No multi-tenant isolation.** The tool runs under a single Azure identity. It does not enforce tenant boundaries — the operator is responsible for scoping access appropriately.
+
+### Guardrails
+
+| Guardrail | Enforcement |
+|---|---|
+| **No environment mutation** | All Azure API calls are read-only (Resource Graph queries, ARM GET, Policy read). No create/update/delete operations exist in the codebase. |
+| **No scoring override** | Maturity scores are computed deterministically by the scoring engine. AI cannot alter control verdicts or weights. |
+| **File confinement** | All generated artifacts are written to `out/`. The `ensure_out_path()` function rejects any path outside that directory. |
+| **Format allow-list** | `generate_outputs` only accepts `html` and `excel` — arbitrary file formats are rejected. |
+| **Schema validation** | AI responses are validated against JSON schemas before acceptance. Malformed output is rejected and retried. |
+| **One-way data flow** | Deterministic results feed the AI layer. AI output never feeds back into the scoring engine. |
+| **No data fabrication** | Every Copilot workshop response must be grounded in loaded assessment data. The session has no access to external data sources beyond what the tools provide. |
+
+### Data Handling
+
+- **No customer data is transmitted externally** metadata goes to Azure OpenAI (for AI reasoning) and Microsoft Learn (for documentation grounding). Both are Microsoft services.
+- **No telemetry or usage data** is collected by this tool.
+- **Assessment results** (including Azure resource metadata) are stored locally in `out/` and `assessment.json`
+
+---
 
 ## Built with AI Assistance
 

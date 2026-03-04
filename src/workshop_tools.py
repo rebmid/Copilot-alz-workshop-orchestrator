@@ -16,8 +16,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
+import tempfile
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -44,6 +47,92 @@ def ensure_out_path(path: str | Path) -> Path:
 
 
 # ══════════════════════════════════════════════════════════════════
+# Run source directory (set by workshop session for run discovery)
+# ══════════════════════════════════════════════════════════════════
+
+_run_source_dir: Path | None = None  # None → use OUT_DIR (default)
+
+
+def set_run_source_dir(path: Path | None) -> None:
+    """Configure the directory used for run discovery in this session."""
+    global _run_source_dir
+    _run_source_dir = path
+
+
+# Pattern for sanitising run IDs into safe filename components.
+_UNSAFE_ID_CHARS = re.compile(r"[^\w\-]")
+
+
+# ══════════════════════════════════════════════════════════════════
+# Background scan tracking (live mode only)
+# ══════════════════════════════════════════════════════════════════
+
+_active_scan: dict[str, Any] | None = None  # {process, started, before_files, stderr_path}
+_active_scan_lock = threading.Lock()
+
+
+def _collect_scan_result(
+    process: subprocess.Popen,
+    before: set[Path],
+    stderr_path: str | None = None,
+) -> str:
+    """Harvest results from a completed background scan process.
+
+    stdout is inherited (printed live to the console) so the user
+    sees real-time scan progress.  Only stderr is captured to a temp
+    file for error diagnostics if the scan fails.
+    """
+    stderr_text = ""
+    try:
+        if stderr_path and os.path.exists(stderr_path):
+            stderr_text = Path(stderr_path).read_text(encoding="utf-8", errors="replace")
+    finally:
+        if stderr_path:
+            try:
+                os.unlink(stderr_path)
+            except OSError:
+                pass
+
+    if process.returncode != 0:
+        stderr_tail = stderr_text.strip().splitlines()[-5:]
+        return json.dumps({
+            "status": "failed",
+            "error": "Scan failed",
+            "exit_code": process.returncode,
+            "detail": "\n".join(stderr_tail),
+        })
+
+    # Discover new run files produced by the scan
+    after = set(OUT_DIR.glob("run-*.json"))
+    new_files = sorted(after - before)
+
+    if not new_files:
+        return json.dumps({
+            "status": "failed",
+            "error": "Scan completed but no new run file was created.",
+        })
+
+    run_path = new_files[-1]
+    run_id = run_path.stem
+
+    # Collect all output artefacts for this run
+    output_paths = [str(run_path.relative_to(_PROJECT_ROOT))]
+    for f in OUT_DIR.iterdir():
+        if f.name.startswith(run_id) and f != run_path:
+            output_paths.append(str(f.relative_to(_PROJECT_ROOT)))
+    for f in OUT_DIR.glob(f"ALZ-Platform-Readiness-Report-{run_id}*.html"):
+        rel = str(f.relative_to(_PROJECT_ROOT))
+        if rel not in output_paths:
+            output_paths.append(rel)
+
+    return json.dumps({
+        "status": "completed",
+        "run_id": run_id,
+        "output_paths": output_paths,
+    }, indent=2)
+
+
+# ══════════════════════════════════════════════════════════════════
 # Run cache (lazy load, keep in memory for the session)
 # ══════════════════════════════════════════════════════════════════
 
@@ -53,16 +142,22 @@ _run_cache: dict[str, dict] = {}  # keyed by run_id or "latest"
 def _resolve_run_path(run_id: str) -> Path:
     """Map a run_id to its JSON file.
 
-    Special value ``"latest"`` → newest ``run-*.json`` in out/.
+    Special value ``"latest"`` → newest run in the active run source dir
+    (``_run_source_dir`` when set, otherwise ``OUT_DIR``).
     Otherwise looks in out/ first, then falls back to demo/.
     """
     if run_id == "latest":
-        runs = sorted(OUT_DIR.glob("run-*.json"), reverse=True)
-        if not runs:
+        from src.run_store import latest_run
+        source = _run_source_dir if _run_source_dir is not None else OUT_DIR
+        ref = latest_run(source)
+        if ref is None:
+            source_label = str(source)
             raise RuntimeError(
-                "No run files found in out/. Run a scan first."
+                f"No run files found in {source_label}. "
+                "Run a scan first or use --run-source to point at a directory "
+                "with existing runs."
             )
-        return runs[0]
+        return ref.path
     candidate = OUT_DIR / f"{run_id}.json"
     if candidate.exists():
         return ensure_out_path(candidate)
@@ -96,6 +191,13 @@ class RunScanParams(BaseModel):
             "Management-group ID to scope the scan "
             "(passed as --mg-scope). "
             "None → default Resource Graph subscription discovery."
+        ),
+    )
+    subscription: str | None = Field(
+        default=None,
+        description=(
+            "Single subscription ID to scope the scan to. "
+            "Faster than scanning all visible subscriptions."
         ),
     )
     demo: bool = Field(
@@ -139,70 +241,85 @@ def run_scan(params: RunScanParams) -> str:
             "output_paths": [str(dest.relative_to(_PROJECT_ROOT))],
         }, indent=2)
 
-    # ── Live mode: shell out to scan.py ───────────────────────
+    # ── Live mode: non-blocking background scan ──────────────
+    global _active_scan
+
+    with _active_scan_lock:
+        # ── If a scan is already running, report status ───────
+        if _active_scan is not None:
+            proc = _active_scan["process"]
+            elapsed = (datetime.now(timezone.utc) - _active_scan["started"]).total_seconds()
+            elapsed_str = f"{int(elapsed // 60)}m {int(elapsed % 60)}s"
+
+            if proc.poll() is None:
+                # Still running
+                return json.dumps({
+                    "status": "in_progress",
+                    "message": (
+                        f"Scan is still running ({elapsed_str} elapsed). "
+                        "Call run_scan again to check, or use list_runs / "
+                        "load_results once it completes."
+                    ),
+                    "elapsed_seconds": round(elapsed),
+                }, indent=2)
+
+            # ── Scan finished — harvest results ──────────────
+            result_json = _collect_scan_result(
+                proc,
+                _active_scan["before_files"],
+                stderr_path=_active_scan.get("stderr_path"),
+            )
+            _active_scan = None
+            return result_json
+
+    # ── No active scan — start one ────────────────────────────
     cmd = [sys.executable, str(_PROJECT_ROOT / "scan.py")]
     if params.scope:
         cmd.extend(["--mg-scope", params.scope])
+    if params.subscription:
+        cmd.extend(["--subscription", params.subscription])
     if params.tag:
         cmd.extend(["--tag", params.tag])
 
-    # Ensure out/ exists before spawning
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-    # Snapshot existing run files BEFORE the scan
     before = set(OUT_DIR.glob("run-*.json"))
 
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            timeout=600,  # 10-minute ceiling
-            cwd=str(_PROJECT_ROOT),
-            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-        )
-    except subprocess.TimeoutExpired:
-        return json.dumps({"error": "Scan timed out after 600 seconds."})
+    # stdout inherits from parent → scan progress prints live in
+    # the workshop terminal so the CSA can see what's happening.
+    # stderr goes to a temp file for error harvesting if scan fails.
+    # (Using pipes would deadlock on long scans that produce >64 KB.)
+    stderr_fd = tempfile.NamedTemporaryFile(
+        mode="w", suffix="_scan_stderr.log", dir=str(OUT_DIR),
+        delete=False, encoding="utf-8",
+    )
 
-    # Decode stdout/stderr from bytes to str safely
-    stdout_text = (result.stdout or b"").decode("utf-8", errors="replace")
-    stderr_text = (result.stderr or b"").decode("utf-8", errors="replace")
+    process = subprocess.Popen(
+        cmd,
+        stdout=None,   # inherit → prints live to console
+        stderr=stderr_fd,
+        cwd=str(_PROJECT_ROOT),
+        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+    )
 
-    if result.returncode != 0:
-        # Surface a useful error without leaking full stderr
-        stderr_tail = stderr_text.strip().splitlines()[-5:]
-        return json.dumps({
-            "error": "Scan failed",
-            "exit_code": result.returncode,
-            "detail": "\n".join(stderr_tail),
-        })
+    stderr_fd.close()  # subprocess owns the fd now
 
-    # Discover new run files produced by the scan
-    after = set(OUT_DIR.glob("run-*.json"))
-    new_files = sorted(after - before)
-
-    if not new_files:
-        return json.dumps({
-            "error": "Scan completed but no new run file was created.",
-            "stdout_tail": stdout_text.strip().splitlines()[-5:],
-        })
-
-    run_path = new_files[-1]  # latest one
-    run_id = run_path.stem     # e.g. "run-20260224-1430"
-
-    # Collect all output artefacts for this run
-    output_paths = [str(run_path.relative_to(_PROJECT_ROOT))]
-    for f in OUT_DIR.iterdir():
-        if f.name.startswith(run_id) and f != run_path:
-            output_paths.append(str(f.relative_to(_PROJECT_ROOT)))
-    # Include the HTML report (named differently)
-    for f in OUT_DIR.glob(f"ALZ-Platform-Readiness-Report-{run_id}*.html"):
-        rel = str(f.relative_to(_PROJECT_ROOT))
-        if rel not in output_paths:
-            output_paths.append(rel)
+    with _active_scan_lock:
+        _active_scan = {
+            "process": process,
+            "started": datetime.now(timezone.utc),
+            "before_files": before,
+            "cmd": cmd,
+            "stderr_path": stderr_fd.name,
+        }
 
     return json.dumps({
-        "run_id": run_id,
-        "output_paths": output_paths,
+        "status": "started",
+        "message": (
+            "Scan started in the background. A live scan typically takes "
+            "5–10 minutes depending on tenant size. "
+            "Call run_scan again to check progress, or use list_runs / "
+            "load_results once it completes."
+        ),
     }, indent=2)
 
 
@@ -485,5 +602,191 @@ def generate_outputs(params: GenerateOutputsParams) -> str:
         result["errors"] = errors
 
     return json.dumps(result, indent=2, default=str)
+
+
+# ══════════════════════════════════════════════════════════════════
+# Tool 5 — list_runs
+# ══════════════════════════════════════════════════════════════════
+
+class ListRunsParams(BaseModel):
+    pass  # no parameters — always operates on the active run source
+
+
+def list_runs(params: ListRunsParams) -> str:
+    """List discovered runs in the active run source (newest first).
+
+    Also reports whether a background scan is currently in progress.
+    """
+    from src.run_store import discover_runs, sort_runs
+
+    source = _run_source_dir if _run_source_dir is not None else OUT_DIR
+    try:
+        runs = sort_runs(discover_runs(source))
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+    # ── Check for an active background scan ────────────────────
+    scan_status: dict[str, Any] | None = None
+    with _active_scan_lock:
+        if _active_scan is not None:
+            proc = _active_scan["process"]
+            elapsed = (datetime.now(timezone.utc) - _active_scan["started"]).total_seconds()
+            if proc.poll() is None:
+                scan_status = {
+                    "active": True,
+                    "elapsed_seconds": round(elapsed),
+                    "message": f"Scan in progress ({int(elapsed // 60)}m {int(elapsed % 60)}s elapsed)",
+                }
+            else:
+                scan_status = {
+                    "active": False,
+                    "message": "Background scan finished. Call run_scan to collect results.",
+                }
+
+    if not runs and scan_status is None:
+        return json.dumps({
+            "run_source": str(source),
+            "count": 0,
+            "runs": [],
+            "message": "No runs found in the selected source.",
+        })
+
+    entries = []
+    for i, ref in enumerate(runs):
+        entries.append({
+            "index": i,
+            "display_name": ref.display_name,
+            "path": str(ref.path),
+            "timestamp": ref.timestamp.isoformat() if ref.timestamp else None,
+            "role": "latest" if i == 0 else ("previous" if i == 1 else None),
+        })
+
+    result: dict[str, Any] = {
+        "run_source": str(source),
+        "count": len(entries),
+        "runs": entries,
+    }
+    if scan_status is not None:
+        result["scan_in_progress"] = scan_status
+
+    return json.dumps(result, indent=2, default=str)
+
+
+# ══════════════════════════════════════════════════════════════════
+# Tool 6 — compare_runs
+# ══════════════════════════════════════════════════════════════════
+
+class CompareRunsParams(BaseModel):
+    pass  # always compares latest vs previous in the active run source
+
+
+def compare_runs(params: CompareRunsParams) -> str:
+    """Compare the latest run against the previous run (delta analysis).
+
+    Guardrails:
+      - Reads from the active run source (demo or out/)
+      - Delta output written only to out/deltas/ (never into demo)
+    """
+    from src.run_store import discover_runs, sort_runs, load_run as _load_run_ref
+
+    source = _run_source_dir if _run_source_dir is not None else OUT_DIR
+    try:
+        runs = sort_runs(discover_runs(source))
+    except Exception as exc:
+        return json.dumps({"error": str(exc)})
+
+    if len(runs) < 2:
+        return json.dumps({
+            "error": (
+                f"Not enough runs to compare. "
+                f"Found {len(runs)} run(s) in {source}. "
+                "At least 2 runs are needed for a delta comparison."
+            ),
+            "run_source": str(source),
+            "count": len(runs),
+        })
+
+    latest_ref = runs[0]
+    previous_ref = runs[1]
+
+    try:
+        latest_data = _load_run_ref(latest_ref)
+        previous_data = _load_run_ref(previous_ref)
+    except Exception as exc:
+        return json.dumps({"error": f"Failed to load run data: {exc}"})
+
+    # ── Compute deterministic delta ───────────────────────────────
+    def _score(run: dict) -> float | None:
+        return run.get("scoring", {}).get("overall_maturity_percent")
+
+    def _status_map(run: dict) -> dict[str, str]:
+        return {
+            c.get("control_id", ""): c.get("status", "")
+            for c in run.get("results", [])
+            if c.get("control_id")
+        }
+
+    latest_score = _score(latest_data)
+    previous_score = _score(previous_data)
+    score_delta = (
+        round(latest_score - previous_score, 2)
+        if latest_score is not None and previous_score is not None
+        else None
+    )
+
+    latest_statuses = _status_map(latest_data)
+    previous_statuses = _status_map(previous_data)
+
+    all_ids = set(latest_statuses) | set(previous_statuses)
+    changed: list[dict] = []
+    for cid in sorted(all_ids):
+        prev_st = previous_statuses.get(cid, "absent")
+        curr_st = latest_statuses.get(cid, "absent")
+        if prev_st != curr_st:
+            changed.append({
+                "control_id": cid,
+                "previous_status": prev_st,
+                "latest_status": curr_st,
+            })
+
+    regressions = [c for c in changed if c["latest_status"] == "Fail"]
+    improvements = [c for c in changed if c["previous_status"] == "Fail"
+                    and c["latest_status"] != "Fail"]
+
+    latest_id = (
+        latest_data.get("meta", {}).get("run_id")
+        or latest_ref.display_name
+    )
+    previous_id = (
+        previous_data.get("meta", {}).get("run_id")
+        or previous_ref.display_name
+    )
+
+    delta_payload: dict[str, Any] = {
+        "latest_run": latest_id,
+        "previous_run": previous_id,
+        "score_delta": score_delta,
+        "latest_score": latest_score,
+        "previous_score": previous_score,
+        "total_changes": len(changed),
+        "regressions": len(regressions),
+        "improvements": len(improvements),
+        "changed_controls": changed,
+    }
+
+    # ── Write delta to out/deltas/ (guardrail: never outside out/) ─
+    deltas_dir = OUT_DIR / "deltas"
+    deltas_dir.mkdir(parents=True, exist_ok=True)
+    safe_latest = _UNSAFE_ID_CHARS.sub("_", str(latest_id))
+    safe_previous = _UNSAFE_ID_CHARS.sub("_", str(previous_id))
+    delta_filename = f"{safe_latest}__{safe_previous}.json"
+    delta_path = ensure_out_path(deltas_dir / delta_filename)
+    delta_path.write_text(
+        json.dumps(delta_payload, indent=2, default=str),
+        encoding="utf-8",
+    )
+
+    delta_payload["delta_path"] = delta_path.relative_to(_PROJECT_ROOT).as_posix()
+    return json.dumps(delta_payload, indent=2, default=str)
 
 

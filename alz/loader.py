@@ -206,3 +206,51 @@ def get_design_area_learn_urls() -> dict[str, str]:
         "Governance":
             "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
     }
+
+def ground_new_control(
+    checklist_id: str,
+    *,
+    text: str = "",
+) -> dict[str, Any]:
+    """Resolve a checklist ID to its design area, MS Learn URL, and
+    matching checklist item — everything needed to ground a new control.
+
+    Parameters
+    ----------
+    checklist_id : str
+        An ALZ checklist ID such as ``"D07.01"``.
+    text : str, optional
+        Free-text description (used only if the checklist item isn't found).
+
+    Returns
+    -------
+    dict
+        ``{"checklist_id", "letter", "design_area", "learn_url",
+        "checklist_item"}`` where ``checklist_item`` is the full
+        checklist entry (or ``None`` if the ID isn't in the cache).
+
+    Raises
+    ------
+    ValueError
+        If the letter prefix is not A–H.
+    """
+    from schemas.taxonomy import CHECKLIST_LETTER_TO_DESIGN_AREA
+
+    if not checklist_id or checklist_id[0] not in CHECKLIST_LETTER_TO_DESIGN_AREA:
+        raise ValueError(
+            f"Unknown checklist letter prefix '{checklist_id[:1]}' — "
+            f"valid prefixes: {sorted(CHECKLIST_LETTER_TO_DESIGN_AREA)}"
+        )
+
+    letter = checklist_id[0]
+    area = CHECKLIST_LETTER_TO_DESIGN_AREA[letter]
+    urls = get_design_area_learn_urls()
+    item = get_item_by_id(checklist_id)
+
+    return {
+        "checklist_id": checklist_id,
+        "letter": letter,
+        "design_area": area,
+        "learn_url": urls.get(area, ""),
+        "checklist_item": item,
+    }

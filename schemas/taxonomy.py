@@ -348,9 +348,9 @@ SECTION_TO_DESIGN_AREA: dict[str, str] = {
     "Governance":      "Governance",
     "Identity":        "Identity and Access Management",
     "Management":      "Management",
-    "Data Protection": "Data Protection",
-    "Resilience":      "Resilience",
-    "Cost":            "Cost Governance",
+    "Data Protection": "Security",           # protection controls → Security
+    "Resilience":      "Management",         # protect & recover → Management
+    "Cost":            "Governance",          # cost policy enforcement → Governance
 }
 
 
@@ -416,6 +416,34 @@ OFFICIAL_ALZ_DESIGN_AREAS: tuple[str, ...] = (
     "Platform Automation and DevOps",
     "Governance",
 )
+
+# ── ALZ Checklist ID Letter Legend ────────────────────────────────
+# Maps the single-letter prefix of ALZ review-checklist IDs (e.g.
+# "D07.01") to the official design area name.  Derived from the
+# Azure/review-checklists ``alz_checklist.en.json`` authority file.
+#
+#   Architecture-diagram labels (A–I) differ from checklist prefixes.
+#   This table uses the **checklist** scheme, which is the authority
+#   for ``checklist_ids`` fields in control_packs.
+CHECKLIST_LETTER_TO_DESIGN_AREA: dict[str, str] = {
+    "A": "Azure Billing and Microsoft Entra ID Tenants",
+    "B": "Identity and Access Management",
+    "C": "Resource Organization",
+    "D": "Network Topology and Connectivity",
+    "E": "Governance",
+    "F": "Management",
+    "G": "Security",
+    "H": "Platform Automation and DevOps",
+}
+
+# Reverse: official design area → checklist letter prefix
+DESIGN_AREA_TO_CHECKLIST_LETTER: dict[str, str] = {
+    v: k for k, v in CHECKLIST_LETTER_TO_DESIGN_AREA.items()
+}
+
+# compile-time check: legend covers all official design areas
+assert set(CHECKLIST_LETTER_TO_DESIGN_AREA.values()) == set(OFFICIAL_ALZ_DESIGN_AREAS), \
+    f"Legend/design-area mismatch: {set(OFFICIAL_ALZ_DESIGN_AREAS) - set(CHECKLIST_LETTER_TO_DESIGN_AREA.values())}"
 
 # ── KG discipline → internal design-area slug ─────────────────────
 # Maps the Knowledge Graph 'affects[].discipline' short labels to

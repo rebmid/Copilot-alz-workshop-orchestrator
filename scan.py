@@ -115,12 +115,22 @@ def parse_args():
                    help="Run interactive discovery workshop to resolve Manual controls")
     p.add_argument("--mg-scope", metavar="MG_ID",
                    help="Scope assessment to subscriptions under a specific management group")
+    p.add_argument("--subscription", metavar="SUB_ID",
+                   help="Scope assessment to a single subscription ID")
     p.add_argument("--validate-signals", action="store_true",
                    help="Probe all signal providers without scoring and exit")
     p.add_argument("--tag", metavar="TAG",
                    help="Label this run snapshot (e.g. 'baseline', 'sprint-3')")
     p.add_argument("--workshop-copilot", action="store_true",
                    help="Start a Copilot SDK workshop session")
+    p.add_argument("--run-source", metavar="SOURCE", default="out",
+                   help=(
+                       "Run source for workshop mode: "
+                       "'out' (default, real runs), "
+                       "'demo' (demo fixtures), "
+                       "or an arbitrary directory path. "
+                       "--demo implicitly sets --run-source demo."
+                   ))
     return p.parse_args()
 
 
@@ -134,8 +144,10 @@ def main():
 
     # ── Workshop-Copilot mode (Copilot SDK session) ───────────────
     if args.workshop_copilot:
-        from src.workshop_copilot import run_workshop
-        run_workshop(demo=args.demo)
+        from src.workshop_copilot import run_workshop as run_copilot_workshop
+        # --demo implicitly sets --run-source demo
+        run_source = "demo" if args.demo else args.run_source
+        run_copilot_workshop(demo=args.demo, run_source=run_source)
         return
 
     print("╔══════════════════════════════════════╗")
@@ -214,6 +226,62 @@ def main():
             print(json.dumps(updated, indent=2, default=str))
         return
 
+    # ── Demo mode (report from fixture — no Azure connection) ──
+    if args.demo:
+        # Warn if user combined --demo with live-only flags
+        _live_only = []
+        if args.validate_signals:
+            _live_only.append("--validate-signals")
+        if args.preflight:
+            _live_only.append("--preflight")
+        if args.on_demand:
+            _live_only.append("--on-demand")
+        if args.mg_scope:
+            _live_only.append("--mg-scope")
+        if args.subscription:
+            _live_only.append("--subscription")
+        if args.tenant_wide:
+            _live_only.append("--tenant-wide")
+        if _live_only:
+            print(f"  ⚠ --demo ignores live-only flags: {', '.join(_live_only)}")
+            print("    Demo mode uses the bundled fixture — no Azure connection.\n")
+
+        run = load_run(demo=True)
+        os.makedirs(OUT_DIR, exist_ok=True)
+        _demo_run_id = datetime.now(timezone.utc).strftime("run-%Y%m%d-%H%M")
+        _demo_existing = [f for f in os.listdir(OUT_DIR)
+                          if f.startswith("run-") and f.endswith(".json")]
+        _demo_snap = len(_demo_existing) + 1
+
+        demo_json_path = os.path.join(OUT_DIR, f"{_demo_run_id}.json")
+        demo_report_path = os.path.join(
+            OUT_DIR,
+            f"ALZ-Platform-Readiness-Report-{_demo_run_id}-S{_demo_snap:03d}.html",
+        )
+
+        # Persist demo run JSON
+        with open(demo_json_path, "w", encoding="utf-8") as f:
+            json.dump(run, f, indent=2)
+
+        # HTML report
+        if not args.no_html:
+            generate_report(run, out_path=demo_report_path)
+            print(f"  Report:   {demo_report_path}")
+
+        # CSA Workbook
+        csa_path = os.path.join(OUT_DIR, f"{_demo_run_id}_CSA_Workbook.xlsm")
+        ta_path = os.path.join(OUT_DIR, "target_architecture.json")
+        build_csa_workbook(
+            run_path=demo_json_path,
+            target_path=ta_path,
+            output_path=csa_path,
+        )
+
+        print(f"\n✓ Demo done.  {demo_json_path}  |  {demo_report_path}  |  {csa_path}")
+        if args.pretty:
+            print(json.dumps(run, indent=2, default=str))
+        return
+
     # ── Timing + paths ────────────────────────────────────────────
     scan_start = time.perf_counter()
     telemetry = RunTelemetry()
@@ -285,7 +353,10 @@ def main():
         return
 
     # ── Subscription list ─────────────────────────────────────────
-    if args.mg_scope:
+    if args.subscription:
+        subscription_ids = [args.subscription]
+        print(f"\n  Single-subscription mode: {args.subscription}")
+    elif args.mg_scope:
         # Narrow to subscriptions under the specified management group
         import requests as _req
         _token = credential.get_token("https://management.azure.com/.default").token
