@@ -421,23 +421,34 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 
 ## CLI Reference
 
-### Demo Mode (No Azure Required)
+### Common Workflows
 
 ```bash
+python scan.py                           # Standard assessment (live Azure)
 python scan.py --demo                    # Demo mode — no Azure connection
+python scan.py --tenant-wide             # Cross-subscription enterprise scan
+python scan.py --workshop-copilot --demo # Copilot workshop (demo)
+python scan.py --workshop-copilot        # Copilot workshop (live Azure)
+python scan.py --why Security --demo     # Why-risk causal analysis
 ```
 
-Launch Copilot workshop (demo data):
+### All Flags
 
-```bash
-python scan.py --workshop-copilot --demo
-```
-
-Launch Copilot workshop (live Azure environment):
-
-```bash
-python scan.py --workshop-copilot
-```
+| Flag | Description |
+|---|---|
+| `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
+| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 6 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
+| `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
+| `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
+| `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
+| `--why DOMAIN` | Explain **why** a domain is the top risk — runs 6-step causal reasoning over an existing assessment |
+| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
+| `--preflight` | Run preflight access probes and exit — validates Azure permissions without a full assessment |
+| `--validate-signals` | Probe all signal providers without scoring and exit — useful for debugging data collection |
+| `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
+| `--no-html` | Skip HTML report generation |
+| `--pretty` | Pretty-print the final JSON to stdout after the run |
+| `--tag TAG` | Label this run snapshot (e.g. `baseline`, `sprint-3`) — appears in output filename and metadata |
 
 ---
 
@@ -563,6 +574,18 @@ Workshop> generate an HTML report and Excel workbook
 Workshop> show failed controls in Identity with severity High
 Workshop> list all runs
 Workshop> compare the baseline run with the latest
+```
+
+### Example Prompts
+
+```
+Workshop> run a scan
+Workshop> load the latest results
+Workshop> show me all critical failures in Security
+Workshop> what design areas have the most failures?
+Workshop> summarize the Networking findings
+Workshop> generate an HTML report and Excel workbook
+Workshop> show failed controls in Identity with severity High
 ```
 
 ---
