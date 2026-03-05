@@ -227,7 +227,7 @@ Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ---
 
-### Interactive Demo Report
+### Interactive HTML Demo Report
 
 Want to explore the full report yourself? Open the sample below — it's a real assessment output generated from an Azure test tenant. Click through sections, expand design areas, and review control details.
 
