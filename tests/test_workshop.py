@@ -253,7 +253,7 @@ _HAS_TOKEN = _resolve_github_token() is not None
 def test_smoke_session_tool_call():
     """Start a real Copilot SDK session, ask 'summarize identity findings',
     and verify summarize_findings is invoked by the model."""
-    from copilot import CopilotClient, PermissionHandler, Tool, ToolResult
+    from copilot import CopilotClient, Tool, ToolResult
     from copilot.types import CopilotClientOptions
     from src.workshop_copilot import TOOLS, SYSTEM_PROMPT
 
@@ -279,7 +279,7 @@ def test_smoke_session_tool_call():
     async def _session_test():
         client = CopilotClient(CopilotClientOptions(github_token=token))
         session = await client.create_session({
-            "on_permission_request": PermissionHandler.approve_all,
+            "on_permission_request": lambda req, ctx: {"kind": "approved", "rules": []},
             "model": "gpt-4o",
             "system_message": {"content": SYSTEM_PROMPT},
             "tools": spy_tools,

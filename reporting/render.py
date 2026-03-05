@@ -116,8 +116,20 @@ def _build_report_context(output: dict) -> dict:
         for item in risk_impact.get("items", [])
     }
 
-    # Use deterministic trajectory if available, else fall back to LLM
-    trajectory = deterministic_trajectory if deterministic_trajectory else roadmap_src.get("maturity_trajectory", {})
+    # Use deterministic trajectory if it has meaningful data, else fall back to LLM
+    def _traj_has_data(t: dict) -> bool:
+        """True if trajectory has at least one non-zero projection value."""
+        for k in ("post_30_day_percent", "post_60_day_percent", "post_90_day_percent",
+                   "current_percent", "current_maturity_percent",
+                   "projected_30_day_percent", "projected_60_day_percent", "projected_90_day_percent"):
+            if t.get(k, 0):
+                return True
+        return False
+
+    if deterministic_trajectory and _traj_has_data(deterministic_trajectory):
+        trajectory = deterministic_trajectory
+    else:
+        trajectory = roadmap_src.get("maturity_trajectory", {})
 
     # ── 1. FOUNDATION GATE ────────────────────────────────────────
     ready = esr.get("ready_for_enterprise_scale")
@@ -578,6 +590,16 @@ def _build_report_context(output: dict) -> dict:
         for letter, area in sorted(CHECKLIST_LETTER_TO_DESIGN_AREA.items())
     ]
 
+    # ── 6. CRITICAL ISSUES (from AI pass 10 or top-level) ───────
+    critical_issues = output.get("critical_issues", [])
+    if not critical_issues:
+        # Fall back to ai.critical_issues (dict with "issues" key or list)
+        ci_raw = ai.get("critical_issues", {})
+        if isinstance(ci_raw, dict):
+            critical_issues = ci_raw.get("issues", ci_raw.get("critical_issues", []))
+        elif isinstance(ci_raw, list):
+            critical_issues = ci_raw
+
     return {
         "foundation_gate": foundation_gate,
         "risk_cards": risk_cards,
@@ -586,6 +608,7 @@ def _build_report_context(output: dict) -> dict:
         "design_areas": design_areas,
         "checklist_legend": checklist_legend,
         "workshop_funnel": workshop_funnel,
+        "critical_issues": critical_issues,
     }
 
 

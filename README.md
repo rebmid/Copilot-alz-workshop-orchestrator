@@ -91,7 +91,7 @@ Copilot orchestrates the experience, but all governance scoring remains determin
 
 ---
 
-### 1️⃣ Live Workshop Mode – Copilot SDK Orchestration
+### Live Workshop Mode – Copilot SDK Orchestration
 
 Natural-language workshop interaction driving deterministic tool execution.
 
@@ -99,7 +99,7 @@ Natural-language workshop interaction driving deterministic tool execution.
 
 ---
 
-### 2️⃣ Execution Context (Azure Environment Scope)
+### Execution Context (Azure Environment Scope)
 
 Assessment scope discovery showing tenant context, evaluated subscriptions, and RBAC posture.
 
@@ -107,7 +107,7 @@ Assessment scope discovery showing tenant context, evaluated subscriptions, and 
 
 ---
 
-### 3️⃣ Foundation Gate – Enterprise Readiness
+### Foundation Gate – Enterprise Readiness
 
 The assessment begins by evaluating whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**.
 
@@ -119,7 +119,7 @@ If foundational architecture requirements are not met, the platform is flagged a
 
 ---
 
-### 4️⃣ Enterprise Readiness Blockers
+### Enterprise Readiness Blockers
 
 Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
 
@@ -127,7 +127,7 @@ Foundation gaps preventing enterprise-scale ALZ adoption, derived from determini
 
 ---
 
-### 5️⃣ Top Business Risks
+### Top Business Risks
 
 Deterministically ranked platform risks with root cause mapping and score drivers.
 
@@ -135,7 +135,7 @@ Deterministically ranked platform risks with root cause mapping and score driver
 
 ---
 
-### 6️⃣ Copilot Governance Analysis
+### Copilot Governance Analysis
 
 Copilot analyzes deterministic evidence and surfaces the most critical governance risks and remediation priorities during the workshop.
 
@@ -143,7 +143,7 @@ Copilot analyzes deterministic evidence and surfaces the most critical governanc
 
 ---
 
-### 7️⃣ Copilot Root Cause Mapping
+### Copilot Root Cause Mapping
 
 The orchestration layer maps failing controls to underlying architectural weaknesses across ALZ design areas.
 
@@ -151,7 +151,7 @@ The orchestration layer maps failing controls to underlying architectural weakne
 
 ---
 
-### 8️⃣ Copilot Remediation Reasoning
+### Copilot Remediation Reasoning
 
 Copilot synthesizes deterministic governance evidence into structured remediation guidance aligned with Azure Landing Zone architecture.
 
@@ -159,7 +159,7 @@ Copilot synthesizes deterministic governance evidence into structured remediatio
 
 ---
 
-### 9️⃣ Critical Issues & Recommended Course of Action
+### Critical Issues & Recommended Course of Action
 
 Architectural remediation guidance derived from failing governance controls and ALZ design area analysis.
 
@@ -174,7 +174,7 @@ Each issue includes:
 
 ---
 
-### 🔟 Transformation Roadmap (30-60-90 Days)
+### Transformation Roadmap (30-60-90 Days)
 
 Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone architecture.
 
@@ -182,7 +182,7 @@ Deterministic findings are converted into a phased transformation roadmap aligne
 
 ---
 
-### 1️⃣1️⃣ Workshop Decision Funnel
+### Workshop Decision Funnel
 
 CSA decision support view mapping blockers → risks → remediation path.
 
@@ -190,7 +190,7 @@ CSA decision support view mapping blockers → risks → remediation path.
 
 ---
 
-### 1️⃣2️⃣ Design Area Breakdown
+### Design Area Breakdown
 
 ALZ design area maturity distribution with automation %, critical failures, and control status mapping.
 
@@ -198,7 +198,7 @@ ALZ design area maturity distribution with automation %, critical failures, and 
 
 ---
 
-### 1️⃣3️⃣ CSA Workbook – 30-60-90 Implementation Plan
+### CSA Workbook – 30-60-90 Implementation Plan
 
 Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
@@ -206,7 +206,7 @@ Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
 ---
 
-### 1️⃣4️⃣ CSA Workbook – Executive Summary
+### CSA Workbook – Executive Summary
 
 Executive framing including maturity metrics and prioritized business risks.
 
@@ -214,7 +214,7 @@ Executive framing including maturity metrics and prioritized business risks.
 
 ---
 
-### 1️⃣5️⃣ Full Checklist Control Details
+### Full Checklist Control Details
 
 Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
@@ -222,7 +222,7 @@ Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ---
 
-### 1️⃣6️⃣ Interactive HTML Executive Report
+### Interactive HTML Executive Report
 
 The platform produces a full executive-ready HTML report suitable for architecture reviews and governance workshops.
 > 🔍 **Open the interactive demo report:**
@@ -656,20 +656,6 @@ Workshop> show failed controls in Identity with severity High
 Workshop> list all runs
 Workshop> compare the baseline run with the latest
 ```
-
-### Example Prompts
-
-```
-Workshop> run a scan
-Workshop> load the latest results
-Workshop> show me all critical failures in Security
-Workshop> what design areas have the most failures?
-Workshop> summarize the Networking findings
-Workshop> generate an HTML report and Excel workbook
-Workshop> show failed controls in Identity with severity High
-```
-
----
 
 ## Output Artifacts
 

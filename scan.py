@@ -151,7 +151,7 @@ def main():
         return
 
     print("╔══════════════════════════════════════╗")
-    print("║   Azure Landing Zone Assessor        ║")
+    print("║  Azure Landing Zone Assessor         ║")
     print("╚══════════════════════════════════════╝")
 
     # ── Why-Risk reasoning (runs on existing data — no Azure needed) ──

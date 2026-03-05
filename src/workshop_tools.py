@@ -161,10 +161,18 @@ def _resolve_run_path(run_id: str) -> Path:
     candidate = OUT_DIR / f"{run_id}.json"
     if candidate.exists():
         return ensure_out_path(candidate)
-    # Fallback: check demo/ for pre-built fixtures
+    # Fallback: check demo/ for pre-built fixtures by filename
     demo_candidate = DEMO_DIR / f"{run_id}.json"
     if demo_candidate.exists():
         return demo_candidate
+    # Fallback: scan demo/ files by metadata run_id (filename ≠ run_id)
+    for demo_file in DEMO_DIR.glob("*.json"):
+        try:
+            data = json.loads(demo_file.read_text(encoding="utf-8"))
+            if data.get("meta", {}).get("run_id") == run_id:
+                return demo_file
+        except Exception:
+            continue
     raise FileNotFoundError(f"Run file not found: {candidate}")
 
 
@@ -551,11 +559,21 @@ def generate_outputs(params: GenerateOutputsParams) -> str:
             from reporting.csa_workbook import build_csa_workbook
 
             # build_csa_workbook takes file paths, not dicts.
-            # Write the run to a temp path if it was loaded from cache.
-            run_json_path = _resolve_run_path(
-                params.run_id if params.run_id != "latest"
-                else run.get("meta", {}).get("run_id", "latest")
-            )
+            # Write the run to out/ if it was loaded from cache and
+            # the original file can't be found by run_id.
+            try:
+                run_json_path = _resolve_run_path(
+                    params.run_id if params.run_id != "latest"
+                    else run.get("meta", {}).get("run_id", "latest")
+                )
+            except (FileNotFoundError, RuntimeError):
+                # Run is in cache but file name doesn't match run_id —
+                # write it to out/ so the workbook builder can read it.
+                run_json_path = OUT_DIR / f"{run_id}.json"
+                run_json_path.write_text(
+                    json.dumps(run, indent=2, default=str),
+                    encoding="utf-8",
+                )
 
             workbook_name = f"{run_id}_CSA_Workbook.xlsm"
             workbook_path = ensure_out_path(OUT_DIR / workbook_name)

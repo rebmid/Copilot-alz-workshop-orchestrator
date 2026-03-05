@@ -14,7 +14,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 
-from copilot import CopilotClient, PermissionHandler, Tool, ToolResult
+from copilot import CopilotClient, Tool, ToolResult
 from copilot.types import CopilotClientOptions
 
 logger = logging.getLogger("workshop")
@@ -439,7 +439,7 @@ async def _run(*, demo: bool = True, run_source_dir=None):
     client = CopilotClient(CopilotClientOptions(github_token=token))
 
     session = await client.create_session({
-        "on_permission_request": PermissionHandler.approve_all,
+        "on_permission_request": lambda req, ctx: {"kind": "approved", "rules": []},
         "model": "gpt-4o",
         "system_message": {"content": system_prompt},
         "tools": TOOLS,
