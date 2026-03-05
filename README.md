@@ -64,7 +64,7 @@ Copilot orchestrates the experience, but all governance scoring remains determin
 
 ---
 
-# 1️⃣ Live Workshop Mode – Copilot SDK Orchestration
+## 1️⃣ Live Workshop Mode – Copilot SDK Orchestration
 
 Natural-language workshop interaction driving deterministic tool execution.
 
@@ -72,7 +72,7 @@ Natural-language workshop interaction driving deterministic tool execution.
 
 ---
 
-# 2️⃣ Execution Context (Azure Environment Scope)
+## 2️⃣ Execution Context (Azure Environment Scope)
 
 Assessment scope discovery showing tenant context, evaluated subscriptions, and RBAC posture.
 
@@ -80,7 +80,7 @@ Assessment scope discovery showing tenant context, evaluated subscriptions, and 
 
 ---
 
-# 3️⃣ Foundation Gate – Enterprise Readiness
+## 3️⃣ Foundation Gate – Enterprise Readiness
 
 The assessment begins by evaluating whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**.
 
@@ -92,7 +92,7 @@ If foundational architecture requirements are not met, the platform is flagged a
 
 ---
 
-# 4️⃣ Enterprise Readiness Blockers
+## 4️⃣ Enterprise Readiness Blockers
 
 Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
 
@@ -100,7 +100,7 @@ Foundation gaps preventing enterprise-scale ALZ adoption, derived from determini
 
 ---
 
-# 5️⃣ Top Business Risks
+## 5️⃣ Top Business Risks
 
 Deterministically ranked platform risks with root cause mapping and score drivers.
 
@@ -108,7 +108,7 @@ Deterministically ranked platform risks with root cause mapping and score driver
 
 ---
 
-# 6️⃣ Copilot Governance Analysis
+## 6️⃣ Copilot Governance Analysis
 
 Copilot analyzes deterministic evidence and surfaces the most critical governance risks and remediation priorities during the workshop.
 
@@ -116,7 +116,7 @@ Copilot analyzes deterministic evidence and surfaces the most critical governanc
 
 ---
 
-# 7️⃣ Copilot Root Cause Mapping
+## 7️⃣ Copilot Root Cause Mapping
 
 The orchestration layer maps failing controls to underlying architectural weaknesses across ALZ design areas.
 
@@ -124,7 +124,7 @@ The orchestration layer maps failing controls to underlying architectural weakne
 
 ---
 
-# 8️⃣ Copilot Remediation Reasoning
+## 8️⃣ Copilot Remediation Reasoning
 
 Copilot synthesizes deterministic governance evidence into structured remediation guidance aligned with Azure Landing Zone architecture.
 
@@ -132,7 +132,7 @@ Copilot synthesizes deterministic governance evidence into structured remediatio
 
 ---
 
-# 9️⃣ Critical Issues & Recommended Course of Action
+## 9️⃣ Critical Issues & Recommended Course of Action
 
 Architectural remediation guidance derived from failing governance controls and ALZ design area analysis.
 
@@ -147,7 +147,7 @@ Each issue includes:
 
 ---
 
-# 🔟 Transformation Roadmap (30-60-90 Days)
+## 🔟 Transformation Roadmap (30-60-90 Days)
 
 Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone architecture.
 
@@ -155,7 +155,7 @@ Deterministic findings are converted into a phased transformation roadmap aligne
 
 ---
 
-# 1️⃣1️⃣ Workshop Decision Funnel
+## 1️⃣1️⃣ Workshop Decision Funnel
 
 CSA decision support view mapping blockers → risks → remediation path.
 
@@ -163,7 +163,7 @@ CSA decision support view mapping blockers → risks → remediation path.
 
 ---
 
-# 1️⃣2️⃣ Design Area Breakdown
+## 1️⃣2️⃣ Design Area Breakdown
 
 ALZ design area maturity distribution with automation %, critical failures, and control status mapping.
 
@@ -171,7 +171,7 @@ ALZ design area maturity distribution with automation %, critical failures, and 
 
 ---
 
-# 1️⃣3️⃣ CSA Workbook – 30-60-90 Implementation Plan
+## 1️⃣3️⃣ CSA Workbook – 30-60-90 Implementation Plan
 
 Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
@@ -179,7 +179,7 @@ Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
 ---
 
-# 1️⃣4️⃣ CSA Workbook – Executive Summary
+## 1️⃣4️⃣ CSA Workbook – Executive Summary
 
 Executive framing including maturity metrics and prioritized business risks.
 
@@ -187,7 +187,7 @@ Executive framing including maturity metrics and prioritized business risks.
 
 ---
 
-# 1️⃣5️⃣ Full Checklist Control Details
+## 1️⃣5️⃣ Full Checklist Control Details
 
 Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
@@ -195,7 +195,7 @@ Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ---
 
-# 1️⃣6️⃣ Interactive HTML Executive Report
+## 1️⃣6️⃣ Interactive HTML Executive Report
 
 The platform produces a full executive-ready HTML report suitable for architecture reviews and governance workshops.
 > 🔍 **Open the interactive demo report:**
@@ -478,25 +478,6 @@ python scan.py --workshop-copilot        # Copilot workshop (live Azure)
 python scan.py --why Security --demo     # Why-risk causal analysis
 ```
 
-### All Flags
-
-| Flag | Description |
-|---|---|
-| `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
-| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 6 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
-| `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
-| `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
-| `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
-| `--why DOMAIN` | Explain **why** a domain is the top risk — runs 6-step causal reasoning over an existing assessment |
-| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
-| `--preflight` | Run preflight access probes and exit — validates Azure permissions without a full assessment |
-| `--validate-signals` | Probe all signal providers without scoring and exit — useful for debugging data collection |
-| `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
-| `--no-html` | Skip HTML report generation |
-| `--pretty` | Pretty-print the final JSON to stdout after the run |
-| `--tag TAG` | Label this run snapshot (e.g. `baseline`, `sprint-3`) — appears in output filename and metadata |
-
----
 
 ### CSA Mode (Enterprise Landing Zone Assessment)
 
@@ -560,7 +541,7 @@ Runs against your authenticated Azure subscription. If `.env` is configured with
 
 > **Mode:** LIVE (authenticated against your Azure subscription)
 >
-> ⚠️ A full deterministic scan against a live tenant can take 5–10 minutes depending on tenant size and subscription count.
+> ⚠️ A full deterministic scan against a live tenant can take 5–15 minutes depending on tenant size and subscription count.
 >
 > **Best practice:** Run `run_scan` before the workshop or during a break. Use `list_runs` + `load_results` during live facilitation.
 
@@ -946,7 +927,7 @@ python scan.py --no-ai --no-html
 ## Built with AI Assistance
 
 This project was developed using GitHub Copilot as an AI pair programmer for code generation, refactoring, and test scaffolding.  
-All architecture, control logic, Azure integration, and reasoning workflows were designed and implemented by the author.
+All architecture, control logic, Azure integration, and reasoning workflows were designed and implemented by the authors Rebekah Midkiff & Jeff Garcia.
 
 ## License
 
