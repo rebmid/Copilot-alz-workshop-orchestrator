@@ -54,23 +54,17 @@ Designed for CSA-led enterprise engagements, this system replaces slideware and 
 
 **Run one command → enter a Copilot-facilitated workshop session over scored governance evidence.**
 
-> [!IMPORTANT]
-> 🔍 **Open the interactive demo report:**
-> 👉 **[View the HTML assessment report](https://htmlpreview.github.io/?https://github.com/rebmid/Copilot-alz-workshop-orchestrator/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
->
-> Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
-
----
 ## Demo Walkthrough – Copilot-Orchestrated ALZ Workshop
 
-The live workshop session below demonstrates Copilot SDK orchestration layered on top of a deterministic Azure Landing Zone assessment engine.
+The walkthrough below demonstrates the full lifecycle of the platform:
 
-All reporting artifacts shown afterward are generated from deterministic governance logic.  
-Copilot does **not** modify scoring or Azure state.
+**Azure Telemetry → Deterministic Governance Assessment → Copilot Reasoning → Remediation Guidance → Transformation Roadmap → Customer Deliverables**
+
+Copilot orchestrates the experience, but all governance scoring remains deterministic.
 
 ---
 
-## Live Workshop Mode – Copilot SDK Orchestration
+# 1️⃣ Live Workshop Mode – Copilot SDK Orchestration
 
 Natural-language workshop interaction driving deterministic tool execution.
 
@@ -78,77 +72,122 @@ Natural-language workshop interaction driving deterministic tool execution.
 
 ---
 
-## Deterministic Assessment Outputs
+# 2️⃣ Execution Context (Azure Environment Scope)
 
-The following artifacts are generated from the authoritative governance engine after a run is completed.
+Assessment scope discovery showing tenant context, evaluated subscriptions, and RBAC posture.
 
----
-
-### Platform Snapshot (Deterministic Output)
-
-Maturity scoring across ALZ design areas with automation coverage and enterprise readiness indicators.
-
-![Platform Snapshot](docs/demo/report-hero.png)
+![Execution Context](docs/demo/00a_execution-context.png)
 
 ---
 
-### Enterprise Readiness Blockers
+# 3️⃣ Foundation Gate – Enterprise Readiness
 
-Foundation gaps preventing enterprise-scale adoption — derived from failed controls and dependency graph impact.
+The assessment begins by evaluating whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**.
+
+The **Foundation Gate** summarizes critical readiness indicators derived from deterministic control evaluation.
+
+If foundational architecture requirements are not met, the platform is flagged as **Not Ready for Enterprise Scale**, signaling that key governance and security controls must be remediated before scaling workloads.
+
+![Foundation Gate](docs/demo/foundation-gate.png)
+
+---
+
+# 4️⃣ Enterprise Readiness Blockers
+
+Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
 
 ![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
 
 ---
 
-### Business Risk Prioritization
+# 5️⃣ Top Business Risks
 
-Deterministically ranked risks with root cause mapping and score drivers.
+Deterministically ranked platform risks with root cause mapping and score drivers.
 
 ![Top Business Risks](docs/demo/02_top-business-risks.png)
 
 ---
 
-### 30-60-90 Transformation Roadmap
+# 6️⃣ Copilot Governance Analysis
 
-Dependency-ordered remediation initiatives with maturity trajectory projections.
+Copilot analyzes deterministic evidence and surfaces the most critical governance risks and remediation priorities during the workshop.
 
-![Roadmap Traceability](docs/demo/03_roadmap-traceability.png)
-
----
-
-### Design Area Breakdown
-
-ALZ design area maturity distribution with automation %, critical failures, and control state mapping.
-
-![Design Area Breakdown](docs/demo/04_design_area_breakdown.png)
+![Copilot Governance Analysis](docs/demo/Copilot Analysis.png)
 
 ---
 
-### Workshop Decision Funnel
+# 7️⃣ Copilot Root Cause Mapping
 
-CSA decision framing: blockers → risks → remediation path.
+The orchestration layer maps failing controls to underlying architectural weaknesses across ALZ design areas.
+
+![Copilot Root Cause Analysis](docs/demo/Copilot Analysis2.png)
+
+---
+
+# 8️⃣ Copilot Remediation Reasoning
+
+Copilot synthesizes deterministic governance evidence into structured remediation guidance aligned with Azure Landing Zone architecture.
+
+![Copilot Remediation Reasoning](docs/demo/Copilot Analysis3.png)
+
+---
+
+# 9️⃣ Critical Issues & Recommended Course of Action
+
+Architectural remediation guidance derived from failing governance controls and ALZ design area analysis.
+
+Each issue includes:
+
+• Design area classification  
+• Severity level  
+• Architectural impact explanation  
+• Recommended remediation aligned with ALZ patterns  
+
+![Critical Issues & Course of Action](docs/demo/06-critical-issues-course-of-action.png)
+
+---
+
+# 🔟 Transformation Roadmap (30-60-90 Days)
+
+Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone architecture.
+
+![30-60-90 Day Transformation Roadmap](docs/demo/00330-60-90 Day Transformation Roadmap.png)
+
+---
+
+# 1️⃣1️⃣ Workshop Decision Funnel
+
+CSA decision support view mapping blockers → risks → remediation path.
 
 ![Workshop Decision Funnel](docs/demo/04_workshop_decision_funnel.png)
 
 ---
 
-### CSA Workbook – 30-60-90 Plan
+# 1️⃣2️⃣ Design Area Breakdown
 
-Customer-ready Excel roadmap aligned to checklist IDs and ownership.
+ALZ design area maturity distribution with automation %, critical failures, and control status mapping.
+
+![Design Area Breakdown](docs/demo/04_design_area_breakdown.png)
+
+---
+
+# 1️⃣3️⃣ CSA Workbook – 30-60-90 Implementation Plan
+
+Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
 ![Excel 30-60-90 Roadmap](docs/demo/05_excel_30_60_90_roadmap.png)
 
 ---
 
-### CSA Workbook – Executive Summary
+# 1️⃣4️⃣ CSA Workbook – Executive Summary
 
-Executive framing with top risks and maturity metrics.
+Executive framing including maturity metrics and prioritized business risks.
 
 ![Excel Executive Summary](docs/demo/05_excel_executive_summary.png)
 
 ---
 
-### Full Checklist Control Details
+# 1️⃣5️⃣ Full Checklist Control Details
 
 Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
@@ -156,11 +195,18 @@ Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ---
 
-### Execution Context (Read-Only Azure Telemetry)
+# 1️⃣6️⃣ Interactive HTML Executive Report
 
-Assessment scope, evaluated subscriptions, and RBAC posture confirmation.
+The platform produces a full executive-ready HTML report suitable for architecture reviews and governance workshops.
+> 🔍 **Open the interactive demo report:**
+> 👉 **[View the HTML assessment report](https://htmlpreview.github.io/?https://github.com/rebmid/Copilot-alz-workshop-orchestrator/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
+> Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
-![Execution Context](docs/demo/00a_execution-context.png)
+## Presentation Deck
+
+See the architecture and business value overview:
+
+/docs/Enterprise-Safe Copilot Orchestration for Azure Landing Zone Governance.pptx
 
 ## Architectural Characteristics
 
@@ -544,7 +590,7 @@ The session registers exactly 6 tools. Copilot selects tools based on your natur
 | `summarize_findings` | Filter findings by design area, severity, or failure status | `design_area`, `severity`, `failed_only`, `limit` | *"show critical Security findings"* |
 | `generate_outputs` | Produce HTML report or Excel workbook from a loaded run | `formats` (`html`, `excel`) | *"generate an HTML report and Excel workbook"* |
 | `list_runs` | List available assessment runs in the run store | *(none)* | *"list all runs"* |
-| `compare_runs` | Compare two assessment runs and produce a delta summary | `run_id_a`, `run_id_b` | *"compare the baseline run with the latest"* |
+| `compare_runs` | Compare the latest run against the previous run (delta analysis) | *(none — always compares latest vs previous)* | *"compare the baseline run with the latest"* |
 
 ### Session Behavior
 
@@ -574,18 +620,6 @@ Workshop> generate an HTML report and Excel workbook
 Workshop> show failed controls in Identity with severity High
 Workshop> list all runs
 Workshop> compare the baseline run with the latest
-```
-
-### Example Prompts
-
-```
-Workshop> run a scan
-Workshop> load the latest results
-Workshop> show me all critical failures in Security
-Workshop> what design areas have the most failures?
-Workshop> summarize the Networking findings
-Workshop> generate an HTML report and Excel workbook
-Workshop> show failed controls in Identity with severity High
 ```
 
 ---
@@ -785,12 +819,17 @@ Before running a full assessment, validate your Azure permissions:
 python scan.py --preflight
 ```
 
-Preflight probes check:
-- Subscription visibility
+Preflight probes check **8 Azure API surfaces**:
+- Management Group read access
 - Resource Graph query access
-- Management group read access
-- Defender API access
-- Policy read access
+- Policy Insights read access
+- Defender for Cloud API access
+- Log Analytics Reader access
+- AAD Diagnostics access
+- Cost Management Reader access
+- Microsoft Graph API access
+
+Each probe has a 5-second timeout, returns duration metrics, and maps failures to specific **assessment impact** (which design areas degrade) and **recommended RBAC actions**.
 
 Results are saved to `out/preflight.json` and printed to the console with pass/fail indicators.
 
@@ -911,4 +950,4 @@ All architecture, control logic, Azure integration, and reasoning workflows were
 
 ## License
 
-Copyright (c) 2026 Rebekah Midkiff
+MIT License

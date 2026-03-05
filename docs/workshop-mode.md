@@ -104,13 +104,14 @@ This allows predictable storytelling while preserving real‑world behavior.
 
 Tool Surface (Workshop Assistant)
 Workshop Mode constrains the assistant to a small, explicit tool set:
-Recommended MVP tools:
+Registered tools (6 total):
 
 run_scan(scope) → execute a scan
 load_results(run_id | 'latest') → activate an existing run
 summarize_findings(run_id, filters) → structured summaries
-compare_runs(run_a, run_b) → delta analysis
 generate_outputs(run_id, formats) → reports (HTML, XLSX)
+list_runs() → list available runs (newest first)
+compare_runs() → delta analysis (latest vs previous)
 Each tool:
 
 Accepts typed inputs
