@@ -5,19 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Azure Landing Zone &ndash; CSA Decision-Driven Assessment</title>
 <style>
-/* ── CSS Variables ─────────────────────────────────────────── */
+/* ── CSS Variables — Azure Portal Design Language ──────────── */
 :root {
-  --bg:       #ffffff;
-  --card-bg:  #f6f8fa;
-  --border:   #d0d7de;
-  --accent:   #0969da;
-  --danger:   #cf222e;
-  --warn:     #9a6700;
-  --success:  #1a7f37;
-  --muted:    #656d76;
-  --text:     #1f2328;
-  --surface:  #eaeef2;
-  --font:     -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --bg:       #f3f6f9;
+  --card-bg:  #ffffff;
+  --border:   #e1e5e8;
+  --accent:   #0078d4;       /* Azure Blue */
+  --accent-dark: #005a9e;    /* Dark Azure */
+  --accent-light: #deecf9;   /* Light Azure tint */
+  --danger:   #d13438;       /* Critical / Fail */
+  --warn:     #ffb900;       /* Warning */
+  --success:  #107c10;       /* Healthy / Pass */
+  --muted:    #616161;       /* Text Secondary */
+  --text:     #1f1f1f;       /* Text Primary */
+  --surface:  #f3f6f9;       /* Surface / page bg */
+  --font:     "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -25,16 +27,22 @@ body {
   margin: 0; padding: 0;
   font-family: var(--font);
   background: var(--bg); color: var(--text);
-  font-size: 14px; line-height: 1.5;
+  font-size: 14px; line-height: 1.6;
 }
 
 /* ── Layout ────────────────────────────────────────────────── */
-.container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
-section { padding: 2rem 0; border-bottom: 1px solid var(--border); }
-section:last-of-type { border-bottom: none; }
+.container { max-width: 1280px; margin: 0 auto; padding: 0 28px; }
+section {
+  background: var(--card-bg);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  padding: 2rem 2rem;
+  margin-bottom: 1.5rem;
+}
+section:last-of-type { margin-bottom: 2rem; }
 h1, h2, h3, h4 { margin: 0 0 .5rem 0; font-weight: 600; }
 h1 { font-size: 1.8rem; color: var(--accent); }
-h2 { font-size: 1.4rem; color: var(--accent); padding-bottom: .5rem; border-bottom: 2px solid var(--accent); }
+h2 { font-size: 1.4rem; color: var(--accent-dark); padding-bottom: .5rem; border-bottom: 2px solid var(--accent); }
 h3 { font-size: 1.15rem; color: var(--text); }
 h4 { font-size: 1rem; color: var(--muted); }
 p { margin: 0.3rem 0; }
@@ -42,32 +50,35 @@ p { margin: 0.3rem 0; }
 /* ── Navigation ────────────────────────────────────────────── */
 nav {
   position: sticky; top: 0; z-index: 100;
-  background: var(--card-bg); border-bottom: 1px solid var(--border);
+  background: var(--accent); border-bottom: none;
   padding: .6rem 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,.12);
 }
 nav .container { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; }
 nav a {
-  color: var(--muted); text-decoration: none; font-size: .85rem; font-weight: 500;
+  color: rgba(255,255,255,.85); text-decoration: none; font-size: .85rem; font-weight: 500;
   padding: .25rem .5rem; border-radius: 6px; transition: all .15s;
 }
-nav a:hover, nav a:focus { color: var(--accent); background: var(--surface); }
-.nav-title { color: var(--accent); font-weight: 700; font-size: .95rem; margin-right: .5rem; }
+nav a:hover, nav a:focus { color: #fff; background: rgba(255,255,255,.18); }
+.nav-title { color: #fff; font-weight: 700; font-size: .95rem; margin-right: .5rem; }
 
 /* ── Cards & Grids ─────────────────────────────────────────── */
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1rem; }
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
 .card {
   background: var(--card-bg); border: 1px solid var(--border);
-  border-radius: 8px; padding: 1.2rem; transition: border-color .15s;
+  border-radius: 8px; padding: 1.2rem; transition: border-color .15s, box-shadow .15s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
-.card:hover { border-color: var(--accent); }
+.card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,120,212,.12); }
 .card-title { font-weight: 600; margin-bottom: .5rem; }
 
 /* ── KPI Tiles ─────────────────────────────────────────────── */
 .kpi-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 .kpi {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
   padding: .8rem 1.2rem; min-width: 140px; text-align: center; flex: 1;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
 }
 .kpi-value { font-size: 1.8rem; font-weight: 700; line-height: 1.2; }
 .kpi-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
@@ -77,17 +88,29 @@ nav a:hover, nav a:focus { color: var(--accent); background: var(--surface); }
   display: inline-block; padding: .15rem .5rem; border-radius: 10px;
   font-size: .7rem; font-weight: 600; text-transform: uppercase;
 }
-.badge-pass   { background: rgba(63,185,80,.15); color: var(--success); }
-.badge-fail   { background: rgba(248,81,73,.15); color: var(--danger); }
-.badge-partial{ background: rgba(210,153,34,.15); color: var(--warn); }
-.badge-manual { background: rgba(139,148,158,.15); color: var(--muted); }
-.badge-critical { background: rgba(248,81,73,.25); color: var(--danger); font-weight: 700; }
-.badge-high   { background: rgba(230,126,34,.2); color: #e67e22; }
-.badge-medium { background: rgba(241,196,15,.15); color: var(--warn); }
-.badge-low    { background: rgba(63,185,80,.1); color: var(--success); }
-.badge-confirmed { background: rgba(88,166,255,.15); color: var(--accent); }
-.badge-derived   { background: rgba(210,153,34,.15); color: var(--warn); }
-.badge-assumed   { background: rgba(139,148,158,.15); color: var(--muted); }
+.badge-pass   { background: rgba(16,124,16,.12); color: var(--success); }
+.badge-fail   { background: rgba(209,52,56,.12); color: var(--danger); }
+.badge-partial{ background: rgba(255,185,0,.18); color: #8a6d00; }
+.badge-manual { background: rgba(97,97,97,.12); color: var(--muted); }
+.badge-critical { background: rgba(209,52,56,.18); color: var(--danger); font-weight: 700; }
+.badge-high   { background: rgba(209,52,56,.10); color: #a4262c; }
+.badge-medium { background: rgba(255,185,0,.15); color: #8a6d00; }
+.badge-low    { background: rgba(16,124,16,.10); color: var(--success); }
+.badge-confirmed { background: rgba(0,120,212,.12); color: var(--accent); }
+.badge-derived   { background: rgba(255,185,0,.15); color: #8a6d00; }
+.badge-assumed   { background: rgba(97,97,97,.12); color: var(--muted); }
+.badge-info      { background: rgba(0,120,212,.08); color: var(--accent); }
+.badge-notapplicable { background: var(--surface); color: var(--muted); }
+.badge-signalerror  { background: rgba(209,52,56,.10); color: var(--danger); }
+.badge-unknown   { background: var(--surface); color: var(--muted); }
+
+/* ── Letter badge (ALZ design area ID) ─────────────────────── */
+.letter-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.6rem; height: 1.6rem; border-radius: 4px;
+  font-size: .75rem; font-weight: 700; color: #fff;
+  background: var(--accent-dark); flex-shrink: 0; margin-right: .4rem;
+}
 
 /* ── Tags ──────────────────────────────────────────────────── */
 .tag {
@@ -95,32 +118,56 @@ nav a:hover, nav a:focus { color: var(--accent); background: var(--surface); }
   font-size: .7rem; color: var(--muted); border: 1px solid var(--border); margin: .1rem;
 }
 
-/* ── Trajectory bar ────────────────────────────────────────── */
+/* ── Trajectory bar — single Azure Blue bar with milestones ── */
 .trajectory-bar {
-  display: flex; gap: 2px; margin: 1rem 0;
-  background: var(--surface); border-radius: 8px; overflow: hidden; height: 36px;
+  width: 100%; height: 20px;
+  background: #e8ebed; border-radius: 10px;
+  overflow: hidden;
 }
-.traj-segment {
-  display: flex; align-items: center; justify-content: center;
-  font-size: .7rem; font-weight: 600; color: var(--bg);
+.traj-fill {
+  display: block; height: 100%; border-radius: 10px;
+  background: #0078d4;
+  min-width: 20px;
+}
+.traj-milestone {
+  position: absolute; top: -3px;
+  width: 2px; height: 26px; background: #a19f9d;
+  border-radius: 1px; z-index: 2;
+}
+.traj-milestone::after {
+  content: attr(data-label);
+  position: absolute; top: 30px; left: 50%;
+  transform: translateX(-50%); white-space: nowrap;
+  font-size: .7rem; font-weight: 600; color: #605e5c;
+}
+.traj-label-start {
+  position: absolute; top: 0; left: 8px; height: 20px;
+  display: flex; align-items: center;
+  font-size: .7rem; font-weight: 600; color: #fff; z-index: 3;
+}
+.traj-label-end {
+  position: absolute; top: 50%; right: 8px;
+  transform: translateY(-50%);
+  font-size: .7rem; font-weight: 600; color: var(--muted);
 }
 
 /* ── Gate banner ───────────────────────────────────────────── */
 .gate-pass {
-  background: linear-gradient(135deg, rgba(63,185,80,.12), rgba(63,185,80,.04));
-  border: 2px solid var(--success); border-radius: 12px; padding: 1.5rem; text-align: center;
+  background: rgba(16,124,16,.06);
+  border: 2px solid var(--success); border-radius: 8px; padding: 1.5rem; text-align: center;
 }
 .gate-fail {
-  background: linear-gradient(135deg, rgba(248,81,73,.12), rgba(248,81,73,.04));
-  border: 2px solid var(--danger); border-radius: 12px; padding: 1.5rem; text-align: center;
+  background: rgba(209,52,56,.06);
+  border: 2px solid var(--danger); border-radius: 8px; padding: 1.5rem; text-align: center;
 }
 .gate-icon { font-size: 2.5rem; }
 .gate-headline { font-size: 1.3rem; font-weight: 700; margin: .5rem 0; }
 
 /* ── Blocker list ──────────────────────────────────────────── */
 .blocker-item {
-  background: var(--surface); border-left: 3px solid var(--danger);
+  background: var(--card-bg); border-left: 3px solid var(--danger);
   border-radius: 0 6px 6px 0; padding: .8rem 1rem; margin-bottom: .5rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
 }
 .blocker-item.improvement {
   border-left-color: var(--accent);
@@ -130,6 +177,7 @@ nav a:hover, nav a:focus { color: var(--accent); background: var(--surface); }
 .risk-card {
   background: var(--card-bg); border: 1px solid var(--border);
   border-radius: 8px; padding: 1.2rem; position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 .risk-card .risk-header {
   display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; margin-bottom: .7rem;
@@ -137,7 +185,7 @@ nav a:hover, nav a:focus { color: var(--accent); background: var(--surface); }
 .risk-number {
   width: 28px; height: 28px; border-radius: 50%; display: flex;
   align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
-  background: var(--danger); color: #fff; flex-shrink: 0;
+  background: var(--accent-dark); color: #fff; flex-shrink: 0;
 }
 .risk-title { font-weight: 600; flex: 1; }
 .risk-meta { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; }
@@ -146,14 +194,15 @@ nav a:hover, nav a:focus { color: var(--accent); background: var(--surface); }
 .phase-card {
   background: var(--card-bg); border: 1px solid var(--border);
   border-radius: 8px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 .phase-header {
   padding: .8rem 1.2rem; font-weight: 700; font-size: 1rem;
   border-bottom: 1px solid var(--border);
 }
-.phase-30 .phase-header { background: rgba(248,81,73,.08); color: var(--danger); }
-.phase-60 .phase-header { background: rgba(210,153,34,.08); color: var(--warn); }
-.phase-90 .phase-header { background: rgba(63,185,80,.08); color: var(--success); }
+.phase-30 .phase-header { background: rgba(209,52,56,.06); color: var(--danger); }
+.phase-60 .phase-header { background: rgba(255,185,0,.10); color: #8a6d00; }
+.phase-90 .phase-header { background: rgba(16,124,16,.06); color: var(--success); }
 .phase-item {
   padding: .8rem 1.2rem; border-bottom: 1px solid var(--border);
 }
@@ -166,14 +215,15 @@ details > summary {
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
   list-style: none; display: flex; align-items: center; gap: .6rem;
   font-weight: 600; transition: background .15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
 }
 details > summary::-webkit-details-marker { display: none; }
 details > summary::before {
   content: "\25B8"; display: inline-block; transition: transform .15s;
-  font-size: 1rem; width: 1rem;
+  font-size: 1rem; width: 1rem; color: var(--accent);
 }
 details[open] > summary::before { transform: rotate(90deg); }
-details > summary:hover { background: var(--surface); }
+details > summary:hover { background: var(--accent-light); }
 details > .detail-body {
   border: 1px solid var(--border); border-top: none;
   border-radius: 0 0 8px 8px; padding: 1rem;
@@ -192,13 +242,14 @@ th {
   font-size: .7rem; text-transform: uppercase; letter-spacing: .04em;
   color: var(--muted); background: var(--surface); position: sticky; top: 0;
 }
-tr:hover td { background: rgba(88,166,255,.04); }
+tr:hover td { background: rgba(0,120,212,.04); }
 td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
 
 /* ── Workshop funnel ───────────────────────────────────────── */
 .funnel-domain {
   background: var(--card-bg); border: 1px solid var(--border);
   border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
 }
 .funnel-domain h3 { margin-bottom: .8rem; }
 .funnel-cols {
@@ -219,6 +270,14 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
 .impact-yes { color: var(--success); }
 .impact-no { color: var(--danger); }
 
+/* ── Issue cards ───────────────────────────────────────────── */
+.issue {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
+  border-left: 3px solid var(--accent-dark);
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .grid-2 { grid-template-columns: 1fr; }
@@ -228,8 +287,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
 @media print {
   nav { display: none; }
   body { background: #fff; color: #000; }
+  section { box-shadow: none; border: 1px solid #ddd; }
   .card, .risk-card, details > summary, .phase-card, .funnel-domain {
-    break-inside: avoid;
+    break-inside: avoid; box-shadow: none;
   }
 }
 </style>
@@ -249,7 +309,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   </div>
 </nav>
 
-<div class="container">
+<div class="container" style="padding-top:1.5rem;padding-bottom:1rem">
 
 <!-- ═══════════════ S1  FOUNDATION GATE ══════════════════════ -->
 <section id="foundation-gate">
@@ -285,7 +345,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   </div>
 
   
-  <h3 style="margin-top:1.5rem">&#x1F6A7; Blockers (6)</h3>
+  <h3 style="margin-top:1.5rem">&#x1F6A7; Blockers (5)</h3>
   
   <div class="blocker-item">
     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
@@ -293,14 +353,16 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <span class="badge badge-critical">Critical</span>
       <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>No evidence of hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. This prevents secure and scalable network segmentation and centralized egress, which are required for multi-subscription environments.</p>
+    <p>No evidence of a hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. This prevents scalable, secure, and centrally governed network architecture required for multi-subscription environments.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Establish hub-spoke network topology with centralized firewall and DDoS protection</strong>
+      Resolving controls: <strong>Hub-spoke network topology with Azure Firewall and DDoS Protection</strong>
       
-        (<a href="#control-C03.01" style="color:inherit">C03.01</a>)
+        (<a href="#control-C01.01" style="color:inherit">C01.01</a>)
       
       
       
+      
+        &middot; Dependencies: Platform governance baseline (resource locks and policy assignments)
       
     </div>
   </div>
@@ -311,16 +373,16 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <span class="badge badge-critical">Critical</span>
       <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>Privileged Identity Management (PIM) is not effective (eligible ratio 0%), break-glass accounts are not validated, and RBAC hygiene is poor (27 Owner assignments, no group-based access). This exposes the tenant to privilege escalation and operational risk at scale.</p>
+    <p>Privileged Identity Management (PIM) is not effective (eligible ratio 0%), excessive Owner role assignments (27, recommended ≤5), and no group-based RBAC. Break-glass accounts are not validated. This exposes the platform to privilege escalation and operational risk at scale.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Remediate RBAC hygiene and enforce group-based access | Establish Privileged Identity Management for privileged roles | Validate break-glass accounts and emergency access</strong>
+      Resolving controls: <strong>RBAC hygiene and Privileged Identity Management enforcement | Break-glass account posture and emergency access validation</strong>
       
-        (<a href="#control-B03.01" style="color:inherit">B03.01</a>, <a href="#control-B03.07" style="color:inherit">B03.07</a>, <a href="#control-B03.15" style="color:inherit">B03.15</a>)
-      
-      
+        (<a href="#control-B03.01" style="color:inherit">B03.01</a>, <a href="#control-B03.15" style="color:inherit">B03.15</a>)
       
       
-        &middot; Dependencies: Remediate RBAC hygiene and enforce group-based access, Establish Privileged Identity Management for privileged roles
+      
+      
+        &middot; Dependencies: Platform governance baseline (resource locks and policy assignments), RBAC hygiene and Privileged Identity Management enforcement
       
     </div>
   </div>
@@ -331,14 +393,16 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <span class="badge badge-critical">Critical</span>
       <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>No centralized Log Analytics workspace, Sentinel not enabled, and log retention is below recommended (30d vs ≥90d). This blocks centralized monitoring, incident response, and compliance at scale.</p>
+    <p>Centralized monitoring is absent: Log Analytics workspace topology is fragmented, Sentinel is not enabled, and log retention is only 30 days (recommend ≥90). This blocks scalable operations, incident response, and regulatory alignment.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Centralize monitoring workspace topology</strong>
+      Resolving controls: <strong>Centralized monitoring and workspace topology | Update Manager and change tracking for managed resources</strong>
       
-        (<a href="#control-B05.01" style="color:inherit">B05.01</a>)
+        (<a href="#control-E01.01" style="color:inherit">E01.01</a>, <a href="#control-E02.01" style="color:inherit">E02.01</a>)
       
       
       
+      
+        &middot; Dependencies: Centralized monitoring and workspace topology
       
     </div>
   </div>
@@ -349,16 +413,16 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <span class="badge badge-critical">Critical</span>
       <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>Centralized security visibility is lacking (diagnostics coverage 2.3%), Defender for Cloud is not fully enabled, and storage/data protection controls are failing. This leaves the environment without baseline security posture for enterprise operations.</p>
+    <p>Centralized security visibility is lacking (diagnostics coverage 2.1%), Defender for Cloud coverage is not evidenced, and Secure Score is not available. Storage and private endpoint posture are non-compliant (0% coverage). This prevents effective threat detection and response at scale.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Centralize security diagnostics and monitoring | Remediate storage account and private endpoint posture</strong>
+      Resolving controls: <strong>Storage account and private endpoint posture remediation | Centralized security visibility and alerting</strong>
       
-        (<a href="#control-D01.01" style="color:inherit">D01.01</a>, <a href="#control-F01.01" style="color:inherit">F01.01</a>)
-      
-      
+        (<a href="#control-D01.01" style="color:inherit">D01.01</a>, <a href="#control-H01.01" style="color:inherit">H01.01</a>)
       
       
-        &middot; Dependencies: Centralize monitoring workspace topology, Establish hub-spoke network topology with centralized firewall and DDoS protection, Centralize security diagnostics and monitoring
+      
+      
+        &middot; Dependencies: Hub-spoke network topology with Azure Firewall and DDoS Protection, RBAC hygiene and Privileged Identity Management enforcement, Centralized monitoring and workspace topology
       
     </div>
   </div>
@@ -369,36 +433,14 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <span class="badge badge-critical">Critical</span>
       <span class="badge badge-unknown">Unknown confidence</span>
     </div>
-    <p>No evidence of management group hierarchy, policy initiatives at MG scope, or resource locks. This prevents scalable policy enforcement, resource organization, and cost governance.</p>
+    <p>No management group hierarchy or policy initiatives at scale. Resource locks, cost governance, and policy compliance are missing. This blocks policy-driven governance, cost control, and prevents scaling beyond a single subscription.</p>
     <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Implement resource locks and governance policies</strong>
+      Resolving controls: <strong>Platform governance baseline (resource locks and policy assignments)</strong>
       
         (<a href="#control-G01.01" style="color:inherit">G01.01</a>)
       
       
       
-      
-        &middot; Dependencies: Implement cost governance and budget alerts
-      
-    </div>
-  </div>
-  
-  <div class="blocker-item">
-    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-      <strong>Data Protection</strong>
-      <span class="badge badge-high">High</span>
-      <span class="badge badge-unknown">Unknown confidence</span>
-    </div>
-    <p>Storage accounts and private endpoints are 0% compliant, and backup coverage for VMs is 0%. This blocks regulatory alignment and resilience for critical workloads.</p>
-    <div style="font-size:.82rem;color:var(--muted);margin-top:.3rem">
-      Resolving controls: <strong>Centralize security diagnostics and monitoring | Remediate storage account and private endpoint posture</strong>
-      
-        (<a href="#control-D01.01" style="color:inherit">D01.01</a>, <a href="#control-F01.01" style="color:inherit">F01.01</a>)
-      
-      
-      
-      
-        &middot; Dependencies: Centralize monitoring workspace topology, Establish hub-spoke network topology with centralized firewall and DDoS protection, Centralize security diagnostics and monitoring
       
     </div>
   </div>
@@ -418,7 +460,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">1</span>
-        <span class="risk-title">Exposure of Sensitive Data and Regulatory Non-Alignment</span>
+        <span class="risk-title">Exposure of Sensitive Data Due to Inadequate Protection</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-critical">Critical</span>
@@ -429,10 +471,10 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Potential data breaches, loss of customer trust, and regulatory penalties due to inadequate protection of storage accounts and lack of private endpoints.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Potential for data breaches, regulatory penalties, and loss of customer trust if sensitive information is compromised.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Storage accounts and PaaS services lack required security controls (encryption, private endpoints); 0% compliance detected.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Storage accounts and PaaS services lack secure configurations (e.g., private endpoints, encryption), with 0% compliance on key controls.</p>
       
 
       
@@ -456,7 +498,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">2</span>
-        <span class="risk-title">Network Breach Risk and Service Disruption</span>
+        <span class="risk-title">Operational Disruption from Insufficient Network Security</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-critical">Critical</span>
@@ -467,10 +509,10 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Increased likelihood of external attacks (e.g., DDoS) and lateral movement within the environment, leading to potential downtime and reputational harm.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Increased risk of service outages and cyberattacks, including DDoS incidents and unauthorized access, potentially impacting business continuity.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No Azure Firewall or hub-spoke topology; DDoS protection not enabled on VNets.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No Azure Firewall or DDoS protection deployed; hub-spoke topology not implemented, leaving the environment exposed.</p>
       
 
       
@@ -494,21 +536,21 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">3</span>
-        <span class="risk-title">Privilege Escalation and Unauthorized Access</span>
+        <span class="risk-title">Privilege Misuse and Insider Risk from Weak Identity Controls</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-high">High</span>
         <span class="badge badge-confirmed">Confirmed</span>
         <span class="badge badge-high">High conf</span>
         <span class="tag">Identity</span>
-        <span class="tag">2 controls</span>
+        <span class="tag">3 controls</span>
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Risk of unauthorized changes, data exfiltration, and audit failures due to excessive Owner role assignments and lack of Privileged Identity Management (PIM).</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Elevated risk of accidental or malicious changes, leading to data loss, downtime, or compliance violations.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> RBAC hygiene issues (27 Owner assignments, no group-based access), PIM not enforced for privileged roles.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Excessive Owner role assignments, lack of Privileged Identity Management (PIM) enforcement, and missing break-glass account validation.</p>
       
 
       
@@ -518,9 +560,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
           
           <span class="tag">Contains High severity controls</span>
           
-          <span class="tag">2 affected control(s)</span>
+          <span class="tag">3 affected control(s)</span>
           
-          <span class="tag">2 in Fail state</span>
+          <span class="tag">3 in Fail state</span>
           
         </div>
       </div>
@@ -532,7 +574,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">4</span>
-        <span class="risk-title">Operational Blind Spots and Delayed Incident Response</span>
+        <span class="risk-title">Inability to Detect and Respond to Threats Effectively</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-high">High</span>
@@ -543,10 +585,10 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Delayed detection and response to security incidents, increasing the impact of breaches or outages.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Delayed incident response and increased dwell time for attackers, risking financial loss and reputational damage.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Centralized security visibility not implemented; SOC workspace topology fragmented, Sentinel not enabled.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> Lack of centralized security monitoring (low diagnostics coverage, fragmented workspaces, Sentinel not enabled).</p>
       
 
       
@@ -570,7 +612,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
     <div class="risk-card">
       <div class="risk-header">
         <span class="risk-number">5</span>
-        <span class="risk-title">Business Continuity Risk Due to Lack of Backups</span>
+        <span class="risk-title">Service Recovery Gaps Threaten Business Continuity</span>
       </div>
       <div class="risk-meta">
         <span class="badge badge-high">High</span>
@@ -581,10 +623,10 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       </div>
 
       
-      <p style="font-size:.85rem"><strong>Business Impact:</strong> Inability to recover critical workloads after failures or ransomware attacks, leading to prolonged downtime and potential data loss.</p>
+      <p style="font-size:.85rem"><strong>Business Impact:</strong> Extended downtime or permanent data loss in the event of failure, impacting revenue and customer confidence.</p>
       
       
-      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No VM backups configured; backup coverage is 0%.</p>
+      <p style="font-size:.85rem;color:var(--muted)"><strong>Root Cause:</strong> No backup coverage for virtual machines; resilience controls not implemented.</p>
       
 
       
@@ -620,18 +662,23 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   
   <div style="margin-bottom:1rem">
     <h4>Maturity Trajectory</h4>
-    <div class="trajectory-bar">
+    <div style="position:relative;margin-bottom:2.5rem">
+      
+      <div class="trajectory-bar">
+        <div class="traj-fill" style="width:68%"></div>
+      </div>
+      
+      <span class="traj-label-start">19.5%</span>
       
       
+      <div class="traj-milestone" style="left:35%" data-label="35% · 30d"></div>
       
       
-    </div>
-    
-    <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-      Controls resolved: 0 (30d)
-      + 0 (60d)
-      + 0 (90d)
-      = 0 total
+      <div class="traj-milestone" style="left:55%" data-label="55% · 60d"></div>
+      
+      
+      <div class="traj-milestone" style="left:68%" data-label="68% · 90d"></div>
+      
     </div>
     
   </div>
@@ -645,35 +692,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Implement cost governance and budget alerts</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            
-            <span>&#x23F1;&#xFE0F; 1 week</span>
-            
-            
-            <span>&#x1F464; Finance Admin</span>
-            
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Budgets and cost alerts configured for all subscriptions; stakeholders receive notifications before thresholds are breached.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Remediate RBAC hygiene and enforce group-based access</strong>
+            <strong>Cost governance and budget alerting</strong>
             
             <span class="tag">Low</span>
             
@@ -688,20 +707,20 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
             
-            <span>&#x1F464; Identity Admin</span>
+            <span>&#x1F464; Cloud Platform Owner</span>
             
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Owner role assignments reduced to ≤5 per subscription; ≥50% of access via Entra groups.
+            &#x2713; Budgets and cost alerts are configured and active for all visible subscriptions; cost overruns trigger notifications.
           </div>
           
         </div>
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Centralize monitoring workspace topology</strong>
+            <strong>Centralized monitoring and workspace topology</strong>
             
             <span class="tag">Low</span>
             
@@ -716,13 +735,41 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
             
-            <span>&#x1F464; Platform Engineering</span>
+            <span>&#x1F464; Cloud Operations</span>
             
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; All subscriptions report to a single Log Analytics workspace with at least 90 days retention; Sentinel onboarding prerequisites met.
+            &#x2713; All platform resources send diagnostics to a central workspace; workspace retention is set to at least 90 days.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>Platform governance baseline (resource locks and policy assignments)</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 5 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 2 weeks</span>
+            
+            
+            <span>&#x1F464; Cloud Platform Owner</span>
+            
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; Critical resources are protected with resource locks; baseline policies are assigned at management group scope.
           </div>
           
         </div>
@@ -736,7 +783,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Establish hub-spoke network topology with centralized firewall and DDoS protection</strong>
+            <strong>Update Manager and change tracking for managed resources</strong>
             
             <span class="tag">Low</span>
             
@@ -751,80 +798,88 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             <span>&#x23F1;&#xFE0F; 3 weeks</span>
             
             
-            <span>&#x1F464; Network Engineering</span>
-            
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Hub VNet, Azure Firewall, and DDoS protection deployed; all spokes peered to hub.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Implement backup coverage for critical VMs and workloads</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            
-            <span>&#x23F1;&#xFE0F; 2 weeks</span>
-            
-            
-            <span>&#x1F464; Platform Engineering</span>
-            
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; All VMs protected by Azure Backup with policy-based retention.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Implement resource locks and governance policies</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            
-            <span>&#x23F1;&#xFE0F; 2 weeks</span>
-            
-            
-            <span>&#x1F464; Platform Engineering</span>
+            <span>&#x1F464; Cloud Operations</span>
             
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Implement cost governance and budget alerts
+            Depends on: Centralized monitoring and workspace topology
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Resource locks applied to critical resources; governance policies enforced at MG/subscription scope.
+            &#x2713; Update Manager covers all managed VMs; change tracking is enabled and reporting to central workspace.
           </div>
           
         </div>
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Establish Privileged Identity Management for privileged roles</strong>
+            <strong>RBAC hygiene and Privileged Identity Management enforcement</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 2 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 4 weeks</span>
+            
+            
+            <span>&#x1F464; Identity Administrator</span>
+            
+          </div>
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+            Depends on: Platform governance baseline (resource locks and policy assignments)
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; Owner role assignments reduced to recommended levels; PIM is enforced for all privileged roles.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>Hub-spoke network topology with Azure Firewall and DDoS Protection</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 3 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 4 weeks</span>
+            
+            
+            <span>&#x1F464; Network Architect</span>
+            
+          </div>
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+            Depends on: Platform governance baseline (resource locks and policy assignments)
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; Hub VNet, spokes, Azure Firewall, and DDoS Protection are deployed and operational; all subnets route through the firewall.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>Backup coverage for critical workloads</strong>
             
             <span class="tag">Low</span>
             
@@ -836,52 +891,20 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             
             
             
-            <span>&#x23F1;&#xFE0F; 2 weeks</span>
+            <span>&#x23F1;&#xFE0F; 3 weeks</span>
             
             
-            <span>&#x1F464; Identity Admin</span>
-            
-          </div>
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Remediate RBAC hygiene and enforce group-based access
-          </div>
-          
-          
-          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; ≥80% of privileged roles are eligible via PIM; no standing global admin assignments.
-          </div>
-          
-        </div>
-        
-        <div class="phase-item">
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Centralize security diagnostics and monitoring</strong>
-            
-            <span class="tag">Low</span>
-            
-          </div>
-          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
-            
-            <span>&#x1F4CB; 1 controls</span>
-            
-            
-            
-            
-            <span>&#x23F1;&#xFE0F; 2 weeks</span>
-            
-            
-            <span>&#x1F464; Security Operations</span>
+            <span>&#x1F464; Cloud Operations</span>
             
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Centralize monitoring workspace topology
+            Depends on: Platform governance baseline (resource locks and policy assignments)
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; Diagnostics coverage &gt;90% for critical resources; security logs ingested centrally.
+            &#x2713; Backup policies are in place and all critical VMs are protected with successful restore points.
           </div>
           
         </div>
@@ -895,7 +918,7 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Validate break-glass accounts and emergency access</strong>
+            <strong>Break-glass account posture and emergency access validation</strong>
             
             <span class="tag">Low</span>
             
@@ -907,52 +930,84 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
             
             
             
-            <span>&#x23F1;&#xFE0F; 1 week</span>
+            <span>&#x23F1;&#xFE0F; 2 weeks</span>
             
             
-            <span>&#x1F464; Identity Admin</span>
+            <span>&#x1F464; Identity Administrator</span>
             
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Establish Privileged Identity Management for privileged roles
+            Depends on: RBAC hygiene and Privileged Identity Management enforcement
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; At least two break-glass accounts validated and monitored; emergency access tested.
+            &#x2713; Break-glass accounts exist, are tested, and are excluded from conditional access and PIM policies as appropriate.
           </div>
           
         </div>
         
         <div class="phase-item">
           <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
-            <strong>Remediate storage account and private endpoint posture</strong>
+            <strong>Centralized security visibility and alerting</strong>
             
             <span class="tag">Low</span>
             
           </div>
           <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
             
-            <span>&#x1F4CB; 2 controls</span>
+            <span>&#x1F4CB; 3 controls</span>
             
             
             
             
-            <span>&#x23F1;&#xFE0F; 3 weeks</span>
+            <span>&#x23F1;&#xFE0F; 4 weeks</span>
             
             
-            <span>&#x1F464; Platform Engineering</span>
+            <span>&#x1F464; Security Operations</span>
             
           </div>
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
-            Depends on: Establish hub-spoke network topology with centralized firewall and DDoS protection, Centralize security diagnostics and monitoring
+            Depends on: RBAC hygiene and Privileged Identity Management enforcement, Centralized monitoring and workspace topology
           </div>
           
           
           <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
-            &#x2713; 100% of storage accounts and PaaS services use private endpoints and meet security baseline.
+            &#x2713; Security signals from all resources are ingested into the central workspace and alerts are mapped to action groups.
+          </div>
+          
+        </div>
+        
+        <div class="phase-item">
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.3rem">
+            <strong>Storage account and private endpoint posture remediation</strong>
+            
+            <span class="tag">Low</span>
+            
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;font-size:.78rem;color:var(--muted)">
+            
+            <span>&#x1F4CB; 3 controls</span>
+            
+            
+            
+            
+            <span>&#x23F1;&#xFE0F; 4 weeks</span>
+            
+            
+            <span>&#x1F464; Cloud Security</span>
+            
+          </div>
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">
+            Depends on: Hub-spoke network topology with Azure Firewall and DDoS Protection
+          </div>
+          
+          
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.2rem">
+            &#x2713; All storage accounts are compliant with encryption, firewall, and private endpoint requirements.
           </div>
           
         </div>
@@ -1140,9 +1195,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
               
             </td>
             <td><span class="badge badge-low">Low</span></td>
-            <td class="why-cell">Signal: resource_graph:app_service_posture · All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-03-04T00:28:50.6250394Z, correlationId = a13d9c8f-dd32-4d23-8d30-9039693dcb29.
+            <td class="why-cell">Signal: resource_graph:app_service_posture · All required signals failed: resource_graph:app_service_posture: (BadRequest) Please provide below info when asking for support: timestamp = 2026-03-05T17:42:31.6929561Z, correlationId = abb77569-bdef-4840-af58-8b44f52071f2.
 Code: BadRequest
-Message: Please provide below info when asking for support: timestamp = 2026-03-04T00:2</td>
+Message: Please provide below info when asking for support: timestamp = 2026-03-05T17:4</td>
           </tr>
           
           <tr id="control-D08.02">
@@ -1268,7 +1323,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
             </td>
             <td><span class="badge badge-high">High</span></td>
-            <td class="why-cell">Signal: defender:secure_score, monitor:diag_coverage_sample · Centralized security visibility gaps: Diagnostics coverage 2.3% is low. · </td>
+            <td class="why-cell">Signal: defender:secure_score, monitor:diag_coverage_sample · Centralized security visibility gaps: Diagnostics coverage 2.1% is low. · </td>
           </tr>
           
           <tr id="control-F01.01">
@@ -1286,7 +1341,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
             </td>
             <td><span class="badge badge-high">High</span></td>
-            <td class="why-cell">Signal: monitor:diag_coverage_sample · Diagnostics coverage is 2.3% (sample=87). Most resources lack diagnostic settings. · </td>
+            <td class="why-cell">Signal: monitor:diag_coverage_sample · Diagnostics coverage is 2.1% (sample=95). Most resources lack diagnostic settings. · </td>
           </tr>
           
           <tr id="control-B03.14">
@@ -1304,7 +1359,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
             </td>
             <td><span class="badge badge-high">High</span></td>
-            <td class="why-cell">Signal: monitor:diag_coverage_sample · Low diagnostics coverage (2.3%) suggests Entra ID logs may not be centralized. · </td>
+            <td class="why-cell">Signal: monitor:diag_coverage_sample · Low diagnostics coverage (2.1%) suggests Entra ID logs may not be centralized. · </td>
           </tr>
           
           <tr id="control-G01.01">
@@ -6651,7 +6706,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              No evidence of management group hierarchy, policy initiatives at MG scope, or resource locks. This prevents scalable policy enforcement, resource organization, and cost governance.
+              No management group hierarchy or policy initiatives at scale. Resource locks, cost governance, and policy compliance are missing. This blocks policy-driven governance, cost control, and prevents scaling beyond a single subscription.
             </div>
             
           
@@ -6662,7 +6717,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are governance controls (including resource locks, policy enforcement, and governance process documentation) implemented and maintained across the platform?</div>
+              <div class="q-text">To what extent are governance controls implemented for resource locks, policy assignment, and compliance management across the platform?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6670,7 +6725,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a Governance and Policy workshop to define, document, and implement required controls.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a governance controls workshop to define lock, policy, and compliance management standards.</div>
               
               
             </div>
@@ -6694,7 +6749,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
             
             <div class="funnel-item">
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Privilege Escalation and Unauthorized Access
+              Privilege Misuse and Insider Risk from Weak Identity Controls
             </div>
             
           
@@ -6708,7 +6763,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              Privileged Identity Management (PIM) is not effective (eligible ratio 0%), break-glass accounts are not validated, and RBAC hygiene is poor (27 Owner assignments, no group-based access). This exposes the tenant to privilege escalation and operational risk at scale.
+              Privileged Identity Management (PIM) is not effective (eligible ratio 0%), excessive Owner role assignments (27, recommended ≤5), and no group-based RBAC. Break-glass accounts are not validated. This exposes the platform to privilege escalation and operational risk at scale.
             </div>
             
           
@@ -6719,7 +6774,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are privileged access controls (including RBAC hygiene, PIM for privileged roles, and break-glass account validation) implemented and operationalized in line with least privilege and zero standing access principles?</div>
+              <div class="q-text">To what extent are role-based access control (RBAC), Privileged Identity Management (PIM), and break-glass accounts implemented and enforced for privileged Azure roles?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6727,7 +6782,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Schedule a Privileged Access Management workshop to design and implement PIM, RBAC hygiene, and break-glass account processes.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate an identity and access management workshop to define RBAC, PIM, and break-glass processes.</div>
               
               
             </div>
@@ -6751,12 +6806,12 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
             
             <div class="funnel-item">
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Operational Blind Spots and Delayed Incident Response
+              Inability to Detect and Respond to Threats Effectively
             </div>
             
             <div class="funnel-item">
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Business Continuity Risk Due to Lack of Backups
+              Service Recovery Gaps Threaten Business Continuity
             </div>
             
           
@@ -6770,7 +6825,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              No centralized Log Analytics workspace, Sentinel not enabled, and log retention is below recommended (30d vs ≥90d). This blocks centralized monitoring, incident response, and compliance at scale.
+              Centralized monitoring is absent: Log Analytics workspace topology is fragmented, Sentinel is not enabled, and log retention is only 30 days (recommend ≥90). This blocks scalable operations, incident response, and regulatory alignment.
             </div>
             
           
@@ -6781,7 +6836,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent is a centralized and scalable monitoring and management architecture (including workspace topology, update management, alerting, and change tracking) established and maintained?</div>
+              <div class="q-text">To what extent is centralized monitoring and management implemented, including Log Analytics workspace topology, update management, change tracking, and alert action mapping?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6789,13 +6844,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Host a Management and Monitoring architecture review to design and implement a centralized solution.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Run a management and monitoring workshop to rationalize workspace topology and operational controls.</div>
               
               
             </div>
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are platform resilience and backup strategies (including VM backup coverage and recovery processes) implemented and regularly tested?</div>
+              <div class="q-text">To what extent is backup and resilience coverage implemented for critical workloads, including VM backup and recovery validation?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6803,13 +6858,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a Resilience and Backup strategy review to establish and test platform-wide backup processes.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a backup and resilience review to identify coverage gaps and validate recovery processes.</div>
               
               
             </div>
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are cost management and forecasting practices (including cost forecasting, budget alerts, and cost allocation) established and regularly reviewed?</div>
+              <div class="q-text">To what extent are cost management and forecasting capabilities implemented, including budget assignment, cost alerts, and forecast reviews?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6817,7 +6872,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Host a Cost Management and Forecasting workshop to implement automated cost controls and review processes.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Run a cost management and forecasting workshop to establish platform-wide cost governance.</div>
               
               
             </div>
@@ -6830,7 +6885,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
     <div class="funnel-domain">
       <h3>Network Topology and Connectivity
         
-        <span class="tag" style="margin-left:.5rem">6 controls impacted if implemented</span>
+        <span class="tag" style="margin-left:.5rem">4 controls impacted if implemented</span>
         
       </h3>
       <div class="funnel-cols">
@@ -6841,7 +6896,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
             
             <div class="funnel-item">
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
-              Network Breach Risk and Service Disruption
+              Operational Disruption from Insufficient Network Security
             </div>
             
           
@@ -6855,7 +6910,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              No evidence of hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. This prevents secure and scalable network segmentation and centralized egress, which are required for multi-subscription environments.
+              No evidence of a hub-spoke or Virtual WAN topology, Azure Firewall, or DDoS Protection. This prevents scalable, secure, and centrally governed network architecture required for multi-subscription environments.
             </div>
             
           
@@ -6866,15 +6921,15 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent is a standardized, secure, and scalable network topology (including hub-spoke, Azure Firewall, DDoS Protection, and NSG coverage) implemented and documented across all Azure environments?</div>
+              <div class="q-text">To what extent is a standardized, enterprise-wide hub-and-spoke network topology implemented, including Azure Firewall, DDoS Protection, and centralized control of network security boundaries?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
-                <span class="tag">Controls impacted: 6</span>
+                <span class="tag">Controls impacted: 4</span>
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a network architecture workshop to design and document a standardized hub-spoke topology with required security controls.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a network topology and security boundary workshop to design or validate the enterprise hub-and-spoke pattern.</div>
               
               
             </div>
@@ -6898,12 +6953,12 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
             
             <div class="funnel-item">
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
-              Exposure of Sensitive Data and Regulatory Non-Alignment
+              Exposure of Sensitive Data Due to Inadequate Protection
             </div>
             
             <div class="funnel-item">
               <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              Operational Blind Spots and Delayed Incident Response
+              Inability to Detect and Respond to Threats Effectively
             </div>
             
           
@@ -6917,14 +6972,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
               
               <span class="badge badge-critical" style="margin-right:.3rem">Critical</span>
               
-              Centralized security visibility is lacking (diagnostics coverage 2.3%), Defender for Cloud is not fully enabled, and storage/data protection controls are failing. This leaves the environment without baseline security posture for enterprise operations.
-            </div>
-            
-            <div class="funnel-item">
-              
-              <span class="badge badge-high" style="margin-right:.3rem">High</span>
-              
-              Storage accounts and private endpoints are 0% compliant, and backup coverage for VMs is 0%. This blocks regulatory alignment and resilience for critical workloads.
+              Centralized security visibility is lacking (diagnostics coverage 2.1%), Defender for Cloud coverage is not evidenced, and Secure Score is not available. Storage and private endpoint posture are non-compliant (0% coverage). This prevents effective threat detection and response at scale.
             </div>
             
           
@@ -6935,7 +6983,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
           
             
             <div class="funnel-q">
-              <div class="q-text">To what extent is centralized security visibility and monitoring established, including diagnostic log coverage, security alerting, and integration with a central SIEM (e.g., Microsoft Sentinel)?</div>
+              <div class="q-text">To what extent is centralized security monitoring and alerting implemented, including diagnostic log coverage, security solution integration, and actionable alert routing?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6943,13 +6991,13 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Facilitate a Security Monitoring and SIEM integration workshop to design and implement centralized security visibility.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Perform a security monitoring and alerting architecture review to identify coverage and integration gaps.</div>
               
               
             </div>
             
             <div class="funnel-q">
-              <div class="q-text">To what extent are data protection and secure access controls (including storage, private endpoints, and container registry posture) implemented and governed across the platform?</div>
+              <div class="q-text">To what extent are data protection controls enforced for storage accounts, private endpoints, and container registries across the platform?</div>
               <div class="q-meta">
                 <span class="tag">maturity_scale</span>
                 
@@ -6957,7 +7005,7 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
                 
               </div>
               
-              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a Data Protection and Secure Access review to identify and remediate gaps in storage and endpoint security.</div>
+              <div class="q-meta" style="margin-top:.2rem">&#x1F4A1; Conduct a data protection controls workshop to define and validate storage, endpoint, and registry policies.</div>
               
               
             </div>
@@ -6976,43 +7024,43 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
   
   
   <div class="issue">
-    <h3>Absence of Secure Hub-and-Spoke Network Topology</h3>
+    <h3>Absence of Secure Network Segmentation</h3>
     <p><strong>Design Area:</strong> Network Topology and Connectivity</p>
     <p><strong>Severity:</strong> High</p>
-    <p>If unresolved, all resources in the visible subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) remain exposed to lateral movement, inconsistent security controls, and inefficient connectivity. This impacts the entire management group scope, increasing the risk of cross-workload compromise and non-compliance with organizational network segmentation standards.</p>
-    <p><strong>Course of Action:</strong> Establish a dedicated virtual network hub using Azure Virtual WAN or a central Virtual Network, and connect spokes for workload isolation. → Apply ALZ Bicep network module to enforce standardized routing, network security groups, and centralized firewall policies across all spokes.</p>
+    <p>If unresolved, all workloads within the visible subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) are exposed to lateral movement and potential compromise, as there is no enforced segmentation. This impacts the entire management group scope, increasing the blast radius for any breach or misconfiguration.</p>
+    <p><strong>Course of Action:</strong> Implement a hub-and-spoke network topology using Azure Virtual Network and Virtual Network Peering via the ALZ Network Bicep module. → Apply network security groups (NSGs) and route tables to enforce segmentation between spokes and restrict east-west traffic.</p>
   </div>
   
   <div class="issue">
-    <h3>Unrestricted Inbound Network Access Detected</h3>
+    <h3>Lack of Centralized Egress and Ingress Control</h3>
     <p><strong>Design Area:</strong> Network Topology and Connectivity</p>
     <p><strong>Severity:</strong> High</p>
-    <p>Leaving inbound network access unrestricted exposes all resources in the subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) to external threats, increasing the likelihood of data breaches and service disruption. This risk extends across the management group, potentially impacting all governed workloads.</p>
-    <p><strong>Course of Action:</strong> Audit and restrict all NSG and firewall rules to allow only required inbound traffic from trusted sources. → Deploy ALZ network security policy assignments at the management group level to enforce baseline inbound access controls.</p>
+    <p>Without centralized control, outbound and inbound traffic for the entire subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) is unmanaged, increasing the risk of data exfiltration and exposure to external threats. This affects all resources under the management group, elevating the governance risk.</p>
+    <p><strong>Course of Action:</strong> Deploy Azure Firewall in the hub network to centralize and log all outbound and inbound traffic using the ALZ Firewall Bicep module. → Configure forced tunneling and update UDRs to ensure all spoke networks route internet-bound traffic through the firewall.</p>
   </div>
   
   <div class="issue">
-    <h3>Lack of Centralized DNS and Private Link Integration</h3>
+    <h3>No Private DNS or Service Endpoints for Platform Services</h3>
     <p><strong>Design Area:</strong> Network Topology and Connectivity</p>
     <p><strong>Severity:</strong> High</p>
-    <p>Without centralized DNS and Private Link, sensitive resources in the subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) are exposed to public endpoints, increasing data exfiltration and eavesdropping risks. This undermines governance controls and may violate internal data protection requirements.</p>
-    <p><strong>Course of Action:</strong> Implement Azure Private DNS Zones and integrate with Private Link for all supported PaaS services. → Update ALZ network Bicep modules to enforce Private Link service endpoints and DNS zone links across all relevant virtual networks.</p>
+    <p>Platform services (e.g., storage, databases) are accessible over public endpoints from the entire subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70), increasing exposure to data leakage and unauthorized access. This risk spans all workloads under the management group.</p>
+    <p><strong>Course of Action:</strong> Establish Azure Private DNS Zones and link them to the virtual networks using the ALZ DNS Bicep module. → Configure Private Endpoints for storage accounts and databases to restrict access to internal networks only.</p>
   </div>
   
   <div class="issue">
-    <h3>Absence of Baseline Security Policy Enforcement</h3>
+    <h3>Absence of Centralized Security Policy Enforcement</h3>
     <p><strong>Design Area:</strong> Security</p>
     <p><strong>Severity:</strong> High</p>
-    <p>Without enforced security policies, critical resources in the subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) lack protection against common threats, increasing the risk of unauthorized access and regulatory misalignment across the management group.</p>
-    <p><strong>Course of Action:</strong> Assign the ALZ Security Baseline policy initiative at the management group scope to enforce minimum security standards. → Monitor compliance and remediate non-compliant resources using Azure Policy remediation tasks.</p>
+    <p>Without centralized security policies, all resources in the subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) are at risk of inconsistent security configurations, increasing the likelihood of non-compliance and undetected vulnerabilities across the management group.</p>
+    <p><strong>Course of Action:</strong> Assign ALZ baseline security policies and initiatives at the management group scope using Azure Policy. → Enable Azure Security Center (Defender for Cloud) to monitor compliance and surface security recommendations.</p>
   </div>
   
   <div class="issue">
-    <h3>Storage Accounts Lack Encryption and Secure Access Controls</h3>
+    <h3>Storage Accounts Exposed to Public Internet</h3>
     <p><strong>Design Area:</strong> Security</p>
     <p><strong>Severity:</strong> High</p>
-    <p>Unprotected storage accounts in the subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70) risk data leakage, unauthorized access, and regulatory violations. This affects all data stored within the governed scope, potentially impacting business continuity and reputation.</p>
-    <p><strong>Course of Action:</strong> Enable encryption with customer-managed keys and enforce secure transfer requirements on all storage accounts. → Apply ALZ storage security policy assignments to require private endpoints and restrict public network access.</p>
+    <p>Data stored in Azure Storage accounts is accessible from the public internet for all workloads in the subscription (f775e0e1-c710-47ae-9dee-f50a0e4a0c70), risking data exfiltration and regulatory violations at the management group level.</p>
+    <p><strong>Course of Action:</strong> Restrict public network access on all storage accounts and require access via private endpoints. → Deploy Azure Policy to audit and enforce storage account network rules across the management group.</p>
   </div>
   
   
@@ -7020,8 +7068,8 @@ Message: Please provide below info when asking for support: timestamp = 2026-03-
 
 </div>
 
-<footer style="text-align:center;padding:2rem 0;color:var(--muted);font-size:.75rem;border-top:1px solid var(--border)">
-  Azure Landing Zone Assessment &mdash; CSA Decision-Driven Report
+<footer style="text-align:center;padding:2rem 0;color:var(--muted);font-size:.75rem;background:var(--card-bg);border-top:1px solid var(--border);margin-top:1rem">
+  <span style="color:var(--accent);font-weight:600">Microsoft Azure</span> Landing Zone Assessment &mdash; CSA Decision-Driven Report
 </footer>
 
 </body>
