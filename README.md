@@ -1,6 +1,6 @@
 # Copilot Enterprise Workshop Orchestrator
 
-This repository is a reference implementation for running CSA‑led Azure Landing Zone governance workshops using deterministic Azure telemetry, with Copilot acting only as a controlled orchestration layer. It replaces checklist interviews and slideware with evidence‑based assessments and customer‑ready outputs.
+This repository is a reference implementation for running CSA‑led Azure Landing Zone governance workshops using deterministic Azure telemetry, with Copilot acting as a controlled orchestration layer. It replaces checklist interviews and slideware with evidence‑based assessments and customer‑ready outputs.
 
 ### AI-Orchestrated Azure Landing Zone Governance Assessments
 
@@ -64,7 +64,7 @@ The underlying assessment engine performs structured, multi-stage reasoning over
 2. Dependency graph impact analysis
 3. Initiative ordering based on structural constraints
 4. Causal "why-risk" chain construction
-5. Microsoft Learn–grounded remediation guidance
+5. Grounds remediation guidance in official Microsoft Learn documentation via MCP (Model Context Protocol)
 
 **The AI does not score. It reasons over scored evidence.**
 
