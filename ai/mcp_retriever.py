@@ -334,9 +334,12 @@ def _mcp_call(tool_name: str, arguments: dict) -> dict | None:
             return asyncio.run(_mcp_call_async(tool_name, arguments))
         except RuntimeError:
             import concurrent.futures
+            import warnings
             remaining = max(1, deadline - time.monotonic())
             with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                future = pool.submit(asyncio.run, _mcp_call_async(tool_name, arguments))
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore", message="coroutine.*was never awaited", category=RuntimeWarning)
+                    future = pool.submit(asyncio.run, _mcp_call_async(tool_name, arguments))
                 try:
                     return future.result(timeout=remaining)
                 except concurrent.futures.TimeoutError as exc:

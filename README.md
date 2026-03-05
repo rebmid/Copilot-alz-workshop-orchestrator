@@ -107,34 +107,6 @@ Assessment scope discovery showing tenant context, evaluated subscriptions, and 
 
 ---
 
-### Foundation Gate – Enterprise Readiness
-
-The assessment begins by evaluating whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**.
-
-The **Foundation Gate** summarizes critical readiness indicators derived from deterministic control evaluation.
-
-If foundational architecture requirements are not met, the platform is flagged as **Not Ready for Enterprise Scale**, signaling that key governance and security controls must be remediated before scaling workloads.
-
-![Foundation Gate](docs/demo/foundation-gate.png)
-
----
-
-### Enterprise Readiness Blockers
-
-Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
-
-![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
-
----
-
-### Top Business Risks
-
-Deterministically ranked platform risks with root cause mapping and score drivers.
-
-![Top Business Risks](docs/demo/02_top-business-risks.png)
-
----
-
 ### Copilot Governance Analysis
 
 Copilot analyzes deterministic evidence and surfaces the most critical governance risks and remediation priorities during the workshop.
@@ -159,7 +131,35 @@ Copilot synthesizes deterministic governance evidence into structured remediatio
 
 ---
 
-### Critical Issues & Recommended Course of Action
+### Foundation Gate – Enterprise Readiness (HTML Report Output)
+
+The **Foundation Gate** is the first section of the generated HTML report. It evaluates whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**, based on the deterministic assessment results.
+
+If foundational requirements are not met, the report flags the platform as **Not Ready for Enterprise Scale**, highlighting the governance and security controls that must be remediated before scaling workloads.
+
+> *Screenshot from the generated HTML report — produced by `python scan.py --demo`*
+
+![Foundation Gate](docs/demo/foundation-gate.png)
+
+---
+
+### Enterprise Readiness Blockers (HTML Report)
+
+Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
+
+![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
+
+---
+
+### Top Business Risks (HTML Report)
+
+Deterministically ranked platform risks with root cause mapping and score drivers.
+
+![Top Business Risks](docs/demo/02_top-business-risks.png)
+
+---
+
+### Critical Issues & Recommended Course of Action (HTML Report)
 
 Architectural remediation guidance derived from failing governance controls and ALZ design area analysis.
 
@@ -174,7 +174,7 @@ Each issue includes:
 
 ---
 
-### Transformation Roadmap (30-60-90 Days)
+### Transformation Roadmap – 30-60-90 Days (HTML Report)
 
 Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone architecture.
 
@@ -182,7 +182,7 @@ Deterministic findings are converted into a phased transformation roadmap aligne
 
 ---
 
-### Workshop Decision Funnel
+### Workshop Decision Funnel (HTML Report)
 
 CSA decision support view mapping blockers → risks → remediation path.
 
@@ -190,7 +190,7 @@ CSA decision support view mapping blockers → risks → remediation path.
 
 ---
 
-### Design Area Breakdown
+### Design Area Breakdown (HTML Report)
 
 ALZ design area maturity distribution with automation %, critical failures, and control status mapping.
 
@@ -198,15 +198,12 @@ ALZ design area maturity distribution with automation %, critical failures, and 
 
 ---
 
-### CSA Workbook – 30-60-90 Implementation Plan
+## CSA Workbook (Excel Output)
 
-Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
+In addition to the HTML report, the platform generates a **CSA Workbook** — a customer-ready Excel deliverable that CSAs can use directly in engagement follow-ups, action tracking, and executive briefings.
 
-![Excel 30-60-90 Roadmap](docs/demo/05_excel_30_60_90_roadmap.png)
 
----
-
-### CSA Workbook – Executive Summary
+### CSA Workbook – Executive Summary (Excel)
 
 Executive framing including maturity metrics and prioritized business risks.
 
@@ -214,7 +211,15 @@ Executive framing including maturity metrics and prioritized business risks.
 
 ---
 
-### Full Checklist Control Details
+### CSA Workbook – 30-60-90 Implementation Plan (Excel)
+
+Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
+
+![Excel 30-60-90 Roadmap](docs/demo/05_excel_30_60_90_roadmap.png)
+
+---
+
+### Full Checklist Control Details (Excel)
 
 Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
@@ -222,14 +227,14 @@ Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ---
 
-### Interactive HTML Executive Report
+### Interactive Demo Report
 
-The platform produces a full executive-ready HTML report suitable for architecture reviews and governance workshops.
-> 🔍 **Open the interactive demo report:**
-> 👉 **[View the HTML assessment report](https://htmlpreview.github.io/?https://github.com/rebmid/Copilot-alz-workshop-orchestrator/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
+Want to explore the full report yourself? Open the sample below — it's a real assessment output generated from an Azure test tenant. Click through sections, expand design areas, and review control details.
+
+> 👉 **[Open the interactive HTML report](https://htmlpreview.github.io/?https://github.com/rebmid/Copilot-alz-workshop-orchestrator/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
 > Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
-## Presentation Deck
+## PowerPoint Presentation Deck
 
 Architecture overview and project walkthrough:
 
@@ -246,7 +251,6 @@ Architecture overview and project walkthrough:
 | **Documentation-Grounded** | Microsoft Learn MCP integration enriches outputs with official implementation guidance |
 | **Traceable Deliverables** | CSA Workbook, HTML Report, and Run JSON preserve referential integrity end-to-end |
 | **Continuous Posture (CI/CD)** | GitHub Actions workflow runs scheduled governance scans with deterministic delta tracking and artifact upload |
-
 
 ---
 
