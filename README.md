@@ -1011,6 +1011,4 @@ python scan.py --no-ai --no-html
 This project was developed using GitHub Copilot as an AI pair programmer for code generation, refactoring, and test scaffolding.  
 All architecture, control logic, Azure integration, and reasoning workflows were designed and implemented by the authors Rebekah Midkiff & Jeff Garcia.
 
-## License
-
-MIT License
+GitHub Copilot SDK Enterprise Challenge Submission
