@@ -9,11 +9,11 @@
 Enterprise-grade Azure Landing Zone assessment orchestrator.
 Runs deterministic governance scans against Azure environments,
 scores maturity across ALZ design areas, and produces customer-facing
-reports — all surfaced through a 4-tool Copilot SDK session.
+reports — all surfaced through a 6-tool Copilot SDK session.
 
 ## Agent Capabilities
 
-The Copilot SDK session exposes **exactly 4 tools**:
+The Copilot SDK session exposes **exactly 6 tools**:
 
 | Tool | Description |
 |---|---|
@@ -21,6 +21,8 @@ The Copilot SDK session exposes **exactly 4 tools**:
 | `load_results` | Load a completed run into memory and return structured metadata |
 | `summarize_findings` | Filter findings by design area, severity, or failure status |
 | `generate_outputs` | Produce HTML report or Excel workbook from a loaded run |
+| `list_runs` | List available assessment runs in the run store (newest first) |
+| `compare_runs` | Compare latest run against previous run and produce a delta summary |
 
 ## Guardrails
 
@@ -33,8 +35,8 @@ The Copilot SDK session exposes **exactly 4 tools**:
 ## Session Cache
 
 After `run_scan` or `load_results`, the session remembers the active run ID.
-Subsequent `summarize_findings` and `generate_outputs` calls default to the
-active run when `run_id` is omitted.
+Subsequent `summarize_findings`, `generate_outputs`, `list_runs`, and `compare_runs`
+calls default to the active run when `run_id` is omitted.
 
 ## Entry Point
 
