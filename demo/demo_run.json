@@ -11115,5 +11115,42 @@
     "has_previous": false,
     "count": 0,
     "changed_controls": []
-  }
+  },
+  "critical_issues": [
+    {
+      "title": "Absence of Centralized Network Security Controls",
+      "design_area": "Network Topology and Connectivity",
+      "severity": "High",
+      "business_risk": "No Azure Firewall or hub-spoke topology detected. Without centralized network security controls, all workloads are exposed to lateral movement risks, uncontrolled egress, and inconsistent perimeter enforcement across subscriptions.",
+      "recommended_action": "Deploy a hub VNet with Azure Firewall to centralize egress and east-west traffic filtering. Establish hub-spoke peering for all workload spokes. Enable DDoS Protection Standard on VNets with public-facing resources."
+    },
+    {
+      "title": "DDoS Protection Not Enabled",
+      "design_area": "Network Topology and Connectivity",
+      "severity": "High",
+      "business_risk": "Virtual networks with public IP addresses lack DDoS Protection Standard. This exposes internet-facing workloads to volumetric, protocol, and application-layer DDoS attacks that could cause service disruption.",
+      "recommended_action": "Enable Azure DDoS Network Protection on all VNets containing public IP resources. Configure DDoS diagnostic logging to the centralized Log Analytics workspace for attack visibility."
+    },
+    {
+      "title": "Management Group Hierarchy Not ALZ-Aligned",
+      "design_area": "Governance",
+      "severity": "Medium",
+      "business_risk": "No Platform, Connectivity, or Landing Zones management groups detected. Without the standard ALZ hierarchy, policy inheritance is fragmented, RBAC boundaries are unclear, and subscription governance cannot scale consistently.",
+      "recommended_action": "Implement the Azure Landing Zone management group hierarchy: Root → Platform (Identity, Management, Connectivity) + Landing Zones (Corp, Online). Assign foundational policy initiatives at the appropriate management group scope."
+    },
+    {
+      "title": "Defender Security Posture Gaps",
+      "design_area": "Security",
+      "severity": "High",
+      "business_risk": "Defender for Cloud assessment health is critically low with multiple unhealthy findings. Secure Score is not measurable. This prevents effective risk visibility and automated threat detection across the platform.",
+      "recommended_action": "Enable all critical Defender for Cloud plans (CSPM, Servers, Storage, Key Vault). Remediate high-impact security recommendations. Configure continuous export of security alerts to the centralized workspace."
+    },
+    {
+      "title": "Insufficient Monitoring and Diagnostics Coverage",
+      "design_area": "Management",
+      "severity": "High",
+      "business_risk": "Diagnostics coverage is below 10% and no centralized Log Analytics workspace topology is established. Sentinel is not deployed. This blocks incident detection, compliance auditing, and operational troubleshooting at scale.",
+      "recommended_action": "Deploy a centralized Log Analytics workspace with 90+ day retention. Configure Azure Policy to enforce diagnostic settings on all resource types. Deploy Microsoft Sentinel for security event correlation and automated response."
+    }
+  ]
 }
