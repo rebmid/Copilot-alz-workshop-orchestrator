@@ -1,31 +1,58 @@
 # Copilot Enterprise Workshop Orchestrator
 
-### Deterministic Azure Landing Zone Governance — Multi-Turn, Tool-Restricted, Enterprise Guardrailed
+### AI-Orchestrated Azure Landing Zone Governance Assessments
 
-This project implements a GitHub Copilot SDK–powered **enterprise workshop orchestrator** over a deterministic Azure Landing Zone (ALZ) governance engine.
+Azure Landing Zone (ALZ) governance reviews are typically delivered through manual workshops, slide decks, and checklist interviews.  
+These engagements are difficult to scale, inconsistent across architects, and rarely produce repeatable governance insights.
 
-> **Copilot does not score controls.**
-> **Copilot does not mutate the environment.**
+This project introduces an **AI-orchestrated workshop experience** built on top of a **deterministic Azure Landing Zone governance assessment engine**.
 
-Copilot acts as a multi-turn orchestration layer, selecting from explicit, guardrailed tools that execute deterministic governance logic and return structured, traceable evidence.
+The platform operates in two layers:
 
----
+1. **Deterministic Assessment Engine**  
+   Evaluates Azure Landing Zone posture using live Azure telemetry and the official Azure Review Checklist.
 
-## What Makes This Enterprise-Grade
+2. **Copilot Workshop Orchestrator**  
+   Uses the GitHub Copilot SDK to guide a multi-turn governance workshop over the deterministic assessment results.
 
-- **One-way data flow:** deterministic → AI
-- **Tool-restricted execution surface**
-- **No scoring modification**
-- **No environment mutation**
-- **No file writes outside `out/`**
-- **Structured output validation**
-- **Microsoft Learn grounding via MCP**
+Copilot **does not score controls or mutate the environment**.  
+It orchestrates guardrailed tools that expose deterministic governance insights through a conversational interface.
 
-> **This is not a chatbot.**
->
-> It is a controlled governance orchestration layer over live Azure telemetry.
+The result is a **repeatable, evidence-driven enterprise governance workshop** powered by real Azure telemetry.
 
----
+**In one command, a Cloud Solution Architect can scan an Azure environment and run a Copilot-facilitated governance workshop over real platform telemetry.**
+
+## Platform Architecture
+
+The platform is composed of two primary layers:
+
+### 1. Deterministic Governance Engine
+
+The assessment engine performs a full Azure Landing Zone governance evaluation using live Azure telemetry.
+
+It:
+
+- Collects signals from Azure Resource Graph, Policy, Defender, and Management Groups
+- Scores controls from the Azure Landing Zone Review Checklist
+- Computes maturity scores and risk tiers
+- Generates transformation roadmaps and remediation guidance
+- Produces customer-ready deliverables (HTML report + CSA workbook)
+
+All governance scoring is **deterministic and reproducible**.
+
+### 2. Copilot Workshop Orchestrator
+
+The Copilot SDK provides an orchestration layer that exposes the deterministic engine through a guided workshop experience.
+
+Copilot selects from a restricted set of tools that:
+
+- Run assessments
+- Load completed results
+- Summarize governance findings
+- Generate customer deliverables
+- Compare historical runs
+
+Copilot **cannot modify scores, mutate the environment, or execute arbitrary code**.
 
 ## Deterministic Reasoning Foundation
 
@@ -64,7 +91,7 @@ Copilot orchestrates the experience, but all governance scoring remains determin
 
 ---
 
-## 1️⃣ Live Workshop Mode – Copilot SDK Orchestration
+### 1️⃣ Live Workshop Mode – Copilot SDK Orchestration
 
 Natural-language workshop interaction driving deterministic tool execution.
 
@@ -72,7 +99,7 @@ Natural-language workshop interaction driving deterministic tool execution.
 
 ---
 
-## 2️⃣ Execution Context (Azure Environment Scope)
+### 2️⃣ Execution Context (Azure Environment Scope)
 
 Assessment scope discovery showing tenant context, evaluated subscriptions, and RBAC posture.
 
@@ -80,7 +107,7 @@ Assessment scope discovery showing tenant context, evaluated subscriptions, and 
 
 ---
 
-## 3️⃣ Foundation Gate – Enterprise Readiness
+### 3️⃣ Foundation Gate – Enterprise Readiness
 
 The assessment begins by evaluating whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**.
 
@@ -92,7 +119,7 @@ If foundational architecture requirements are not met, the platform is flagged a
 
 ---
 
-## 4️⃣ Enterprise Readiness Blockers
+### 4️⃣ Enterprise Readiness Blockers
 
 Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
 
@@ -100,7 +127,7 @@ Foundation gaps preventing enterprise-scale ALZ adoption, derived from determini
 
 ---
 
-## 5️⃣ Top Business Risks
+### 5️⃣ Top Business Risks
 
 Deterministically ranked platform risks with root cause mapping and score drivers.
 
@@ -108,31 +135,31 @@ Deterministically ranked platform risks with root cause mapping and score driver
 
 ---
 
-## 6️⃣ Copilot Governance Analysis
+### 6️⃣ Copilot Governance Analysis
 
 Copilot analyzes deterministic evidence and surfaces the most critical governance risks and remediation priorities during the workshop.
 
-![Copilot Governance Analysis](docs/demo/Copilot Analysis.png)
+![Copilot Governance Analysis](docs/demo/copilot-analysis.png)
 
 ---
 
-## 7️⃣ Copilot Root Cause Mapping
+### 7️⃣ Copilot Root Cause Mapping
 
 The orchestration layer maps failing controls to underlying architectural weaknesses across ALZ design areas.
 
-![Copilot Root Cause Analysis](docs/demo/Copilot Analysis2.png)
+![Copilot Root Cause Analysis](docs/demo/copilot-analysis2.png)
 
 ---
 
-## 8️⃣ Copilot Remediation Reasoning
+### 8️⃣ Copilot Remediation Reasoning
 
 Copilot synthesizes deterministic governance evidence into structured remediation guidance aligned with Azure Landing Zone architecture.
 
-![Copilot Remediation Reasoning](docs/demo/Copilot Analysis3.png)
+![Copilot Remediation Reasoning](docs/demo/copilot-analysis3.png)
 
 ---
 
-## 9️⃣ Critical Issues & Recommended Course of Action
+### 9️⃣ Critical Issues & Recommended Course of Action
 
 Architectural remediation guidance derived from failing governance controls and ALZ design area analysis.
 
@@ -147,11 +174,11 @@ Each issue includes:
 
 ---
 
-## 🔟 Transformation Roadmap (30-60-90 Days)
+### 🔟 Transformation Roadmap (30-60-90 Days)
 
 Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone architecture.
 
-![30-60-90 Day Transformation Roadmap](docs/demo/00330-60-90 Day Transformation Roadmap.png)
+![30-60-90 Day Transformation Roadmap](docs/demo/003-60-90_day_transformation_roadmap.png)
 
 ---
 
@@ -204,9 +231,9 @@ The platform produces a full executive-ready HTML report suitable for architectu
 
 ## Presentation Deck
 
-See the architecture and business value overview:
+Architecture overview and project walkthrough:
 
-/docs/Enterprise-Safe Copilot Orchestration for Azure Landing Zone Governance.pptx
+[Enterprise-Safe Copilot Orchestration for Azure Landing Zone Governance](docs/Enterprise-Safe%20Copilot%20Orchestration%20for%20Azure%20Landing%20Zone%20Governance.pptx)
 
 ## Architectural Characteristics
 
