@@ -9,18 +9,18 @@ This project introduces an **AI-orchestrated workshop experience** built on top 
 
 The platform operates in two layers:
 
-1. **Deterministic Assessment Engine**  
-   Evaluates Azure Landing Zone posture using live Azure telemetry and the official Azure Review Checklist.
+### Deterministic Assessment Engine
+Evaluates Azure Landing Zone posture using live Azure telemetry and the official Azure Review Checklist.
 
-2. **Copilot Workshop Orchestrator**  
-   Uses the GitHub Copilot SDK to guide a multi-turn governance workshop over the deterministic assessment results.
+### Copilot Workshop Orchestrator
+Uses the **GitHub Copilot SDK** to guide a multi-turn governance workshop over deterministic assessment results.
 
-Copilot **does not score controls or mutate the environment**.  
+Copilot **does not score controls or mutate the environment.**  
 It orchestrates guardrailed tools that expose deterministic governance insights through a conversational interface.
 
-The result is a **repeatable, evidence-driven enterprise governance workshop** powered by real Azure telemetry.
+The result is a **repeatable, evidence-driven enterprise governance workshop powered by real Azure telemetry.**
 
-**In one command, a Cloud Solution Architect can scan an Azure environment and run a Copilot-facilitated governance workshop over real platform telemetry.**
+> **In one command, a Cloud Solution Architect can scan an Azure environment and run a Copilot-facilitated governance workshop over real platform telemetry.**
 
 ## Platform Architecture
 
@@ -182,7 +182,7 @@ Deterministic findings are converted into a phased transformation roadmap aligne
 
 ---
 
-## 1️⃣1️⃣ Workshop Decision Funnel
+### 1️⃣1️⃣ Workshop Decision Funnel
 
 CSA decision support view mapping blockers → risks → remediation path.
 
@@ -190,7 +190,7 @@ CSA decision support view mapping blockers → risks → remediation path.
 
 ---
 
-## 1️⃣2️⃣ Design Area Breakdown
+### 1️⃣2️⃣ Design Area Breakdown
 
 ALZ design area maturity distribution with automation %, critical failures, and control status mapping.
 
@@ -198,7 +198,7 @@ ALZ design area maturity distribution with automation %, critical failures, and 
 
 ---
 
-## 1️⃣3️⃣ CSA Workbook – 30-60-90 Implementation Plan
+### 1️⃣3️⃣ CSA Workbook – 30-60-90 Implementation Plan
 
 Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
@@ -206,7 +206,7 @@ Customer-ready Excel roadmap aligned to ALZ checklist IDs and ownership roles.
 
 ---
 
-## 1️⃣4️⃣ CSA Workbook – Executive Summary
+### 1️⃣4️⃣ CSA Workbook – Executive Summary
 
 Executive framing including maturity metrics and prioritized business risks.
 
@@ -214,7 +214,7 @@ Executive framing including maturity metrics and prioritized business risks.
 
 ---
 
-## 1️⃣5️⃣ Full Checklist Control Details
+### 1️⃣5️⃣ Full Checklist Control Details
 
 Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
@@ -222,7 +222,7 @@ Control-level scoring mapped directly to official Azure Review Checklist IDs.
 
 ---
 
-## 1️⃣6️⃣ Interactive HTML Executive Report
+### 1️⃣6️⃣ Interactive HTML Executive Report
 
 The platform produces a full executive-ready HTML report suitable for architecture reviews and governance workshops.
 > 🔍 **Open the interactive demo report:**
@@ -245,6 +245,7 @@ Architecture overview and project walkthrough:
 | **Schema-Enforced Output** | All AI responses are validated against JSON schemas before acceptance |
 | **Documentation-Grounded** | Microsoft Learn MCP integration enriches outputs with official implementation guidance |
 | **Traceable Deliverables** | CSA Workbook, HTML Report, and Run JSON preserve referential integrity end-to-end |
+| **Continuous Posture (CI/CD)** | GitHub Actions workflow runs scheduled governance scans with deterministic delta tracking and artifact upload |
 
 
 ---
@@ -295,6 +296,13 @@ Azure Tenant / Demo ──────────────► Deterministic 
                                     ▼                         ▼
                               Traceable Deliverables
                     (HTML Report · CSA Workbook · Run JSON)
+                                          │
+                              ┌───────────┴──────────────┐
+                              │  CI/CD Continuous Posture │
+                              │  (GitHub Actions weekly)  │
+                              │  Scheduled scan → Delta   │
+                              │  summary → Artifacts      │
+                              └──────────────────────────┘
 ```
 
 ### Copilot SDK Layer
@@ -754,7 +762,7 @@ The workbook is the primary **customer-facing deliverable** — a 3-sheet Excel 
 
 A phased transformation plan where each action item includes:
 
-- **Phase** (30 / 60 / 90 day)
+- **Phase** (3/ 60 / 90 day)
 - **Action** and **Checklist ID** (canonical ALZ checklist ID, e.g. `A01.01`)
 - **CAF Discipline** alignment
 - **Owner** and **Success Criteria**
@@ -902,7 +910,23 @@ This tool is designed to run **locally** on a CSA's workstation — it is not a 
 
 ### Running in CI/CD
 
-If you want to run assessments in a pipeline (e.g., scheduled governance scans):
+A **GitHub Actions workflow** is included at `.github/workflows/continuous-posture.yml` for scheduled governance scans:
+
+- **Schedule:** Runs weekly (Monday 3am UTC) or on manual dispatch
+- **Azure login:** Uses OIDC with `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` secrets (falls back to demo mode if not configured)
+- **Assessment:** Runs `python scan.py --no-ai` for a headless deterministic scan
+- **Delta summary:** Generates a markdown delta report via `scripts/delta_summary.py`
+- **Artifacts:** Uploads `assessment.json` and `out/` as build artifacts
+
+To use it with your own Azure environment, configure these repository secrets:
+
+| Secret | Description |
+|---|---|
+| `AZURE_CLIENT_ID` | Service principal app ID |
+| `AZURE_TENANT_ID` | Azure AD tenant ID |
+| `AZURE_SUBSCRIPTION_ID` | Target subscription ID |
+
+For manual pipeline runs without the workflow:
 
 ```bash
 # Authenticate with a service principal
