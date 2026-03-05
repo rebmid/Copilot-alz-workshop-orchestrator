@@ -505,7 +505,8 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 ### Common Workflows
 
 ```bash
-python scan.py                           # Standard assessment (live Azure)
+
+                           # Standard assessment (live Azure)
 python scan.py --demo                    # Demo mode — no Azure connection
 python scan.py --tenant-wide             # Cross-subscription enterprise scan
 python scan.py --workshop-copilot --demo # Copilot workshop (demo)
@@ -513,23 +514,40 @@ python scan.py --workshop-copilot        # Copilot workshop (live Azure)
 python scan.py --why Security --demo     # Why-risk causal analysis
 ```
 
-### All Flags
+---
 
-| Flag | Description |
-|---|---|
-| `--demo` | Use the bundled demo fixture (`demo/demo_run.json`) instead of live Azure data — no Azure connection required |
-| `--workshop-copilot` | Start an interactive Copilot SDK workshop session with 6 guardrailed tools (see [Copilot Workshop Session](#copilot-workshop-session)) |
-| `--workshop` | Run interactive discovery workshop to resolve Manual controls via guided conversation |
-| `--tenant-wide` | Scan all visible subscriptions (default: Resource Graph discovery only) |
-| `--mg-scope MG_ID` | Scope assessment to subscriptions under a specific management group |
-| `--why DOMAIN` | Explain **why** a domain is the top risk — runs 6-step causal reasoning over an existing assessment |
-| `--on-demand INTENT` | Run a targeted evaluation via `IntentOrchestrator` (e.g. `enterprise_readiness`) — output saved to `out/run-*-on-demand.json` |
-| `--preflight` | Run preflight access probes and exit — validates Azure permissions without a full assessment |
-| `--validate-signals` | Probe all signal providers without scoring and exit — useful for debugging data collection |
-| `--no-ai` | Skip AI reasoning passes (useful for testing or environments without Azure OpenAI) |
-| `--no-html` | Skip HTML report generation |
-| `--pretty` | Pretty-print the final JSON to stdout after the run |
-| `--tag TAG` | Label this run snapshot (e.g. `baseline`, `sprint-3`) — appears in output filename and metadata |
+### Demo Mode (No Azure Connection Required)
+
+> **For hackathon judges, reviewers, and anyone who wants to see the platform in action without an Azure subscription.**
+
+Demo mode uses a bundled fixture (`demo/demo_run.json`) with pre-computed assessment data and AI output. No Azure credentials, no Azure OpenAI key, and no `az login` required.
+
+#### Quick Start — Demo
+
+```bash
+pip install -r requirements.txt
+python scan.py --demo
+```
+
+This runs the full deterministic engine over the demo fixture and produces all output artifacts in `out/`:
+- HTML executive report
+- CSA workbook (Excel)
+- Assessment JSON
+
+#### Copilot Workshop — Demo
+
+To experience the interactive Copilot-orchestrated workshop over demo data:
+
+```bash
+python scan.py --workshop-copilot --demo
+```
+
+> **Requires:** `GITHUB_TOKEN` env var or `gh auth login` — no other credentials needed.
+
+In the workshop session, try prompts like:
+- *"load the latest results"*
+- *"summarize the Security findings"*
+- *"generate an HTML report and Excel workbook"*
 
 ---
 
