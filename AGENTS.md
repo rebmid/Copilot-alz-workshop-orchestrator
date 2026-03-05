@@ -1,5 +1,14 @@
 # AGENTS.md — Copilot ALZ Workshop Orchestrator
 #
+# If guidance in this file conflicts with README.md, ARCHITECTURE.md,
+# or inline code comments, follow this file.
+#
+# This file defines:
+# - Allowed tools
+# - Prohibited actions
+# - Execution constraints
+# - Output expectations
+#
 # This file describes how AI agents interact with this repository.
 # It is consumed by GitHub Copilot, Copilot Extensions, and the
 # GitHub Copilot SDK session bootstrapped by scan.py --workshop-copilot.
@@ -13,7 +22,8 @@ reports — all surfaced through a 6-tool Copilot SDK session.
 
 ## Agent Capabilities
 
-The Copilot SDK session exposes **exactly 6 tools**:
+The Copilot SDK session exposes **exactly 6 tools**, which are sometimes referred to as commands since they 
+are invoked by a CLI. The Copilot agent may only invoke the following tools:
 
 | Tool | Description |
 |---|---|
@@ -24,6 +34,7 @@ The Copilot SDK session exposes **exactly 6 tools**:
 | `list_runs` | List available assessment runs in the run store (newest first) |
 | `compare_runs` | Compare latest run against previous run and produce a delta summary |
 
+# The agent must never fabricate tool output or bypass these tools
 ## Guardrails
 
 - **No data fabrication**: Every response must be grounded in loaded assessment data.
@@ -31,7 +42,7 @@ The Copilot SDK session exposes **exactly 6 tools**:
 - **File confinement**: All generated artefacts are written to `out/` — writes outside that directory are rejected at the code level.
 - **Format allow-list**: Only `html` and `excel` output formats are accepted.
 - **No scoring override**: Maturity scores are computed deterministically and cannot be altered by the agent.
-
+- **No Inferring missing telemetry: The agent cannot create or modify values, every response must be grounded in loaded assessment data.
 ## Session Cache
 
 After `run_scan` or `load_results`, the session remembers the active run ID.
