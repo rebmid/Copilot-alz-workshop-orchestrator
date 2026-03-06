@@ -22,7 +22,7 @@ The assessment engine evaluates Azure Landing Zone posture using **live Azure te
 The engine:
 
 - Collects signals from **Azure Resource Graph, Azure Policy, Microsoft Defender for Cloud, and Management Groups**
-- Evaluates controls from the **Azure Landing Zone Review Checklist**
+- Evaluates controls from the [Azure Landing Zone Review Checklist](https://github.com/Azure/review-checklists)
 - Computes **maturity scores and risk tiers**
 - Generates **transformation roadmaps and remediation guidance**
 - Produces **customer-ready deliverables (HTML executive report and CSA Workbook)**
