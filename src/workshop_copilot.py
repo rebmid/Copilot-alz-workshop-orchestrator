@@ -2,7 +2,7 @@
 #
 # Launched via:  python scan.py --workshop-copilot
 #
-# Registers exactly 4 tools with explicit JSON schemas.
+# Registers exactly 6 tools with explicit JSON schemas.
 # No wildcard tools. No freeform input. No dynamic execution.
 # ──────────────────────────────────────────────────────────────────
 

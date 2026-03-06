@@ -1,28 +1,33 @@
 # Copilot-Governed Azure Landing Zone Orchestration
 
-This repository demonstrates an **enterprise-safe Copilot orchestration pattern** for Azure Landing Zone governance assessments, powered by a **deterministic assessment engine** and **GitHub Copilot SDK orchestration**. It replaces manual checklist interviews, slide-driven workshops, and post-engagement synthesis with an evidence-based, repeatable governance workflow that produces customer-ready outputs.
+Azure Landing Zone governance reviews are traditionally delivered through manual workshops, slide decks, and checklist interviews. These engagements are difficult to scale, inconsistent across architects, and rarely produce repeatable governance insights.
 
-## Overview
+This project introduces a **Copilot-orchestrated Azure Landing Zone governance workshop** powered by a **deterministic governance assessment engine**.
 
-- Deterministic Azure Landing Zone governance assessment engine  
-- GitHub Copilot SDK orchestration layer  
-- Interactive governance workshop experience  
-- Customer-ready outputs (HTML report + Excel remediation workbook)
+The system evaluates Azure environments using live telemetry from **Azure Resource Graph, Azure Policy, Defender for Cloud, and Management Groups** to deterministically score Azure Landing Zone governance controls.
+
+The **GitHub Copilot SDK** provides a guardrailed orchestration layer that enables architects to run interactive governance workshops using natural language while invoking a restricted set of deterministic tools (scan, load results, summarize findings, generate outputs). A supporting **Microsoft 365 Copilot agent** provides guidance on platform setup, capabilities, and workshop usage.
+
+AI does not score controls or modify infrastructure. It reasons over deterministic evidence to generate customer-ready outputs including an **HTML executive report**, **Excel CSA Workbook**, and **transformation roadmap** — enabling repeatable assessments and faster remediation of governance risks.
 
 ### Measurable Impact
 
 Reduces hours of manual Azure governance workshop preparation to a deterministic scan and automated report generation in minutes, enabling repeatable posture assessments and trend tracking over time.
 
-### How Copilot Orchestrates the Assessment
-
-Azure Landing Zone governance reviews are typically delivered through manual workshops, static slide decks, and architect interpretation. That model is difficult to scale, inconsistent across engagements, and hard to repeat over time.
-
-This project introduces a **Copilot-orchestrated Azure Landing Zone governance workshop** built on top of a **deterministic Landing Zone Assessment engine**.
-
-The platform operates in two distinct layers:
+## Two-Layer Architecture
 
 ### 1. Deterministic Assessment Engine
-The assessment engine evaluates Azure Landing Zone posture using **live Azure telemetry** and the **official Azure Review Checklist**. It performs the authoritative work of collecting signals, evaluating controls, and producing deterministic governance results.
+The assessment engine evaluates Azure Landing Zone posture using **live Azure telemetry** and the **official Azure Review Checklist**, under **RBAC-controlled read-only access**. It performs the authoritative work of collecting signals, evaluating controls, and producing deterministic governance results.
+
+The engine:
+
+- Collects signals from **Azure Resource Graph, Azure Policy, Microsoft Defender for Cloud, and Management Groups**
+- Evaluates controls from the **Azure Landing Zone Review Checklist**
+- Computes **maturity scores and risk tiers**
+- Generates **transformation roadmaps and remediation guidance**
+- Produces **customer-ready deliverables (HTML executive report and CSA Workbook)**
+
+All governance scoring is **deterministic, auditable, and reproducible**.
 
 ### 2. Copilot Workshop Orchestrator
 The **GitHub Copilot SDK** provides a controlled orchestration layer that enables a **multi-turn governance workshop** over those deterministic results. Copilot guides the interaction, invokes a restricted set of tools, summarizes findings, compares runs, and generates outputs.
@@ -34,13 +39,13 @@ The result is a **repeatable, enterprise-safe, evidence-driven governance worksh
 
 > **In one command, an architect can assess an Azure environment and launch a Copilot-facilitated governance workshop over deterministic platform evidence.**
 
-## Demo Walkthrough – Copilot-Orchestrated ALZ Workshop
+## Demo Walkthrough – Copilot-Orchestrated Azure Landing Zone (ALZ) Workshop
 
 The walkthrough below demonstrates the full lifecycle of the platform:
 
 **Azure Telemetry → Deterministic Governance Assessment → Copilot Reasoning → Remediation Guidance → Transformation Roadmap → Customer Deliverables**
 
-Copilot orchestrates the experience, but all governance scoring remains deterministic.
+The screenshots below walk through a live workshop session and the generated deliverables.
 
 ---
 
@@ -98,7 +103,7 @@ If foundational requirements are not met, the report flags the platform as **Not
 
 ### Enterprise Readiness Blockers (HTML Report)
 
-Foundation gaps preventing enterprise-scale ALZ adoption, derived from deterministic control failures and dependency graph analysis.
+Foundation gaps derived from deterministic control failures that block enterprise-scale adoption — both Landing Zone readiness and broader Azure platform scaling.
 
 ![Enterprise Readiness Blockers](docs/demo/01_enterprise-readiness-blockers.png)
 
@@ -129,7 +134,7 @@ Each issue includes:
 
 ### Transformation Roadmap – 30-60-90 Days (HTML Report)
 
-Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone architecture.
+Deterministic findings are converted into a phased transformation roadmap aligned with Azure Landing Zone (ALZ) architecture.
 
 ![30-60-90 Day Transformation Roadmap](docs/demo/003-60-90_day_transformation_roadmap.png)
 
@@ -153,7 +158,7 @@ ALZ design area maturity distribution with automation %, critical failures, and 
 
 ## CSA Workbook (Excel Output)
 
-In addition to the HTML report, the platform generates a **CSA Workbook** — a customer-ready Excel deliverable that CSAs can use directly in engagement follow-ups, action tracking, and executive briefings.
+The HTML report provides the architectural narrative of the assessment, while the CSA Excel Workbook provides the structured remediation plan used to track implementation with customers.
 
 
 ### CSA Workbook – Executive Summary (Excel)
@@ -195,28 +200,6 @@ Architecture overview and project walkthrough:
 
 ---
 
-## Platform Architecture
-
-The platform is composed of two primary layers:
-
-### 1. Deterministic Governance Engine
-
-The Azure Landing Zone assessment engine performs a full governance evaluation of an Azure environment using **live platform telemetry under RBAC-controlled read-only access**.
-
-The engine:
-
-- Collects signals from **Azure Resource Graph, Azure Policy, Microsoft Defender for Cloud, and Management Groups**
-- Evaluates controls from the **Azure Landing Zone Review Checklist**
-- Computes **maturity scores and risk tiers**
-- Generates **transformation roadmaps and remediation guidance**
-- Produces **customer-ready deliverables (HTML executive report and CSA remediation workbook)**
-
-All governance scoring is **deterministic, auditable, and reproducible**.
-
-### 2. Copilot Workshop Orchestrator
-
-The **GitHub Copilot SDK** provides a controlled orchestration layer that enables a **multi-turn governance workshop** over those deterministic results. Copilot guides the interaction, invokes a restricted set of tools, summarizes findings, compares assessment runs, and generates customer-ready outputs.
-
 ## Deterministic Reasoning Foundation
 
 The underlying assessment engine performs structured, multi-stage reasoning over live Azure telemetry:
@@ -228,13 +211,6 @@ The underlying assessment engine performs structured, multi-stage reasoning over
 5. Grounds remediation guidance in official Microsoft Learn documentation via MCP (Model Context Protocol)
 
 **The AI does not score. It reasons over scored evidence.**
-
-### What the Engine Produces
-
-- Scores every control in the [Azure Landing Zone Review Checklist](https://github.com/Azure/review-checklists) against live Azure telemetry
-- Builds a dependency-ordered 30-60-90 transformation roadmap
-- Performs causal "why-risk" analysis across domains
-- Grounds remediation guidance in official Microsoft Learn documentation via MCP (Model Context Protocol)
 
 ---
 ### Microsoft Platform Integrations
@@ -297,19 +273,22 @@ By combining **deterministic platform analysis** with **Copilot-guided orchestra
                                         │  (--workshop-copilot)     │
               CSA / User ◄─────────────►│                           │
           (multi-turn conversation)     │  6 Guardrailed Tools:     │
-                                        │   run_scan                │
-                                        │   load_results            │
-                                        │   summarize_findings      │
-                                        │   generate_outputs        │
-                                        │   list_runs               │
-                                        │   compare_runs            │
-                                        │                           │
-                                        │  Session Cache · Path &   │
-                                        │  Format Guardrails        │
-                                        └─────────┬─────────────────┘
-                                                  │ invokes
-                                                  ▼
-Azure Tenant / Demo ──────────────► Deterministic ALZ Assessment
+              │                         │   run_scan                │
+              │                         │   load_results            │
+              │                         │   summarize_findings      │
+              │                         │   generate_outputs        │
+              │                         │   list_runs               │
+              │                         │   compare_runs            │
+              │                         │                           │
+              │                         │  Session Cache · Path &   │
+              │                         │  Format Guardrails        │
+              ▼                         └─────────┬─────────────────┘
+  ┌─────────────────────────────┐                 │ invokes
+  │ M365 Copilot Agent          │                 │
+  │ (internal · no results)     │                 │
+  │ Setup guide · Usage Q&A     │                 ▼
+  └─────────────────────────────┘
+Azure Tenant / Demo ──────────────► Deterministic ALZ Assessment Engine
                                     (Resource Graph + Policy + Defender)
                                                   │
                                                   ▼
@@ -333,12 +312,14 @@ Azure Tenant / Demo ──────────────► Deterministic 
                     (HTML Report · CSA Workbook · Run JSON)
                                           │
                               ┌───────────┴──────────────┐
-                              │  CI/CD Continuous Posture │
-                              │  (GitHub Actions weekly)  │
-                              │  Scheduled scan → Delta   │
-                              │  summary → Artifacts      │
+                              │  CI/CD Continuous Posture│
+                              │  (GitHub Actions weekly) │
+                              │  Scheduled scan → Delta  │
+                              │  summary → Artifacts     │
                               └──────────────────────────┘
 ```
+
+The diagram illustrates the one-way data flow architecture where deterministic governance evaluation produces scored evidence, and Copilot orchestrates interaction and reasoning over those results without modifying them.
 
 ### Copilot SDK Layer
 
@@ -397,41 +378,7 @@ The **Copilot SDK session** (`--workshop-copilot`) adds an interactive orchestra
 | **Azure OpenAI** | Required for AI features. Needs a `gpt-4.1` deployment (or any chat-completion model). Set env vars (see [Configuration](#configuration)). |
 | **Git** | For cloning the repository |
 
-### Required Azure Resource Providers
-
-The tool queries Azure Resource Graph and ARM APIs using **read-only** calls. The following resource providers must be registered on the target subscriptions for all signals to return data. Most are registered by default on any subscription that has used the service — but if a signal returns empty, missing provider registration is the most common cause.
-
-| Resource Provider | Signal(s) | Registered by Default? |
-|---|---|---|
-| `Microsoft.ResourceGraph` | All Resource Graph queries | ✅ Yes |
-| `Microsoft.Network` | Firewalls, VNets, Public IPs, NSGs, Route Tables, Private Endpoints, DDoS | ✅ Yes |
-| `Microsoft.Storage` | Storage Account Posture | ✅ Yes |
-| `Microsoft.KeyVault` | Key Vault Posture | ✅ Yes |
-| `Microsoft.Sql` | SQL Server Posture | Only if SQL is used |
-| `Microsoft.Web` | App Service Posture | Only if App Service is used |
-| `Microsoft.ContainerRegistry` | Container Registry Posture | Only if ACR is used |
-| `Microsoft.ContainerService` | AKS Cluster Posture | Only if AKS is used |
-| `Microsoft.RecoveryServices` | VM Backup Coverage | Only if Backup is configured |
-| `Microsoft.Compute` | VM inventory (for backup coverage) | ✅ Yes |
-| `Microsoft.Security` | Defender plans, Secure Score | ✅ Yes |
-| `Microsoft.Authorization` | RBAC hygiene, Resource Locks, Policy assignments | ✅ Yes (built-in) |
-| `Microsoft.PolicyInsights` | Policy compliance summary | ✅ Yes |
-| `Microsoft.Management` | Management Group hierarchy | ✅ Yes |
-| `Microsoft.Insights` | Diagnostics coverage | ✅ Yes |
-
-To check registration status:
-
-```bash
-az provider show -n Microsoft.RecoveryServices --query "registrationState" -o tsv
-```
-
-To register a missing provider (requires Contributor or Owner):
-
-```bash
-az provider register -n Microsoft.RecoveryServices
-```
-
-> **Note:** If a resource type doesn't exist in the subscription (e.g., no AKS clusters), the evaluator returns **NotApplicable** — not an error. Missing provider registration only matters when you *have* those resources but the signal returns empty.
+See [docs/azure-provider-requirements.md](docs/azure-provider-requirements.md) for full provider requirements and signal coverage details.
 
 ---
 
@@ -549,6 +496,15 @@ python scan.py --workshop-copilot        # Copilot workshop (live Azure)
 python scan.py --why Security --demo     # Why-risk causal analysis
 ```
 
+### Additional Flags
+
+| Flag | Description |
+|---|---|
+| `--subscription <ID>` | Scope to a single subscription |
+| `--tag <label>` | Label a run snapshot |
+| `--validate-signals` | Probe signal providers without scoring |
+| `--pretty` | Pretty-print JSON output |
+
 ---
 
 ### Demo Mode (No Azure Connection Required)
@@ -638,7 +594,7 @@ Uses the bundled demo fixture (`demo/demo_run.json`) — no Azure credentials or
 
 > **Note:** Demo mode loads a static fixture. It does **not** run evaluators, the AI pipeline, or MCP grounding. To get fresh AI-enriched output, use live mode with `.env` configured.
 
-### Live Mode (real Azure environment)
+### Assessment Engine Live Mode (real Azure environment)
 
 ```bash
 python scan.py --workshop-copilot
@@ -696,31 +652,18 @@ The session registers exactly 6 tools. Copilot selects tools based on your natur
 5. **"list all runs"** — browse available assessment snapshots in the run store
 6. **"compare baseline with latest"** — produce a delta summary between two runs
 
-### Example Prompts
-
-```
-Workshop> run a scan
-Workshop> load the latest results
-Workshop> show me all critical failures in Security
-Workshop> what design areas have the most failures?
-Workshop> summarize the Networking findings
-Workshop> generate an HTML report and Excel workbook
-Workshop> show failed controls in Identity with severity High
-Workshop> list all runs
-Workshop> compare the baseline run with the latest
-```
-
 ## Output Artifacts
 
-All outputs are written to the `out/` directory:
+All outputs are written to the `out/` directory (run snapshots are stored per-tenant in `out/{tenant}/`):
 
 | File | Description |
 |---|---|
-| `run-YYYYMMDD-HHMM.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
-| `ALZ-Platform-Readiness-Report-{run_id}-SNNN.html` | Interactive executive HTML report with score breakdowns and gap analysis |
-| `run-YYYYMMDD-HHMM_CSA_Workbook.xlsm` | 3-sheet CSA deliverable workbook — macro-enabled (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
-| `target_architecture.json` | Target architecture recommendation — derived from scored controls and checklist alignment, with component recommendations and Learn references |
-| `preflight.json` | *(preflight mode only)* Access probe results |
+| `out/{tenant}/YYYYMMDD-HHMMSS.json` | Complete assessment data — controls, scores, AI output, delta, execution context |
+| `ALZ-Platform-Readiness-Report-run-YYYYMMDD-HHMM-SNNN.html` | Interactive executive HTML report with score breakdowns and gap analysis |
+| `{run_id}_CSA_Workbook.xlsm` | 3-sheet CSA Workbook — macro-enabled (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
+| `target_architecture.json` | Target architecture recommendation (when AI is enabled) |
+| `why-{domain}.json` | *(why-risk mode only)* Causal reasoning output for a specific domain |
+| `preflight/out/preflight.json` | *(preflight mode only)* Access probe results |
 
 Additionally, `assessment.json` is written to the project root as a convenience copy.
 
@@ -732,7 +675,7 @@ Additionally, `assessment.json` is written to the project root as a convenience 
 
 The **collectors** module queries Azure APIs via Resource Graph, Defender, Policy, and Management Group endpoints to gather raw infrastructure data:
 
-- **Resource Graph** — VNets, firewalls, public IPs, NSGs, route tables, storage accounts, Key Vaults, private endpoints, diagnostic settings, and more
+- **Resource Graph** — core platform resources (networking, storage, compute, identity)
 - **Defender** — security score, coverage tier, recommendations
 - **Policy** — policy definitions, assignments, and compliance state
 - **Management Groups** — full hierarchy tree
@@ -755,19 +698,20 @@ The AI layer is a **consumer** of the deterministic scoring output — it receiv
 
 When AI is enabled, a **multi-stage reasoning pipeline** runs against Azure OpenAI:
 
-| Pass | Prompt | Output | max_tokens |
-|---|---|---|---|
-| 1 | `roadmap.txt` | 30-60-90 transformation roadmap + named initiatives | 8000 |
-| 2 | `exec.txt` | Executive briefing with business risk narrative | 8000 |
-| 3 | `implementation_decision.txt` | ALZ implementation pattern selection per initiative | 8000 |
-| 4 | `sequence_justification.txt` | Initiative ordering rationale + engagement recommendations | 8000 |
-| 5 | `readiness.txt` | Enterprise-scale landing zone technical readiness | 8000 |
-| 6 | `smart_questions.txt` | Customer discovery questions per domain | 8000 |
-| 7 | `implementation.txt` × N | Implementation backlog (one item per initiative) | 4000 |
-| 8 | *(MCP grounding)* | Learn doc refs, code samples, full-page enrichment | — |
-| 9 | `target_architecture.txt` | Target architecture + `grounding.txt` enrichment | 8000 |
-| 10 | `critical_issues.txt` | Top failing controls advisory with course of action | 8000 |
-| 11 | `blocker_resolution.txt` | Enterprise readiness blocker resolution summary | 8000 |
+| Pass | Prompt | Output |
+|---|---|---|
+| 1 | `roadmap.txt` | 30-60-90 transformation roadmap + named initiatives |
+| 2 | `exec.txt` | Executive briefing with business risk narrative |
+| 3 | `implementation_decision.txt` | ALZ implementation pattern selection per initiative |
+| 4 | `sequence_justification.txt` | Initiative ordering rationale + engagement recommendations |
+| 5 | `readiness.txt` | Enterprise-scale landing zone technical readiness |
+| 6 | `smart_questions.txt` | Customer discovery questions per domain |
+| 7 | `implementation.txt` × N | Implementation backlog (one item per initiative) |
+| 8 | *(MCP grounding)* | Learn doc refs, code samples, full-page enrichment |
+| 9 | `target_architecture.txt` | Target architecture + `grounding.txt` enrichment |
+| 10 | `critical_issues.txt` | Top failing controls advisory with course of action |
+| 11 | `governance_intelligence.txt` | Strategic governance recommendations and cross-cutting insights |
+| 12 | `blocker_resolution.txt` | Enterprise readiness blocker resolution summary |
 
 The `AOAIClient` includes built-in resilience:
 - **JSON fence stripping** — removes markdown ````json```` wrappers from model output
@@ -799,17 +743,13 @@ Grounding runs for:
 ### 5. Report Generation
 
 **HTML Report** (`report.html`):
-- **Platform Readiness Snapshot** — tenant maturity score, automation coverage, enterprise-scale landing zone technical readiness
-- **Landing Zone Adoption Blockers** — AI-identified barriers to ALZ adoption
-- **Platform Risk Prioritization** — 5-tier risk classification (Critical → Hygiene) with confidence indicators
-- **Highest-Impact Remediation Sequence** — prioritised initiative roadmap
-- **Maturity After Roadmap Execution** — projected score improvement
-- **Capability Unlock View** — capabilities enabled by completing each initiative
-- **Domain Deep Dive** — per-section control tables split into ALZ Core and Operational Overlay, with automation %, critical fail counts, and risk sorting
-- **Assessment Scope & Confidence** — subscription coverage, signal availability, and data-collection provenance
-- **Customer Validation Required** — controls needing manual review or customer conversation
-- **ALZ Design Area References** — links to official ALZ design area documentation
-- **Data Collection Provenance** — collector execution metadata and timestamps
+- **Foundation Gate** — enterprise readiness assessment with blocker identification and resolution mapping
+- **Top Business Risks** — deterministically ranked platform risks with root cause mapping and confidence indicators
+- **30-60-90 Transformation Roadmap** — phased remediation sequence with dependency ordering and maturity trajectory
+- **Critical Issues & Course of Action** — top failing controls with architectural remediation guidance
+- **Design Area Breakdown** — per-area control tables grouped by official ALZ design areas, with automation %, critical fail counts, and risk sorting
+- **Workshop Decision Funnel** — per-domain blockers, risks, and smart questions for customer conversation
+- **Assessment Scope & Confidence** — subscription coverage, signal availability, and execution context
 
 **CSA Workbook** (`{run_id}_CSA_Workbook.xlsm`):
 - See [CSA Workbook Deep Dive](#csa-workbook-deep-dive) below
@@ -818,7 +758,7 @@ Grounding runs for:
 
 ## CSA Workbook Deep Dive
 
-The workbook is the primary **customer-facing deliverable** — a 3-sheet Excel file ready for CSA engagements:
+The workbook is a **structured customer-facing deliverable** — a 3-sheet Excel file designed for engagement follow-ups and remediation tracking:
 
 ### Sheet 0: `0_Executive_Summary`
 
@@ -899,25 +839,13 @@ Output is saved to `out/why-{domain}.json`. Use `--no-ai` to get the raw evidenc
 
 ## Preflight Mode
 
-Before running a full assessment, validate your Azure permissions:
+Validate your Azure read-only permissions before running a full assessment:
 
 ```bash
 python scan.py --preflight
 ```
 
-Preflight probes check **8 Azure API surfaces**:
-- Management Group read access
-- Resource Graph query access
-- Policy Insights read access
-- Defender for Cloud API access
-- Log Analytics Reader access
-- AAD Diagnostics access
-- Cost Management Reader access
-- Microsoft Graph API access
-
-Each probe has a 5-second timeout, returns duration metrics, and maps failures to specific **assessment impact** (which design areas degrade) and **recommended RBAC actions**.
-
-Results are saved to `out/preflight.json` and printed to the console with pass/fail indicators.
+Probes 8 Azure API surfaces (Resource Graph, Policy, Defender, Management Groups, etc.) with 5-second timeouts and maps failures to affected design areas and recommended RBAC actions. Results are saved to `out/preflight.json`.
 
 ---
 
@@ -967,11 +895,7 @@ Results are saved to `out/preflight.json` and printed to the console with pass/f
 | Report sections are empty (roadmap, executive briefing, critical issues) | AI credentials are not configured. Create a `.env` file — without it, the 11-pass AI pipeline is silently skipped |
 | `No subscriptions found` | Ensure `az login` succeeded and your identity has Reader on at least one subscription |
 | `Management group hierarchy not visible` | Your identity needs Management Group Reader — the tool still works, but MG-related controls will be `Manual` |
-| `Unterminated string` / JSON parse errors in AI output | The tool auto-repairs truncated JSON. If it persists, check your Azure OpenAI quota and model deployment name (`gpt-4.1`) |
-| `MCP connection failed` | The tool falls back to the public Learn search API automatically. No action needed. |
-| `ModuleNotFoundError` | Ensure your virtual environment is activated and `pip install -r requirements.txt` completed successfully |
-| `az: command not found` | Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) |
-| Slow execution | Large tenants take longer. Use `--tenant-wide` only when needed. AI passes add ~60-90s. |
+| `MCP connection failed` | The tool falls back to the public Learn search REST API automatically. No action needed. |
 | Workshop session: `GITHUB_TOKEN` errors | Set `GITHUB_TOKEN` env var with a personal access token, or run `gh auth login` |
 
 ## Deployment
