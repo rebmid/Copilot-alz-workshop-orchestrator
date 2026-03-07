@@ -192,9 +192,9 @@ Want to explore the full report yourself? Open the sample below — it's a real 
 > 👉 **[Open the interactive HTML report](https://htmlpreview.github.io/?https://github.com/rebmid/Copilot-alz-workshop-orchestrator/blob/main/docs/demo/Contoso-ALZ-Platform-Readiness-Report-Sample.html)**
 > Generated from a real Azure Test/Lab "Contoso" tenant using read-only access.
 
-## PowerPoint Presentation Deck
+## Presentation Deck
 
-Architecture overview and project walkthrough:
+Business value proposition, architecture overview, and project walkthrough:
 
 [Enterprise-Safe Copilot Orchestration for Azure Landing Zone Governance](presentations/Enterprise-Safe%20Copilot%20Orchestration%20for%20Azure%20Landing%20Zone%20Governance.pptx)
 
