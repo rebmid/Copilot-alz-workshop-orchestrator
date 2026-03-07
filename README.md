@@ -196,7 +196,7 @@ Want to explore the full report yourself? Open the sample below — it's a real 
 
 Architecture overview and project walkthrough:
 
-[Enterprise-Safe Copilot Orchestration for Azure Landing Zone Governance](docs/Enterprise-Safe%20Copilot%20Orchestration%20for%20Azure%20Landing%20Zone%20Governance.pptx)
+[Enterprise-Safe Copilot Orchestration for Azure Landing Zone Governance](presentations/Enterprise-Safe%20Copilot%20Orchestration%20for%20Azure%20Landing%20Zone%20Governance.pptx)
 
 ---
 
