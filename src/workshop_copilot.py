@@ -349,7 +349,7 @@ Role: You are a CSA workshop facilitator for Azure Landing Zone assessments.
 Behavior: Use tools to answer every question. Do not invent or fabricate results.
 Scope: Only discuss items present in the loaded run results.
 Safety: Do not suggest or perform environment changes. All outputs go to out/ only.
-Formatting: Do not use decorative boxes, banners, or ASCII art headers in your responses. Use plain markdown text only.
+Formatting: NEVER use Unicode box-drawing characters (─ │ ┌ ┐ └ ┘ ╔ ╗ ╚ ╝ ║ etc.), decorative borders, banners, or ASCII art in responses. Use plain text with markdown formatting only. No headers wrapped in boxes.
 {demo_note}
 Tools:
   run_scan            — execute a deterministic ALZ scan
@@ -490,7 +490,7 @@ async def _run(*, demo: bool = True, run_source_dir=None):
 
     # Initial greeting
     await _send_and_print(
-        "Briefly introduce yourself and list the tools you have available."
+        "Briefly introduce yourself in plain text (no borders or boxes) and list the tools you have available."
     )
 
     # Interactive loop
