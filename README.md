@@ -41,51 +41,132 @@ The result is a **repeatable, enterprise-safe, evidence-driven governance worksh
 
 ## Demo Walkthrough – Copilot-Orchestrated Azure Landing Zone (ALZ) Workshop
 
-The walkthrough below demonstrates a live workshop session and the generated customer deliverables, using a non-customer test tenant.
+The walkthrough below shows what a real Azure Landing Zone assessment workshop looks like when using the Copilot orchestrator.
+
+In this example the assessment runs against a **non-customer test tenant**.  
+The system evaluates the environment, analyzes the results, and generates the artifacts architects normally produce during an engagement.
 
 ---
 
-### Part 1: The Workshop Experience
+## Part 1: Running the Assessment
 
-What the architect sees during an interactive Copilot-orchestrated governance session.
-
----
-
-### Execution Context (Azure Environment Scope)
-
-Assessment scope discovery showing tenant context, evaluated subscriptions, and RBAC posture.
-
-![Execution Context](docs/demo/00a_execution-context.png)
+This section walks through what happens when the architect starts the workshop and runs the Azure Landing Zone assessment.
 
 ---
 
-### Live Workshop Mode – Copilot SDK Orchestration
+### Starting the Workshop
 
-Natural-language workshop interaction driving deterministic tool execution.
+The architect begins by launching the Copilot workshop session.  
+This initializes the orchestration layer and loads the tools Copilot can use during the workshop (run scans, load results, summarize findings, generate reports, and compare runs).
 
-![Copilot Workshop Session](docs/demo/000_copilot_workshop-session.png)
+From here the architect can start interacting with the environment.
+
+![Workshop Initialization](docs/demo/0a_workshop_Initialization.png)
 
 ---
 
-### Copilot Governance Analysis
+### Discovering Azure Signals
 
-Copilot analyzes deterministic evidence and surfaces the most critical governance risks and remediation priorities during the workshop.
+Before the platform can evaluate governance controls, it first gathers signals from the Azure environment.
+
+The system queries Azure services such as **Resource Graph**, **Azure Policy**, **Defender for Cloud**, and **RBAC** to determine which governance signals are available.
+
+This step confirms the environment has the telemetry needed for the assessment.
+
+![Signal Collection](docs/demo/0b_signal_collection.png)
+
+---
+
+### Evaluating the Environment
+
+Once signals are collected, the deterministic assessment engine begins evaluating Azure Landing Zone controls across the platform.
+
+This stage analyzes the tenant structure, policy configuration, networking posture, security settings, and other platform components.
+
+The results from this step form the foundation for all later analysis.
+
+![Execution Context](docs/demo/0c_execution-context.png)
+
+---
+
+### Validating Governance Relationships
+
+Before generating recommendations, the system performs a validation pass.
+
+This step checks that all control relationships, remediation mappings, and roadmap items align with the Azure Landing Zone governance model.
+
+These guardrails help ensure the recommendations remain grounded in the deterministic control framework.
+
+![Governance Validation](docs/demo/0d_governance_validation.png)
+
+---
+
+### Generating Governance Insights
+
+With validation complete, the reasoning engine synthesizes the results into higher-level insights.
+
+This includes:
+
+- identifying architectural gaps  
+- generating remediation patterns  
+- building a target architecture plan  
+- producing governance intelligence used during the workshop discussion  
+
+At this point the system has everything needed to guide the conversation with the customer.
+
+![Governance Intelligence](docs/demo/0e_governance_intelligence_complete.png)
+
+---
+
+### Producing Workshop Deliverables
+
+Finally, the system generates the artifacts used during the engagement.
+
+These include the **HTML executive readiness report**, **assessment JSON** (the full scored run data), and the **CSA Excel Workbook** used to guide the workshop conversation and track remediation with the customer.
+
+The platform also records telemetry about the assessment run so the results are fully traceable.
+
+![Deliverable Generation](docs/demo/0f_deliverable_generation.png)
+
+---
+
+## What Happens Next
+
+With the assessment complete, the architect can continue the session with Copilot to explore the findings, load prior runs to compare posture over time, generate deliverables on demand, and walk the customer through remediation priorities.
+
+The next section shows how Copilot helps interpret the results and guide the workshop discussion.
+
+---
+
+### Reviewing the Results with Copilot
+
+Once the assessment completes, the architect can interact with Copilot to explore the findings and understand where the environment needs attention.
+
+Copilot loads the deterministic scan results and helps summarize the most critical areas that should be addressed first.
 
 ![Copilot Governance Analysis](docs/demo/copilot-analysis.png)
 
 ---
 
-### Copilot Root Cause Mapping
+### Understanding the Root Causes
 
-The orchestration layer maps failing controls to underlying architectural weaknesses across ALZ design areas.
+After identifying the most critical design area, Copilot helps break down *why* the failures occurred.
+
+Instead of showing isolated control failures, it connects the results back to underlying architectural issues across Azure Landing Zone design areas.
+
+This helps the architect quickly understand the bigger picture behind the findings.
 
 ![Copilot Root Cause Analysis](docs/demo/copilot-analysis2.png)
 
 ---
 
-### Copilot Remediation Reasoning
+### Discussing What to Fix First
 
-Copilot synthesizes deterministic governance evidence into structured remediation guidance aligned with Azure Landing Zone architecture.
+During the workshop the architect can continue asking questions about the environment.
+
+Copilot uses the deterministic results to suggest where the customer should focus first and explains the reasoning behind those priorities.
+
+This helps guide the conversation toward practical next steps and remediation planning.
 
 ![Copilot Remediation Reasoning](docs/demo/copilot-analysis3.png)
 
@@ -500,13 +581,11 @@ Default: `2024-02-15-preview`. Configurable in `AOAIClient.__init__()`.
 ### Common Workflows
 
 ```bash
-
-                           # Standard assessment (live Azure)
+python scan.py                           # Standard assessment (live Azure)
 python scan.py --demo                    # Demo mode — no Azure connection
 python scan.py --tenant-wide             # Cross-subscription enterprise scan
 python scan.py --workshop-copilot --demo # Copilot workshop (demo)
 python scan.py --workshop-copilot        # Copilot workshop (live Azure)
-python scan.py --why Security --demo     # Why-risk causal analysis
 ```
 
 ### Additional Flags
