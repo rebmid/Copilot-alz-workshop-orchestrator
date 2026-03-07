@@ -591,7 +591,6 @@ python scan.py --workshop-copilot        # Copilot workshop (live Azure)
 | `--subscription <ID>` | Scope to a single subscription |
 | `--tag <label>` | Label a run snapshot |
 | `--validate-signals` | Probe signal providers without scoring |
-| `--pretty` | Pretty-print JSON output |
 
 ---
 
@@ -750,7 +749,6 @@ All outputs are written to the `out/` directory (run snapshots are stored per-te
 | `ALZ-Platform-Readiness-Report-run-YYYYMMDD-HHMM-SNNN.html` | Interactive executive HTML report with score breakdowns and gap analysis |
 | `{run_id}_CSA_Workbook.xlsm` | 3-sheet CSA Workbook — macro-enabled (see [CSA Workbook Deep Dive](#csa-workbook-deep-dive)) |
 | `target_architecture.json` | Target architecture recommendation (when AI is enabled) |
-| `why-{domain}.json` | *(why-risk mode only)* Causal reasoning output for a specific domain |
 | `preflight/out/preflight.json` | *(preflight mode only)* Access probe results |
 
 Additionally, `assessment.json` is written to the project root as a convenience copy.
@@ -761,12 +759,16 @@ Additionally, `assessment.json` is written to the project root as a convenience 
 
 ### 1. Data Collection
 
-The **collectors** module queries Azure APIs via Resource Graph, Defender, Policy, and Management Group endpoints to gather raw infrastructure data:
+The **collectors** module queries Azure APIs to gather raw infrastructure data:
 
 - **Resource Graph** — core platform resources (networking, storage, compute, identity)
 - **Defender** — security score, coverage tier, recommendations
 - **Policy** — policy definitions, assignments, and compliance state
 - **Management Groups** — full hierarchy tree
+- **Microsoft Entra ID** — PIM maturity, conditional access, break-glass accounts, service principal risk
+- **Azure Monitor** — diagnostics coverage, alert mapping, Log Analytics topology
+- **Cost Management** — budget posture, forecast accuracy, idle resources
+- **Network Watcher** — flow logs, watcher posture
 
 All queries use `AzureCliCredential` — the same identity you authenticated with via `az login`.
 
@@ -830,14 +832,13 @@ Grounding runs for:
 
 ### 5. Report Generation
 
-**HTML Report** (`report.html`):
+**HTML Report** (`ALZ-Platform-Readiness-Report-run-YYYYMMDD-HHMM-SNNN.html`):
 - **Foundation Gate** — enterprise readiness assessment with blocker identification and resolution mapping
 - **Top Business Risks** — deterministically ranked platform risks with root cause mapping and confidence indicators
 - **30-60-90 Transformation Roadmap** — phased remediation sequence with dependency ordering and maturity trajectory
 - **Critical Issues & Course of Action** — top failing controls with architectural remediation guidance
 - **Design Area Breakdown** — per-area control tables grouped by official ALZ design areas, with automation %, critical fail counts, and risk sorting
 - **Workshop Decision Funnel** — per-domain blockers, risks, and smart questions for customer conversation
-- **Assessment Scope & Confidence** — subscription coverage, signal availability, and execution context
 
 **CSA Workbook** (`{run_id}_CSA_Workbook.xlsm`):
 - See [CSA Workbook Deep Dive](#csa-workbook-deep-dive) below
@@ -893,35 +894,6 @@ All ~255 controls in a flat table with 19 columns:
 | Q: Related Items | Checklist IDs of related remediation items |
 | R: Category | ALZ category |
 | S: Discussion Points | Customer discovery items mapped by control |
-
----
-
-## Why-Risk Reasoning (`--why`)
-
-After a full assessment, drill into **why** a specific domain was flagged as the top risk:
-
-```bash
-python scan.py --why Networking --demo
-```
-
-This runs a **6-step causal reasoning pipeline** over the existing assessment data:
-
-| Step | What it does |
-|---|---|
-| 1. **Find risk** | Matches the domain to a top business risk from the executive summary |
-| 2. **Failing controls** | Extracts every Fail/Partial control tied to the risk |
-| 3. **Dependency impact** | Queries the knowledge graph for downstream controls blocked by failures |
-| 4. **Roadmap initiatives** | Finds transformation plan actions that address the affected controls |
-| 5. **Learn grounding** | Attaches Microsoft Learn references to each initiative via MCP |
-| 6. **AI causal explanation** | Sends the assembled evidence to the reasoning model for root-cause analysis |
-
-The AI output includes:
-- **Root cause** — why the domain is the top risk (current-state framing)
-- **Business impact** — specific consequences tied to the evidence
-- **Fix sequence** — ordered remediation steps with dependency rationale and Learn URLs
-- **Cascade effect** — which downstream controls will automatically improve
-
-Output is saved to `out/why-{domain}.json`. Use `--no-ai` to get the raw evidence payload without the AI narration.
 
 ---
 
