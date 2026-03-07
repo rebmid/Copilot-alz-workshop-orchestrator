@@ -1,12 +1,12 @@
 # Copilot-Governed Azure Landing Zone Orchestration
 
-Azure Landing Zone governance reviews are traditionally delivered through manual workshops, slide decks, and checklist interviews. These engagements are difficult to scale, inconsistent across architects, and rarely produce repeatable governance insights.
+Azure Landing Zone governance reviews are traditionally delivered through manual workshops, slide decks, and checklist interviews. These engagements are difficult to scale, inconsistent across architects, and challenging to produce repeatable governance insights.
 
 This project introduces a **Copilot-orchestrated Azure Landing Zone governance workshop** powered by a **deterministic governance assessment engine**.
 
-The system evaluates Azure environments using live telemetry from **Azure Resource Graph, Azure Policy, Defender for Cloud, and Management Groups** to deterministically score Azure Landing Zone governance controls.
+The system evaluates Azure environments using live telemetry from **Azure Resource Graph, Azure Policy, Defender for Cloud, Management Groups, Microsoft Entra ID, Azure Monitor, Cost Management, and Network Watcher** to deterministically score Azure Landing Zone governance controls.
 
-The **GitHub Copilot SDK** provides a guardrailed orchestration layer that enables architects to run interactive governance workshops using natural language while invoking a restricted set of deterministic tools (scan, load results, summarize findings, generate outputs). A supporting **Microsoft 365 Copilot agent** provides guidance on platform setup, capabilities, and workshop usage.
+The **GitHub Copilot SDK** provides a guardrailed orchestration layer that enables architects to run interactive governance workshops using natural language while invoking a restricted set of deterministic tools (scan, load results, summarize findings, generate outputs). A supporting **[Microsoft 365 Copilot agent](https://m365.cloud.microsoft/chat/?titleId=T_3128688b-1520-da9d-ba71-8db4bf0fb0c1&source=embedded-builder)** provides guidance on platform setup, capabilities, and workshop usage.
 
 AI does not score controls or modify infrastructure. It reasons over deterministic evidence to generate customer-ready outputs including an **HTML executive report**, **Excel CSA Workbook**, and **transformation roadmap** — enabling repeatable assessments and faster remediation of governance risks.
 
@@ -21,7 +21,7 @@ The assessment engine evaluates Azure Landing Zone posture using **live Azure te
 
 The engine:
 
-- Collects signals from **Azure Resource Graph, Azure Policy, Microsoft Defender for Cloud, and Management Groups**
+- Collects signals from **Azure Resource Graph, Azure Policy, Microsoft Defender for Cloud, Management Groups, Microsoft Entra ID, Azure Monitor, Cost Management, and Network Watcher**
 - Evaluates controls from the [Azure Landing Zone Review Checklist](https://github.com/Azure/review-checklists)
 - Computes **maturity scores and risk tiers**
 - Generates **transformation roadmaps and remediation guidance**
@@ -41,19 +41,13 @@ The result is a **repeatable, enterprise-safe, evidence-driven governance worksh
 
 ## Demo Walkthrough – Copilot-Orchestrated Azure Landing Zone (ALZ) Workshop
 
-The walkthrough below demonstrates the full lifecycle of the platform:
-
-**Azure Telemetry → Deterministic Governance Assessment → Copilot Reasoning → Remediation Guidance → Transformation Roadmap → Customer Deliverables**
-
-The screenshots below walk through a live workshop session and the generated deliverables.
+The walkthrough below demonstrates a live workshop session followed by the generated customer deliverables.
 
 ---
 
-### Live Workshop Mode – Copilot SDK Orchestration
+### Part 1: The Workshop Experience
 
-Natural-language workshop interaction driving deterministic tool execution.
-
-![Copilot Workshop Session](docs/demo/000_copilot_workshop-session.png)
+What the architect sees during an interactive Copilot-orchestrated governance session.
 
 ---
 
@@ -62,6 +56,14 @@ Natural-language workshop interaction driving deterministic tool execution.
 Assessment scope discovery showing tenant context, evaluated subscriptions, and RBAC posture.
 
 ![Execution Context](docs/demo/00a_execution-context.png)
+
+---
+
+### Live Workshop Mode – Copilot SDK Orchestration
+
+Natural-language workshop interaction driving deterministic tool execution.
+
+![Copilot Workshop Session](docs/demo/000_copilot_workshop-session.png)
 
 ---
 
@@ -89,7 +91,13 @@ Copilot synthesizes deterministic governance evidence into structured remediatio
 
 ---
 
-### Foundation Gate – Enterprise Readiness (HTML Report Output)
+### Part 2: Generated Customer Deliverables
+
+The outputs produced for the customer — an interactive HTML executive report and a structured CSA Excel Workbook.
+
+---
+
+### Foundation Gate – Enterprise Readiness (HTML Report)
 
 The **Foundation Gate** is the first section of the generated HTML report. It evaluates whether the Azure platform meets the **minimum architectural requirements for enterprise-scale workloads**, based on the deterministic assessment results.
 
@@ -216,7 +224,7 @@ The underlying assessment engine performs structured, multi-stage reasoning over
 ### Microsoft Platform Integrations
 
 - GitHub Copilot SDK
-- Microsoft 365 Copilot Chat Agent (internal)
+- [Microsoft 365 Copilot Chat Agent](https://m365.cloud.microsoft/chat/?titleId=T_3128688b-1520-da9d-ba71-8db4bf0fb0c1&source=embedded-builder) (internal)
 - Azure OpenAI / Foundry
 - Microsoft Learn MCP (documentation grounding)
 - Microsoft Graph API
@@ -289,7 +297,8 @@ By combining **deterministic platform analysis** with **Copilot-guided orchestra
   │ Setup guide · Usage Q&A     │                 ▼
   └─────────────────────────────┘
 Azure Tenant / Demo ──────────────► Deterministic ALZ Assessment Engine
-                                    (Resource Graph + Policy + Defender)
+                          (Resource Graph + Policy + Defender + Entra ID
+                           + Monitor + Cost Mgmt + Network Watcher)
                                                   │
                                                   ▼
                                         Control Scoring Engine
@@ -338,6 +347,10 @@ The **Copilot SDK session** (`--workshop-copilot`) adds an interactive orchestra
 - Policy + Compliance
 - Defender for Cloud
 - Management Group hierarchy
+- Microsoft Entra ID (PIM, conditional access, break-glass, service principal risk)
+- Azure Monitor (diagnostics coverage, alert mapping, Log Analytics topology)
+- Cost Management (budget posture, forecast accuracy, idle resources)
+- Network Watcher (flow logs, watcher posture)
 
 ### Evaluation Engine
 
