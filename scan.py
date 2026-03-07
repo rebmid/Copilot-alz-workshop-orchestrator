@@ -278,6 +278,9 @@ def main():
         )
 
         print(f"\n✓ Demo done.  {demo_json_path}  |  {demo_report_path}  |  {csa_path}")
+        if os.environ.get("WORKSHOP_SESSION"):
+            print("\n  Workshop session is still active. Type your next command at the Workshop> prompt.")
+            print("  Try: 'load results' | 'summarize findings' | 'compare runs'\n")
         if args.pretty:
             print(json.dumps(run, indent=2, default=str))
         return
@@ -771,6 +774,9 @@ def main():
     print("└──────────────────────────────────────┘")
 
     print(f"\n✓ Done.  {run_json_path}  |  {report_path}  |  {csa_path}")
+    if os.environ.get("WORKSHOP_SESSION"):
+        print("\n  Workshop session is still active. Type your next command at the Workshop> prompt.")
+        print("  Try: 'load results' | 'summarize findings' | 'compare runs'\n")
 
     if args.pretty:
         print(json.dumps(output, indent=2))

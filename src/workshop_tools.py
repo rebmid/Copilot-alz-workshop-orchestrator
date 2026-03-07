@@ -306,7 +306,7 @@ def run_scan(params: RunScanParams) -> str:
         stdout=None,   # inherit → prints live to console
         stderr=stderr_fd,
         cwd=str(_PROJECT_ROOT),
-        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        env={**os.environ, "PYTHONIOENCODING": "utf-8", "WORKSHOP_SESSION": "1"},
     )
 
     stderr_fd.close()  # subprocess owns the fd now

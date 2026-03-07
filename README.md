@@ -41,16 +41,11 @@ The result is a **repeatable, enterprise-safe, evidence-driven governance worksh
 
 ## Demo Walkthrough – Copilot-Orchestrated Azure Landing Zone (ALZ) Workshop
 
-The walkthrough below shows what a real Azure Landing Zone assessment workshop looks like when using the Copilot orchestrator.
-
-In this example the assessment runs against a **non-customer test tenant**.  
-The system evaluates the environment, analyzes the results, and generates the artifacts architects normally produce during an engagement.
+The screenshots below walk through a live Azure Landing Zone assessment workshop using the Copilot orchestrator, run against a **non-customer test tenant**.
 
 ---
 
 ## Part 1: Running the Assessment
-
-This section walks through what happens when the architect starts the workshop and runs the Azure Landing Zone assessment.
 
 ---
 
