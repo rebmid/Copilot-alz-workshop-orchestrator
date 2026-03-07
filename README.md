@@ -128,7 +128,9 @@ The platform also records telemetry about the assessment run so the results are 
 
 ## Part 2: Interpreting Results with Copilot
 
-With the assessment complete, the architect shifts from running the scan to facilitating the workshop conversation. Copilot helps navigate the scored evidence interactively.
+With the assessment complete, the architect can continue the session with Copilot to explore the findings, load prior runs to compare posture over time, generate deliverables on demand, and walk the customer through remediation priorities.
+
+The next section shows how Copilot helps interpret the results and guide the workshop discussion.
 
 ---
 
@@ -176,7 +178,6 @@ The **Foundation Gate** is the first section of the generated HTML report. It ev
 
 If foundational requirements are not met, the report flags the platform as **Not Ready for Enterprise Scale**, highlighting the governance and security controls that must be remediated before scaling workloads.
 
-> *Screenshot from the generated HTML report — produced by `python scan.py --demo`*
 
 ![Foundation Gate](docs/demo/foundation-gate.png)
 
