@@ -1,32 +1,27 @@
 # Documentation
 
-## Workshop Deliverables Checklist
+This folder contains supplementary documentation, presentation materials, and demo assets for the Copilot ALZ Workshop Orchestrator.
 
-| # | Deliverable | Status |
-|---|---|---|
-| 1 | Assessment scan completed | `run_scan` tool |
-| 2 | Run data loaded and validated | `load_results` tool |
-| 3 | Findings summarised by design area | `summarize_findings` tool |
-| 4 | HTML readiness report generated | `generate_outputs(formats=["html"])` |
-| 5 | Excel CSA workbook generated | `generate_outputs(formats=["excel"])` |
-| 6 | All artefacts confined to `out/` | Enforced by `ensure_out_path()` |
+## Contents
+
+| File | Description |
+|---|---|
+| [azure-provider-requirements.md](azure-provider-requirements.md) | Required Azure resource providers and signal coverage details |
+| [workshop-mode.md](workshop-mode.md) | Copilot workshop session documentation |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines |
+| [summary.md](summary.md) | Project summary |
+| [options-5-6.md](options-5-6.md) | Implementation options reference |
+| `Enterprise-Safe...pptx` | Presentation deck with architecture diagram and business value proposition |
+| `GithubCopilot_SDK_ProductFeedback_Jeff_Garcia.png` | SDK product feedback screenshot (bonus submission) |
+| `demo/` | Demo screenshots and sample HTML report |
 
 ## Architecture
 
-See [ARCHITECTURE.md](../ARCHITECTURE.md) for the system-level diagram.
+See [ARCHITECTURE.md](../ARCHITECTURE.md) at the project root for the full system architecture.
 
-## Getting Started
+## Main README
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run workshop in demo mode
-python scan.py --workshop-copilot --demo
-
-# Run workshop against live Azure environment
-python scan.py --workshop-copilot
-```
+See the [project README](../README.md) for problem statement, solution overview, setup instructions, RAI notes, and full technical documentation.
 
 ## Test Suite
 

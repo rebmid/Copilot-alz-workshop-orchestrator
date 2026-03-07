@@ -159,7 +159,7 @@ The following are prohibited until stabilization ends:
 
 - New evaluators
 - New control types
-- New AI passes (currently 11)
+- New AI passes (currently 12)
 - New MCP endpoints
 - Scoring weight changes
 - Synthetic control injection
@@ -179,7 +179,7 @@ Append-only additions to AI-owned keys are permitted. Reporting-layer changes th
 │        ▼                                                │
 │  src/workshop_copilot.py                                │
 │  ├─ CopilotClient → CopilotSession (gpt-4o)            │
-│  ├─ 4 Tool() registrations (explicit JSON schemas)      │
+│  ├─ 6 Tool() registrations (explicit JSON schemas)      │
 │  ├─ Session cache: active_run_id / active_results       │
 │  └─ REPL loop                                           │
 │        │                                                │
@@ -189,6 +189,8 @@ Append-only additions to AI-owned keys are permitted. Reporting-layer changes th
 │  ├─ load_results    → disk + memory cache               │
 │  ├─ summarize_findings → deterministic filter           │
 │  ├─ generate_outputs → HTML / Excel renderers           │
+│  ├─ list_runs       → run store enumeration             │
+│  ├─ compare_runs    → delta analysis (latest vs prev)   │
 │  └─ ensure_out_path → path guardrail                    │
 │        │                                                │
 │        ▼                                                │
@@ -198,7 +200,7 @@ Append-only additions to AI-owned keys are permitted. Reporting-layer changes th
 ```
 
 **Rules**:
-- Exactly 4 tools exposed. No extras.
+- Exactly 6 tools exposed. No extras.
 - No data fabrication — all responses grounded in loaded run data.
 - No environment mutation — read-only against Azure.
 - File writes confined to `out/` via `ensure_out_path()`.
