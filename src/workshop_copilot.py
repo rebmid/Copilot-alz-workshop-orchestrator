@@ -465,6 +465,24 @@ async def _run(*, demo: bool = True, run_source_dir=None):
             print(f"  [debug] event: {etype}{data_preview}", flush=True)
         session.on(_debug_observer)
 
+    # ── Helper: strip box-drawing characters from model output ──
+    import re
+    _BOX_CHARS = re.compile(r'[─│┌┐└┘├┤┬┴┼╔╗╚╝╠╣╦╩╬═║╒╕╘╛╞╡╤╧╪╓╖╙╜╟╢╥╨╫┏┓┗┛┣┫┳┻╋┃━╭╮╯╰]')
+
+    def _sanitize_content(text: str) -> str:
+        """Remove box-drawing characters and collapse resulting empty lines."""
+        cleaned = _BOX_CHARS.sub('', text)
+        # Collapse lines that are now whitespace-only into empty lines
+        lines = cleaned.split('\n')
+        lines = [line if line.strip() else '' for line in lines]
+        # Remove consecutive blank lines
+        result = []
+        for line in lines:
+            if line == '' and result and result[-1] == '':
+                continue
+            result.append(line)
+        return '\n'.join(result).strip()
+
     # ── Helper: send prompt and print response ──
     async def _send_and_print(prompt: str, timeout: float = 660.0):
         """Use the SDK's send_and_wait which correctly handles the
@@ -476,7 +494,7 @@ async def _run(*, demo: bool = True, run_source_dir=None):
             if response:
                 content = getattr(response.data, "content", None)
                 if content:
-                    print(f"\n{content}\n", flush=True)
+                    print(f"\n{_sanitize_content(content)}\n", flush=True)
                 else:
                     if _debug:
                         print("  [debug] response received but no content", flush=True)
