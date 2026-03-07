@@ -126,19 +126,15 @@ The platform also records telemetry about the assessment run so the results are 
 
 ---
 
-## What Happens Next
+## Part 2: Interpreting Results with Copilot
 
-With the assessment complete, the architect can continue the session with Copilot to explore the findings, load prior runs to compare posture over time, generate deliverables on demand, and walk the customer through remediation priorities.
-
-The next section shows how Copilot helps interpret the results and guide the workshop discussion.
+With the assessment complete, the architect shifts from running the scan to facilitating the workshop conversation. Copilot helps navigate the scored evidence interactively.
 
 ---
 
 ### Reviewing the Results with Copilot
 
-Once the assessment completes, the architect can interact with Copilot to explore the findings and understand where the environment needs attention.
-
-Copilot loads the deterministic scan results and helps summarize the most critical areas that should be addressed first.
+The architect asks Copilot to load and summarize the scan results, surfacing the design areas that need the most attention.
 
 ![Copilot Governance Analysis](docs/demo/copilot-analysis.png)
 
