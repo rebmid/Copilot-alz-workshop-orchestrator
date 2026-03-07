@@ -963,10 +963,7 @@ python scan.py --no-ai --no-html
 
 ### Data Handling
 
-- **Assessment evidence is sent to your own Azure OpenAI resource** for AI reasoning. Scored controls, risk tiers, and evidence summaries are transmitted to the Azure OpenAI endpoint you configure — data stays within your Azure tenant. No data is sent to public OpenAI.
-- **Documentation queries are sent to Microsoft Learn** via MCP for grounding. These are generic ALZ topic searches — no customer-specific data is included.
-- **No telemetry or usage data** is collected by this tool.
-- **Assessment results** (including Azure resource metadata) are stored locally in `out/` and `assessment.json`.
+- **Aggregated assessment evidence is sent to the configured Azure OpenAI deployment** for AI reasoning. This includes computed control verdicts, maturity scores, risk classifications, and summarized platform signals — not raw resource identifiers, tenant metadata, or direct Azure API responses. The AI layer operates only on deterministic assessment results produced by the engine. All model calls use Azure OpenAI (Azure AI Foundry); no data is sent to the public OpenAI API.
 
 ---
 
