@@ -422,7 +422,7 @@ AZURE_OPENAI_KEY=<your-api-key>
 
 The tool expects a **`gpt-4.1`** deployment (or any chat-completion model) on the Azure OpenAI resource. See [Configuration](#configuration) for details.
 
-> **Without these credentials**, the assessment still runs — all deterministic scoring, control evaluation, and data collection work normally. However, the 11-pass AI reasoning pipeline will be skipped (`⚠ AI skipped`), meaning these report sections will be empty:
+> **Without these credentials**, the assessment still runs — all deterministic scoring, control evaluation, and data collection work normally. However, the 12-pass AI reasoning pipeline will be skipped (`⚠ AI skipped`), meaning these report sections will be empty:
 > - 30-60-90 Transformation Roadmap
 > - Executive Briefing & Top Business Risks
 > - Enterprise-Scale Readiness & Blockers
@@ -456,7 +456,7 @@ The tool will:
 2. Fetch the latest ALZ checklist from GitHub (~255 controls)
 3. Run all evaluators against your environment
 4. Score every control with weighted domain scoring
-5. Run the 11-pass AI reasoning pipeline (requires `.env` — see step 4)
+5. Run the 12-pass AI reasoning pipeline (requires `.env` — see step 4)
 6. Ground recommendations in Microsoft Learn documentation via MCP
 7. Output all artifacts to the `out/` directory
 
@@ -600,7 +600,7 @@ Uses the bundled demo fixture (`demo/demo_run.json`) — no Azure credentials or
 python scan.py --workshop-copilot
 ```
 
-Runs against your authenticated Azure subscription. If `.env` is configured with Azure OpenAI credentials, the full 11-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
+Runs against your authenticated Azure subscription. If `.env` is configured with Azure OpenAI credentials, the full 12-pass AI reasoning pipeline runs — otherwise AI is skipped and only deterministic scoring is produced.
 
 > **Mode:** LIVE (authenticated against your Azure subscription)
 >
@@ -892,7 +892,7 @@ Probes 8 Azure API surfaces (Resource Graph, Policy, Defender, Management Groups
 | Problem | Solution |
 |---|---|
 | `AZURE_OPENAI_KEY / AZURE_OPENAI_ENDPOINT not set` | Create a `.env` file with your Azure OpenAI credentials (see [Quick Start step 4](#4-configure-environment-variables)), or run with `--no-ai` to skip AI |
-| Report sections are empty (roadmap, executive briefing, critical issues) | AI credentials are not configured. Create a `.env` file — without it, the 11-pass AI pipeline is silently skipped |
+| Report sections are empty (roadmap, executive briefing, critical issues) | AI credentials are not configured. Create a `.env` file — without it, the 12-pass AI pipeline is silently skipped |
 | `No subscriptions found` | Ensure `az login` succeeded and your identity has Reader on at least one subscription |
 | `Management group hierarchy not visible` | Your identity needs Management Group Reader — the tool still works, but MG-related controls will be `Manual` |
 | `MCP connection failed` | The tool falls back to the public Learn search REST API automatically. No action needed. |
@@ -939,7 +939,7 @@ python scan.py --no-ai --no-html
 ### Transparency
 
 - **AI does not score controls.** All control verdicts (`Pass`, `Fail`, `Partial`, `Manual`) are computed deterministically from live Azure telemetry before AI executes. The AI reasoning engine is a **consumer** of scored evidence — it cannot modify or override deterministic results.
-- **AI-generated content is clearly scoped.** The 11-pass reasoning pipeline produces advisory content (roadmaps, executive briefings, risk narratives). These outputs are labeled as AI-generated in the report and are always traceable to the underlying control evidence.
+- **AI-generated content is clearly scoped.** The 12-pass reasoning pipeline produces advisory content (roadmaps, executive briefings, risk narratives). These outputs are labeled as AI-generated in the report and are always traceable to the underlying control evidence.
 - **Microsoft Learn grounding.** Remediation recommendations are grounded in official Microsoft documentation via MCP retrieval — not synthesized from training data alone.
 
 ### Limitations
