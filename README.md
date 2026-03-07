@@ -98,13 +98,14 @@ These guardrails help ensure the recommendations remain grounded in the determin
 
 ### Generating Governance Insights
 
-With validation complete, the reasoning engine synthesizes the results into higher-level insights.
+With validation complete, the AI reasoning engine (powered by Azure OpenAI) synthesizes the deterministic results into higher-level insights.
 
 This includes:
 
 - identifying architectural gaps  
 - generating remediation patterns  
 - building a target architecture plan  
+- grounding recommendations in official Microsoft Learn documentation via MCP  
 - producing governance intelligence used during the workshop discussion  
 
 At this point the system has everything needed to guide the conversation with the customer.
