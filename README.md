@@ -6,7 +6,7 @@ This project introduces a **Copilot-orchestrated Azure Landing Zone governance w
 
 The system evaluates Azure environments using live telemetry from **Azure Resource Graph, Azure Policy, Defender for Cloud, Management Groups, Microsoft Entra ID, Azure Monitor, Cost Management, and Network Watcher** to deterministically score Azure Landing Zone governance controls.
 
-The **GitHub Copilot SDK** provides a guardrailed orchestration layer that enables architects to run interactive governance workshops using natural language while invoking a restricted set of deterministic tools (scan, load results, summarize findings, generate outputs). A supporting **[Microsoft 365 Copilot agent](https://m365.cloud.microsoft/chat/?titleId=T_3128688b-1520-da9d-ba71-8db4bf0fb0c1&source=embedded-builder)** provides guidance on platform setup, capabilities, and workshop usage.
+The **GitHub Copilot SDK** provides a guardrailed orchestration layer that enables architects to run interactive governance workshops using natural language while invoking a restricted set of deterministic tools (scan, load results, summarize findings, generate outputs). A supporting **[Microsoft 365 Copilot agent](https://m365.cloud.microsoft/chat/?titleId=T_3128688b-1520-da9d-ba71-8db4bf0fb0c1&source=embedded-builder)** provides guidance on platform setup, capabilities, and workshop usage for the person running the workshop (internal use).
 
 AI does not score controls or modify infrastructure. It reasons over deterministic evidence to generate customer-ready outputs including an **HTML executive report**, **Excel CSA Workbook**, and **transformation roadmap** — enabling repeatable assessments and faster remediation of governance risks.
 
@@ -30,7 +30,7 @@ The engine:
 All governance scoring is **deterministic, auditable, and reproducible**.
 
 ### 2. Copilot Workshop Orchestrator
-The **GitHub Copilot SDK** provides a controlled orchestration layer that enables a **multi-turn governance workshop** over those deterministic results. Copilot guides the interaction, invokes a restricted set of tools, summarizes findings, compares runs, and generates outputs.
+The **GitHub Copilot SDK** provides a controlled orchestration layer that enables a **multi-turn governance workshop** over those deterministic results. Copilot executes scans as non-blocking background processes, manages assessment run history, summarizes findings by design area or severity, compares runs to track posture over time, and generates customer-ready deliverables — all through natural language interaction with a restricted set of guardrailed tools.
 
 Copilot **does not score controls, alter deterministic results, or mutate the Azure environment**.  
 It operates strictly as a **guardrailed orchestration layer** over authoritative governance evidence.
@@ -41,7 +41,7 @@ The result is a **repeatable, enterprise-safe, evidence-driven governance worksh
 
 ## Demo Walkthrough – Copilot-Orchestrated Azure Landing Zone (ALZ) Workshop
 
-The walkthrough below demonstrates a live workshop session followed by the generated customer deliverables.
+The walkthrough below demonstrates a live workshop session and the generated customer deliverables, using a non-customer test tenant.
 
 ---
 
