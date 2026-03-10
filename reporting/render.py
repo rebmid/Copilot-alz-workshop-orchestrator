@@ -2,7 +2,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import os, re
 
 from schemas.taxonomy import bucket_domain as _bucket_domain
-from schemas.taxonomy import SECTION_TO_DESIGN_AREA, OFFICIAL_ALZ_DESIGN_AREAS, CHECKLIST_LETTER_TO_DESIGN_AREA, DESIGN_AREA_TO_CHECKLIST_LETTER
+from schemas.taxonomy import SECTION_TO_DESIGN_AREA, OFFICIAL_ALZ_DESIGN_AREAS, CHECKLIST_LETTER_TO_DESIGN_AREA, DESIGN_AREA_TO_CHECKLIST_LETTER, MATURITY_DENOMINATOR_STATUSES
 from engine.scoring import section_scores as _compute_section_scores
 
 
@@ -497,10 +497,14 @@ def _build_report_context(output: dict) -> dict:
     # Flatten into final design_areas list
     design_areas = []
     for alz_area, m in _alz_merged.items():
-        # Maturity: automated_pass / automated_controls — same formula as scoring.py
+        # Maturity: automated_pass / applicable controls (excl. NA + errors)
+        # Includes Manual/NotVerified in denominator so unverified
+        # controls lower the percentage.
+        denom = sum(1 for c in m["controls"]
+                    if c.get("status", "Manual") in MATURITY_DENOMINATOR_STATUSES)
         ac = m["automated_controls_sum"]
         ap = m["automated_pass_sum"]
-        mat_pct = round((ap / ac) * 100, 1) if ac > 0 else None
+        mat_pct = round((ap / denom) * 100, 1) if denom > 0 else None
 
         avg_conf = (
             sum(m["conf_values"]) / len(m["conf_values"])
@@ -602,10 +606,9 @@ def _build_report_context(output: dict) -> dict:
             "verification_notes": verification_notes_friendly,
         })
 
-    # Sort by risk: critical fails desc, maturity asc
+    # Sort by maturity: highest to lowest, then alphabetically
     design_areas.sort(key=lambda s: (
-        -(s.get("critical_fail_count", 0) + s.get("critical_partial_count", 0)),
-        s["maturity_percent"] if s["maturity_percent"] is not None else 9999,
+        -(s["maturity_percent"] if s["maturity_percent"] is not None else -1),
         s["section"],
     ))
 

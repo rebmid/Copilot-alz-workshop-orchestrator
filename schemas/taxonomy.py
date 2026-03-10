@@ -142,6 +142,14 @@ MANUAL_STATUSES: frozenset[str] = frozenset({"Manual"})
 # Not applicable
 NA_STATUSES: frozenset[str] = frozenset({"NotApplicable"})
 
+# Statuses included in the maturity denominator.
+# Pass/Fail/Partial contribute to scoring; Manual/NotVerified are
+# unverified coverage that must lower the percentage.
+# Excludes NotApplicable (irrelevant) and error statuses (infra failures).
+MATURITY_DENOMINATOR_STATUSES: frozenset[str] = frozenset({
+    "Pass", "Fail", "Partial", "Manual", "NotVerified",
+})
+
 # Compile-time assertion: every status is categorized
 assert MATURITY_STATUSES | NON_MATURITY_STATUSES == frozenset(ALL_CONTROL_STATUSES), \
     f"Status accounting gap: {frozenset(ALL_CONTROL_STATUSES) - (MATURITY_STATUSES | NON_MATURITY_STATUSES)}"
@@ -474,8 +482,10 @@ DESIGN_AREA_TO_CHECKLIST_LETTER: dict[str, str] = {
 }
 
 # compile-time check: legend covers all official design areas
-assert set(CHECKLIST_LETTER_TO_DESIGN_AREA.values()) == set(OFFICIAL_ALZ_DESIGN_AREAS), \
-    f"Legend/design-area mismatch: {set(OFFICIAL_ALZ_DESIGN_AREAS) - set(CHECKLIST_LETTER_TO_DESIGN_AREA.values())}"
+_legend_areas = set(CHECKLIST_LETTER_TO_DESIGN_AREA.values())
+_official_areas: set[str] = set(OFFICIAL_ALZ_DESIGN_AREAS)
+assert _legend_areas == _official_areas, \
+    f"Legend/design-area mismatch: {_official_areas - _legend_areas}"
 
 # ── KG discipline → internal design-area slug ─────────────────────
 # Maps the Knowledge Graph 'affects[].discipline' short labels to
