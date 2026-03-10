@@ -39,7 +39,10 @@ Return ONLY valid JSON matching this schema:
 
 Rules:
 - Audience is CIO / CTO — translate technical gaps into business risk language
-- Never use task-based language. Lead with outcomes.
+- Never use task-based language. Lead with outcomes, not actions.
+  BAD:  "Enable DDoS Protection Standard on all VNets"
+  GOOD: "DDoS Protection Standard active on all VNets hosting internet-facing workloads"
+  Never start a sentence with: Enable, Deploy, Create, Configure, Install, Set up.
 - Tie every risk to a business consequence: revenue, compliance, operational continuity, reputation
 - Investment priorities should be ordered by risk reduction per effort
 - 90-day outcomes must be concrete and measurable (e.g., "Policy compliance above 80%")

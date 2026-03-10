@@ -120,9 +120,13 @@ assessment data.
 
 Write outcomes, not tasks.
 Actions must begin with a measurable platform outcome.
-Never start with Enable, Deploy, Create, Configure.
+Never start with Enable, Deploy, Create, Configure, Install, Set up.
 Do NOT say: "Deploy Azure Firewall"
 Instead say: "Establish centralized egress control and east-west traffic inspection for all landing zones"
+Do NOT say: "Enable DDoS Protection Standard on all VNets"
+Instead say: "DDoS Protection Standard active on all VNets hosting internet-facing workloads"
+Do NOT say: "Enable diagnostic logging for all Azure Firewalls"
+Instead say: "Diagnostic telemetry flowing from all Azure Firewalls to Log Analytics"
 
 If management_group_hierarchy is provided:
 - Use it to determine whether the platform MG structure already exists
