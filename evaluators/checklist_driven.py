@@ -59,6 +59,7 @@ KEYWORD_TO_SIGNAL: list[tuple[str, str | None]] = [
     ("dns zone", "resource_graph:dns_zones"),
     ("auto-registration", "resource_graph:dns_zones"),
     ("dns resolution", "resource_graph:dns_zones"),
+    ("port 65330", None),
     ("dns proxy", "resource_graph:azure_firewall"),
     # NSG
     ("nsg", "resource_graph:nsgs"),
@@ -82,16 +83,19 @@ KEYWORD_TO_SIGNAL: list[tuple[str, str | None]] = [
     ("traffic analytics", "network:watcher_posture"),
     ("network watcher", "network:watcher_posture"),
     ("connection monitor", "network:watcher_posture"),
-    # Virtual WAN
-    ("virtual wan", "resource_graph:vnets"),
-    ("secured hub", "resource_graph:vnets"),
-    # MG / governance
+    # Virtual WAN — separate service, vnets signal can't verify
+    ("virtual wan", None),
+    ("secured hub", None),
+    # MG / governance — only match when text is about MG structure itself
     ("management group", "arm:mg_hierarchy"),
     ("root management group", "arm:mg_hierarchy"),
     ("platform management group", "arm:mg_hierarchy"),
-    ("landing zone", "arm:mg_hierarchy"),
     ("sandbox management group", "arm:mg_hierarchy"),
     ("connectivity management group", "arm:mg_hierarchy"),
+    ("landing zone management group", "arm:mg_hierarchy"),
+    # "landing zone" alone is too broad — items about deploying resources
+    # IN the landing zone should not match MG hierarchy signal
+    ("landing zone", None),
     # Policy
     ("azure policy", "policy:assignments"),
     ("policy assignment", "policy:assignments"),
@@ -120,6 +124,10 @@ KEYWORD_TO_SIGNAL: list[tuple[str, str | None]] = [
     ("pim", "identity:pim_maturity"),
     ("break-glass", "identity:breakglass_validation"),
     ("emergency access", "identity:breakglass_validation"),
+    ("custom rbac", None),
+    ("on-premises synced", None),
+    ("synced accounts", None),
+    ("data plane access", None),
     ("rbac", "identity:rbac_hygiene"),
     ("role assignment", "identity:rbac_hygiene"),
     ("managed identit", "resource_graph:managed_identities"),
@@ -147,9 +155,11 @@ KEYWORD_TO_SIGNAL: list[tuple[str, str | None]] = [
     ("resource lock", "resource_graph:resource_locks"),
     # Update Manager
     ("update manager", "manage:update_manager"),
-    # Lighthouse
-    ("lighthouse", "resource_graph:vnets"),
+    # Lighthouse — no signal available
+    ("lighthouse", None),
     # Availability zones (only for actual LB/compute, not identity/AD)
+    ("identity resources in multiple regions", None),
+    ("identity services", None),
     ("domain controller", None),
     ("zone-redundant", "resource_graph:load_balancers"),
     # VM / compute
