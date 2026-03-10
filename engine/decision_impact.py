@@ -365,24 +365,36 @@ def build_decision_impact_model(
 
         # Confidence: average of underlying control confidences.
         # Only include controls that actually have a confidence_score.
-        # Do NOT substitute a default — missing means missing.
+        # Match controls by exact ID or by 8-char prefix (AI may use short IDs).
+        matched_results = [
+            r for r in results
+            if r.get("control_id") in init_controls
+            or r.get("control_id", "")[:8] in {c[:8] for c in init_controls}
+        ]
         ctrl_confidences = [
             r["confidence_score"]
-            for r in results
-            if r.get("control_id") in init_controls
-            and "confidence_score" in r
+            for r in matched_results
+            if "confidence_score" in r
             and isinstance(r["confidence_score"], (int, float))
         ]
         # Signal coverage for this initiative's signals
         init_signals = set()
-        for r in results:
-            if r.get("control_id") in init_controls:
-                init_signals.update(r.get("signals_used", []))
+        for r in matched_results:
+            init_signals.update(r.get("signals_used", []))
         signals_dict = signals or {}
         covered = sum(1 for s in init_signals if signals_dict.get(s))
         signal_pct = (covered / max(len(init_signals), 1)) * 100
 
-        confidence = compute_derived_confidence(list(map(float, ctrl_confidences)), signal_pct)
+        # If item has controls but none matched results, use Low confidence
+        # rather than 0.0 — the controls exist, we just can't correlate them
+        if init_controls and not ctrl_confidences:
+            confidence = {
+                "value": 0.3,
+                "basis": f"{len(init_controls)} controls referenced but none matched results",
+                "label": "Low",
+            }
+        else:
+            confidence = compute_derived_confidence(list(map(float, ctrl_confidences)), signal_pct)
 
         di_item = {
             "checklist_id": cid,

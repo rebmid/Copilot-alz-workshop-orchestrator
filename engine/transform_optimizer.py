@@ -44,7 +44,7 @@ def build_transformation_optimization(
       - optimization_notes: list[str]  — advisory notes
       - effort_matrix: list[dict]  — per-initiative effort vs impact
     """
-    init_index = {i.get("initiative_id", ""): i for i in initiatives}
+    init_index = {i.get("checklist_id", ""): i for i in initiatives}
     phase_assignment = dep_graph.get("phase_assignment", {})
     parallel_groups = dep_graph.get("parallel_groups", [])
     init_deps = dep_graph.get("initiative_deps", {})
@@ -52,7 +52,7 @@ def build_transformation_optimization(
 
     # Build impact lookup from risk_impact layer
     impact_by_id = {
-        item["initiative_id"]: item
+        item.get("checklist_id", ""): item
         for item in risk_impact.get("items", [])
     }
 

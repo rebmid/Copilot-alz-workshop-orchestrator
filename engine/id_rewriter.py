@@ -71,6 +71,26 @@ _CONTROLS_JSON_PATH = (
 
 _CANONICAL_KEYS: set[str] | None = None
 _FULLID_TO_KEY: dict[str, str] | None = None
+_CHECKLIST_GUID_TO_ID: dict[str, str] | None = None
+
+
+def _load_checklist_guid_map() -> dict[str, str]:
+    """Load GUID → checklist_id map from the ALZ checklist (cached)."""
+    global _CHECKLIST_GUID_TO_ID
+    if _CHECKLIST_GUID_TO_ID is None:
+        try:
+            from alz.loader import load_alz_checklist
+            cl = load_alz_checklist(force_refresh=False)
+            _CHECKLIST_GUID_TO_ID = {}
+            for item in cl.get("items", []):
+                guid = item.get("guid", "")
+                cid = item.get("id", "")
+                if guid and cid:
+                    _CHECKLIST_GUID_TO_ID[guid] = cid
+                    _CHECKLIST_GUID_TO_ID[guid[:8]] = cid
+        except Exception:
+            _CHECKLIST_GUID_TO_ID = {}
+    return _CHECKLIST_GUID_TO_ID
 
 
 def _load_canonical_keys() -> set[str]:
@@ -107,9 +127,14 @@ def _resolve_control_id(raw_id: str, canonical_keys: set[str]) -> tuple[str, str
     if raw_id in canonical_keys:
         return raw_id, "exact"
 
-    # 1b. Full-ID or UUID-prefix match via reverse lookup
+    # 1b. Full-ID or UUID-prefix match via pack reverse lookup
     if _FULLID_TO_KEY and raw_id in _FULLID_TO_KEY:
         return _FULLID_TO_KEY[raw_id], "prefix"
+
+    # 1c. Checklist GUID → checklist_id (e.g. ca0fe401 → A03.04)
+    checklist_map = _load_checklist_guid_map()
+    if raw_id in checklist_map:
+        return checklist_map[raw_id], "prefix"
 
     # 2. Prefix match — the canonical keys are 8-char truncated.
     #    Take the first 8 characters of the raw ID and check for a

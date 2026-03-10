@@ -554,92 +554,73 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   {% endif %}
 
   {% for area in design_areas %}
-  <details {% if loop.index <= 2 %}open{% endif %}>
-    <summary>
-      {% if area.legend_letter %}
-      <span class="badge" style="background:var(--accent);color:#fff;min-width:1.4rem;text-align:center;margin-right:.4rem">{{ area.legend_letter }}</span>
-      {% endif %}
-      <span style="flex:1">{{ area.section }}</span>
-      <span class="badge badge-{{ area.confidence|lower }}">{{ area.confidence }} conf</span>
-      <span style="font-size:.8rem;color:var(--muted)">
-        {{ area.maturity_percent|default('--') }}{% if area.maturity_percent is not none %}%{% endif %} maturity
-      </span>
-      {% if area.critical_fail_count %}
-      <span class="badge badge-fail">{{ area.critical_fail_count }} critical fail</span>
-      {% endif %}
-      <span style="font-size:.75rem;color:var(--muted)">
-        {{ area.controls|length }} controls
-      </span>
+  <details class="design-area-card" style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;margin-bottom:1.2rem">
+    <summary style="padding:.8rem 1.2rem;cursor:pointer;list-style:none">
+      <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        {% if area.legend_letter %}
+        <span class="badge" style="background:var(--accent);color:#fff;min-width:1.4rem;text-align:center;font-size:.85rem;padding:.15rem .4rem">{{ area.legend_letter }}</span>
+        {% endif %}
+        <span style="margin:0;flex:1;font-weight:600;font-size:.9rem">{{ area.section }}</span>
+        <span class="badge badge-{{ area.confidence|lower }}" style="text-transform:uppercase;font-size:.65rem">{{ area.confidence }}</span>
+        <span style="font-weight:700;font-size:.9rem;color:{% if area.maturity_percent and area.maturity_percent >= 70 %}var(--success){% elif area.maturity_percent and area.maturity_percent >= 40 %}var(--warn){% else %}var(--danger){% endif %}">{{ area.maturity_percent|default('--') }}% maturity</span>
+        {% if area.critical_fail_count %}
+        <span class="badge badge-fail">{{ area.critical_fail_count }} gap{{ 's' if area.critical_fail_count > 1 }}</span>
+        {% endif %}
+        <span style="font-size:.8rem;color:var(--muted)">{{ area.counts.get('Fail', 0) }}F &middot; {{ area.counts.get('Pass', 0) }}P &middot; {{ area.controls|length }} total</span>
+      </div>
     </summary>
-    <div class="detail-body">
-      <!-- Section KPIs -->
-      <div class="kpi-row" style="margin-bottom:1rem">
-        <div class="kpi">
-          <div class="kpi-value" style="color:{% if area.maturity_percent and area.maturity_percent >= 70 %}var(--success){% elif area.maturity_percent and area.maturity_percent >= 40 %}var(--warn){% else %}var(--danger){% endif %}">
-            {{ area.maturity_percent|default('--') }}{% if area.maturity_percent is not none %}%{% endif %}
-          </div>
-          <div class="kpi-label">Maturity</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-value">{{ area.counts.get('Pass', 0) }}</div>
-          <div class="kpi-label">Pass</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-value" style="color:var(--warn)">{{ area.counts.get('Partial', 0) }}</div>
-          <div class="kpi-label">Partial</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-value" style="color:var(--danger)">{{ area.counts.get('Fail', 0) }}</div>
-          <div class="kpi-label">Fail</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-value" style="color:var(--muted)">{{ area.counts.get('Manual', 0) }}</div>
-          <div class="kpi-label">Manual</div>
-        </div>
+    <div style="padding:0 1.5rem 1.2rem 1.5rem">
+
+      <!-- Maturity + Verification -->
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem .8rem;margin-bottom:.6rem;font-size:.85rem">
+        <span style="font-weight:700;color:{% if area.maturity_percent and area.maturity_percent >= 70 %}var(--success){% elif area.maturity_percent and area.maturity_percent >= 40 %}var(--warn){% else %}var(--danger){% endif %}">{{ area.maturity_percent|default('--') }}% maturity</span>
+        <span style="color:var(--muted)">(based on telemetry signals)</span>
+        <span style="color:var(--muted)">&mdash; {% if area.verification_status == 'Workshop validation recommended' %}workshop validation recommended{% elif area.verification_status == 'Derived from telemetry' %}telemetry-derived assessment{% else %}signal-verified assessment{% endif %}</span>
       </div>
 
-      <!-- Controls table -->
-      {% if area.controls %}
-      <table>
-        <thead>
-          <tr>
-            <th style="width:22%">Control</th>
-            <th style="width:7%">Status</th>
-            <th style="width:8%">Signal</th>
-            <th style="width:7%">Severity</th>
-            <th style="width:7%">Confidence</th>
-            <th>Why We Think This</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for ctrl in area.controls %}
-          <tr{% if ctrl.checklist_ids %} id="control-{{ ctrl.checklist_ids[0] }}"{% endif %}>
-            <td>
-              <span style="font-weight:500">{{ ctrl.text }}</span><br/>
-              {% if ctrl.checklist_ids %}
-              <a href="#control-{{ ctrl.checklist_ids[0] }}" style="font-size:.7rem;color:var(--muted);text-decoration:none">{{ ctrl.checklist_ids[0] }}</a>
-              {% else %}
-              <span style="font-size:.7rem;color:var(--muted)">{{ ctrl.control_id }}</span>
-              {% endif %}
-            </td>
-            <td><span class="badge badge-{{ ctrl.status|lower }}">{{ ctrl.status }}</span></td>
-            <td><span class="badge badge-{{ ctrl.signal_type|lower }}">{{ ctrl.signal_type }}</span></td>
-            <td>
-              {% if ctrl.severity %}
-              <span class="badge badge-{{ ctrl.severity|lower }}">{{ ctrl.severity }}</span>
-              {% else %}
-              <span style="color:var(--muted)">&mdash;</span>
-              {% endif %}
-            </td>
-            <td><span class="badge badge-{{ ctrl.confidence|lower }}">{{ ctrl.confidence }}</span></td>
-            <td class="why-cell">{{ ctrl.why }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p style="color:var(--muted)">No controls evaluated in this section.</p>
+      <!-- Status distribution -->
+      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:.6rem">
+        <span style="font-size:.85rem"><span class="badge badge-pass">{{ area.counts.get('Pass', 0) }}</span> Pass</span>
+        <span style="font-size:.85rem"><span class="badge badge-partial" style="background:var(--warn);color:#fff">{{ area.counts.get('Partial', 0) }}</span> Partial</span>
+        <span style="font-size:.85rem"><span class="badge badge-fail">{{ area.counts.get('Fail', 0) }}</span> Fail</span>
+        <span style="font-size:.85rem;color:var(--muted)"><span class="badge" style="background:#dee2e6;color:#495057">{{ area.counts.get('Manual', 0) }}</span> Manual</span>
+        <span style="font-size:.8rem;color:var(--muted);margin-left:auto">{{ area.controls|length }} controls total</span>
+      </div>
+
+      <!-- Top issues (max 2) -->
+      {% set top_fails = area.controls|selectattr('status', 'equalto', 'Fail')|list %}
+      {% if top_fails %}
+      <div style="border-top:1px solid var(--border);padding-top:.6rem;margin-top:.4rem">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.05em">Top Issues (from telemetry signals)</div>
+        {% for fail in top_fails[:2] %}
+        <div style="margin-bottom:.5rem">
+          <div style="font-size:.85rem;font-weight:600">
+            <span class="badge badge-{{ fail.severity|lower }}" style="font-size:.7rem;margin-right:.3rem">{{ fail.severity }}</span>
+            {{ fail.text[:80] }}{% if fail.text|length > 80 %}&hellip;{% endif %}
+          </div>
+          <div style="font-size:.8rem;color:var(--muted);margin-top:.15rem;padding-left:1rem">
+            Telemetry signals suggest incomplete coverage &mdash; validate during workshop.
+          </div>
+        </div>
+        {% endfor %}
+      </div>
       {% endif %}
+
+      <!-- Telemetry signals detected -->
+      {% if area.verification_notes %}
+      <div style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.4rem">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.3rem;font-weight:600">Telemetry signals detected:</div>
+        <ul style="margin:0;padding-left:1.2rem;font-size:.8rem;color:var(--muted)">
+          {% for sig_name in area.verification_notes %}
+          <li>{{ sig_name }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      <div style="text-align:right;margin-top:.5rem">
+        <span style="font-size:.75rem;color:var(--muted)">&#128196; Full detail &rarr; CSA Workbook Sheet 2</span>
+      </div>
     </div>
   </details>
   {% endfor %}

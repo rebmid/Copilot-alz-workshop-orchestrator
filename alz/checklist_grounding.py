@@ -125,6 +125,21 @@ def resolve_control_to_checklist(
                     "category": it.get("category", ""),
                 })
 
+    # If still no match, try 8-char prefix against checklist GUIDs
+    # (AI often uses truncated GUIDs as control IDs)
+    if not refs and len(control_id) >= 8:
+        prefix = control_id[:8]
+        for guid, it in by_guid.items():
+            if guid.startswith(prefix):
+                refs.append({
+                    "checklist_id": it["id"],
+                    "guid": it["guid"],
+                    "text": it.get("text", "")[:200],
+                    "severity": it.get("severity", ""),
+                    "category": it.get("category", ""),
+                })
+                break  # first match only
+
     return refs
 
 
@@ -162,6 +177,21 @@ def derive_checklist_for_initiative(
             if ref["checklist_id"] not in seen:
                 seen.add(ref["checklist_id"])
                 checklist_refs.append(ref)
+
+    # If no controls resolved, try self-grounding via the item's own
+    # checklist_id (e.g., A03.03 IS a checklist item).
+    if not checklist_refs:
+        by_id, _ = _ensure_index()
+        own_id = initiative.get("checklist_id", "")
+        if own_id and own_id in by_id:
+            it = by_id[own_id]
+            checklist_refs.append({
+                "checklist_id": it["id"],
+                "guid": it["guid"],
+                "text": it.get("text", "")[:200],
+                "severity": it.get("severity", ""),
+                "category": it.get("category", ""),
+            })
 
     # Stable sort by checklist ID for deterministic output
     checklist_refs.sort(key=lambda r: r["checklist_id"])

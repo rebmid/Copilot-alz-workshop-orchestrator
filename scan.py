@@ -7,6 +7,9 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
+load_dotenv()  # load .env (AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_KEY, etc.)
+
 # Ensure stdout handles Unicode on Windows terminals that default to cp1252
 if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
@@ -63,6 +66,16 @@ import evaluators.identity_access      # noqa: F401
 import evaluators.resource_organization  # noqa: F401
 import evaluators.platform_automation  # noqa: F401
 import evaluators.billing              # noqa: F401
+
+# ── Data-driven checklist evaluators ──────────────────────────────
+# Auto-register evaluators for ALL automatable items from the official
+# Azure Review Checklist repo. This covers items that the hand-written
+# evaluators above don't already handle.
+from evaluators.checklist_driven import register_checklist_evaluators
+from alz.loader import load_alz_checklist as _load_checklist
+
+_cl = _load_checklist(force_refresh=False)
+_auto_count = register_checklist_evaluators(_cl.get("items", []))
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "out")
 
@@ -459,6 +472,11 @@ def main():
 
     # ── Checklist (full ALZ list — Manual items backfill scoring) ──
     checklist = load_alz_checklist(force_refresh=True)
+
+    # ── Data-driven evaluators already registered at module level ──
+    from evaluators.registry import EVALUATORS as _ev_reg
+    print(f"  {len(_ev_reg)} evaluators registered ({_auto_count} data-driven from ALZ checklist)")
+
     # ── Fail-fast: binding validation ─────────────────────────
     pack = load_pack("alz", "v1.0")
     binding_violations = validate_signal_bindings(pack)

@@ -177,12 +177,52 @@ def run_evaluators_for_scoring(
     pack_full_ids = {cd.full_id for cd in pack_controls.values()}
     pack_short_keys = set(pack_controls.keys())
 
+    # Build checklist GUID lookup for data-driven evaluators
+    checklist_by_guid: dict[str, dict] = {}
+    if checklist:
+        for item in checklist.get("items", []):
+            guid = item.get("guid", "")
+            if guid:
+                checklist_by_guid[guid] = item
+
     for cid in EVALUATORS:
-        # Skip evaluators whose control_id is not in the current pack
-        if cid not in pack_full_ids and cid not in pack_short_keys and cid[:8] not in pack_short_keys:
-            continue
+        evaluator = EVALUATORS[cid]
+        in_pack = cid in pack_full_ids or cid in pack_short_keys or cid[:8] in pack_short_keys
+        in_checklist = cid in checklist_by_guid
+
+        if not in_pack and not in_checklist:
+            continue  # neither in pack nor checklist — skip
+
         raw = evaluate_control(cid, scope, bus, run_id=run_id)
-        adapted = adapt_evaluator_result(raw, pack_controls)
+
+        if in_pack:
+            adapted = adapt_evaluator_result(raw, pack_controls)
+        else:
+            # Data-driven evaluator from checklist — build result from checklist metadata
+            cl_item = checklist_by_guid[cid]
+            adapted = {
+                "control_id": cid,
+                "category": cl_item.get("category", ""),
+                "section": cl_item.get("category", ""),
+                "text": cl_item.get("text", ""),
+                "question": cl_item.get("text", ""),
+                "severity": raw.get("severity") or cl_item.get("severity", "Medium"),
+                "status": raw.get("status", "Manual"),
+                "evidence_count": len(raw.get("evidence", [])),
+                "evidence": raw.get("evidence", []),
+                "signal_used": raw.get("signals_used", [None])[0] if raw.get("signals_used") else None,
+                "confidence": raw.get("confidence", "Medium"),
+                "confidence_score": raw.get("confidence_score", 0.5),
+                "notes": raw.get("reason", ""),
+                "checklist_ids": [cl_item.get("id", "")] if cl_item.get("id") else [],
+                "checklist_guids": [cid],
+                "learn_url": cl_item.get("link", ""),
+                "training_url": cl_item.get("training", ""),
+                "waf_pillar": cl_item.get("waf", ""),
+                "checklist_name": cl_item.get("subcategory", ""),
+                "checklist_description": cl_item.get("text", ""),
+            }
+
         automated_results.append(adapted)
         automated_ids.add(adapted["control_id"])
 
