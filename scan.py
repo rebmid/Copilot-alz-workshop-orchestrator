@@ -58,6 +58,11 @@ import evaluators.identity         # noqa: F401
 import evaluators.network_coverage # noqa: F401
 import evaluators.management       # noqa: F401
 import evaluators.cost             # noqa: F401
+import evaluators.network_topology     # noqa: F401
+import evaluators.identity_access      # noqa: F401
+import evaluators.resource_organization  # noqa: F401
+import evaluators.platform_automation  # noqa: F401
+import evaluators.billing              # noqa: F401
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "out")
 
@@ -389,8 +394,37 @@ def main():
         subscription_ids = execution_context.get("subscription_ids_visible", [])
         print(f"\n  Tenant-wide mode: {len(subscription_ids)} subscription(s)")
     else:
-        subscription_ids = get_subscriptions()
-        print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
+        # Default mode: prefer MG descendants for full coverage, fall back to ARM
+        mg_access = execution_context.get("management_group_access", False)
+        if mg_access and tenant_id:
+            import requests as _req
+            _token = credential.get_token("https://management.azure.com/.default").token
+            try:
+                _mg_resp = _req.get(
+                    f"https://management.azure.com/providers/Microsoft.Management"
+                    f"/managementGroups/{tenant_id}/descendants"
+                    f"?api-version=2021-04-01",
+                    headers={"Authorization": f"Bearer {_token}"},
+                    timeout=20,
+                )
+                _mg_resp.raise_for_status()
+                _mg_subs = sorted({
+                    d["name"]
+                    for d in _mg_resp.json().get("value", [])
+                    if (d.get("type") or "").endswith("/subscriptions")
+                })
+                if _mg_subs:
+                    subscription_ids = _mg_subs
+                    print(f"\n  MG-discovery mode: {len(subscription_ids)} subscription(s) across tenant")
+                else:
+                    subscription_ids = get_subscriptions()
+                    print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
+            except Exception:
+                subscription_ids = get_subscriptions()
+                print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
+        else:
+            subscription_ids = get_subscriptions()
+            print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
 
     if not subscription_ids:
         print("  ⚠ No subscriptions found — assessment will be limited.")

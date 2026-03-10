@@ -173,7 +173,14 @@ def run_evaluators_for_scoring(
     automated_results: list[dict[str, Any]] = []
     automated_ids: set[str] = set()
 
+    # Build set of evaluator IDs that exist in the pack (full_id or short key)
+    pack_full_ids = {cd.full_id for cd in pack_controls.values()}
+    pack_short_keys = set(pack_controls.keys())
+
     for cid in EVALUATORS:
+        # Skip evaluators whose control_id is not in the current pack
+        if cid not in pack_full_ids and cid not in pack_short_keys and cid[:8] not in pack_short_keys:
+            continue
         raw = evaluate_control(cid, scope, bus, run_id=run_id)
         adapted = adapt_evaluator_result(raw, pack_controls)
         automated_results.append(adapted)

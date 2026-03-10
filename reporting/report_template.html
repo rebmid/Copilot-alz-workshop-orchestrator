@@ -341,8 +341,8 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <div class="kpi-label">Readiness Score</div>
     </div>
     <div class="kpi">
-      <div class="kpi-value">{{ foundation_gate.max_subscriptions|default('--') }}</div>
-      <div class="kpi-label">Max Subscriptions (Current)</div>
+      <div class="kpi-value">{{ foundation_gate.subscription_count|default('--') }}</div>
+      <div class="kpi-label">Subscriptions (Scanned)</div>
     </div>
     <div class="kpi">
       <div class="kpi-value">{{ foundation_gate.automated_controls }}/{{ foundation_gate.total_controls }}</div>

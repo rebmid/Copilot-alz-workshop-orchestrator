@@ -6,18 +6,15 @@ from signals.providers.resource_graph import _query_rg
 
 
 def fetch_app_service_posture(subscriptions: list[str]) -> SignalResult:
-    """Evaluate App Services for HTTPS, TLS, managed identity, VNet integration."""
+    """Evaluate App Services for HTTPS, managed identity, VNet integration."""
     query = """
     Resources
     | where type =~ 'microsoft.web/sites'
     | extend httpsOnly   = tostring(properties.httpsOnly),
-             minTls      = tostring(properties.siteConfig.minTlsVersion),
-             ftpsState   = tostring(properties.siteConfig.ftpsState),
-             vnetName    = tostring(properties.virtualNetworkSubnetId),
-             managedId   = iff(isnotempty(identity), true, false),
-             kind        = kind
+             vnetInteg   = iff(isnotempty(tostring(properties.virtualNetworkSubnetId)), true, false),
+             managedId   = iff(isnotempty(identity), true, false)
     | project name, resourceGroup, location, id, kind,
-              httpsOnly, minTls, ftpsState, vnetName, managedId
+              httpsOnly, vnetInteg, managedId
     """
     r = _query_rg(query, subscriptions)
     r.signal_name = "resource_graph:app_service_posture"
@@ -34,12 +31,6 @@ def fetch_app_service_posture(subscriptions: list[str]) -> SignalResult:
 
             if (app.get("httpsOnly") or "").lower() not in ("true", "1"):
                 app_issues.append("HTTPS-only not enforced")
-                ok = False
-            if (app.get("minTls") or "").lower() not in ("1.2", "1.3"):
-                app_issues.append(f"TLS < 1.2 ({app.get('minTls', 'unknown')})")
-                ok = False
-            if (app.get("ftpsState") or "").lower() not in ("disabled", "ftpsonly"):
-                app_issues.append("FTP(S) not disabled")
                 ok = False
             if not app.get("managedId"):
                 app_issues.append("no managed identity")

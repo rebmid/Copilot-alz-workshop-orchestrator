@@ -532,7 +532,7 @@ az login
 ```bash
 python scan.py                       # scans the default subscription
 python scan.py --demo                # demo mode — no Azure connection
-python scan.py --mg-scope <mg-id>    # scope to a management group (recommended for CSA)
+python scan.py --mg-scope <mg-id>    # scope to Tenant Root Management group (recommended for CSA)
 ```
 
 See the **[CLI Reference](#cli-reference)** for all available modes and flags.

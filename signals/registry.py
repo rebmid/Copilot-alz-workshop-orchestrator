@@ -58,6 +58,18 @@ from signals.providers.cost_management import (
 )
 from signals.providers.network_watcher import fetch_network_watcher_posture
 from signals.providers.update_manager import fetch_update_manager_posture
+from signals.providers.network_topology import (
+    fetch_load_balancers,
+    fetch_expressroute_gateways,
+    fetch_bastion_hosts,
+    fetch_front_doors,
+    fetch_application_gateways,
+    fetch_dns_zones,
+    fetch_vnet_peerings,
+    fetch_managed_identities,
+    fetch_tag_coverage,
+    fetch_gateway_subnets,
+)
 
 
 # Type: (scope) -> SignalResult
@@ -560,6 +572,18 @@ SIGNAL_PROVIDERS: dict[str, ProviderFn] = {
 
     # Update Manager (multi-sub aggregation)
     "manage:update_manager":              _multi_sub_provider(fetch_update_manager_posture),
+
+    # ── Network Topology signals (RG — cross-sub) ────────────────
+    "resource_graph:load_balancers":       _rg_provider(fetch_load_balancers),
+    "resource_graph:vnet_gateways":        _rg_provider(fetch_expressroute_gateways),
+    "resource_graph:bastion_hosts":        _rg_provider(fetch_bastion_hosts),
+    "resource_graph:front_doors":          _rg_provider(fetch_front_doors),
+    "resource_graph:app_gateways":         _rg_provider(fetch_application_gateways),
+    "resource_graph:dns_zones":            _rg_provider(fetch_dns_zones),
+    "resource_graph:vnet_peerings":        _rg_provider(fetch_vnet_peerings),
+    "resource_graph:managed_identities":   _rg_provider(fetch_managed_identities),
+    "resource_graph:tag_coverage":         _rg_provider(fetch_tag_coverage),
+    "resource_graph:gateway_subnets":      _rg_provider(fetch_gateway_subnets),
 }
 
 

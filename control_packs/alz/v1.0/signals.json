@@ -3,7 +3,6 @@
   "name": "Azure Landing Zone — V1 Starter",
   "version": "1.3.0",
   "description": "Signal and control definitions for the ALZ enterprise-scale assessment. Maps logical signal names to signal providers registered in the signals/ layer.",
-
   "signals": {
     "mg_hierarchy": {
       "provider": "arm",
@@ -103,7 +102,6 @@
       "description": "Log Analytics workspaces for centralized logging validation",
       "preflight_probe": "log_analytics_reader"
     },
-
     "storage_posture": {
       "provider": "resource_graph",
       "signal_bus_name": "resource_graph:storage_posture",
@@ -170,7 +168,6 @@
       "description": "RBAC hygiene — owner count, group vs user ratio, service principals (coverage-based)",
       "preflight_probe": null
     },
-
     "entra_log_availability": {
       "provider": "entra",
       "signal_bus_name": "identity:entra_log_availability",
@@ -183,7 +180,6 @@
       "description": "PIM usage — role eligibility activations, break-glass detection (coverage-based)",
       "preflight_probe": null
     },
-
     "workspace_topology": {
       "provider": "monitor",
       "signal_bus_name": "monitor:workspace_topology",
@@ -196,28 +192,24 @@
       "description": "Activity log automation maturity — IaC ratio, policy remediations, RBAC/NSG/FW churn (coverage-based)",
       "preflight_probe": null
     },
-
     "cost_management_posture": {
       "provider": "cost_management",
       "signal_bus_name": "cost:management_posture",
       "description": "Cost governance — budgets, cost alerts, reservation/savings plan (coverage-based)",
       "preflight_probe": "cost_management_reader"
     },
-
     "network_watcher_posture": {
       "provider": "network_watcher",
       "signal_bus_name": "network:watcher_posture",
       "description": "Network Watcher observability — flow logs v2, Traffic Analytics, connection monitors (coverage-based)",
       "preflight_probe": null
     },
-
     "update_manager": {
       "provider": "maintenance",
       "signal_bus_name": "manage:update_manager",
       "description": "Update Manager posture — maintenance configs, guest configuration, patch assessment, VM maintenance join (coverage-based)",
       "preflight_probe": null
     },
-
     "pim_maturity": {
       "provider": "graph_api",
       "signal_bus_name": "identity:pim_maturity",
@@ -242,7 +234,6 @@
       "description": "Admin Conditional Access coverage — admin users protected by CA policies requiring MFA",
       "preflight_probe": "graph_api_reader"
     },
-
     "alert_action_mapping": {
       "provider": "resource_graph",
       "signal_bus_name": "monitor:alert_action_mapping",
@@ -267,7 +258,6 @@
       "description": "Change tracking — Microsoft.ChangeAnalysis RP registration, ChangeTracking solutions, VM extensions",
       "preflight_probe": null
     },
-
     "cost_forecast_accuracy": {
       "provider": "cost_management",
       "signal_bus_name": "cost:forecast_accuracy",
@@ -278,6 +268,76 @@
       "provider": "resource_graph",
       "signal_bus_name": "cost:idle_resources",
       "description": "Idle resource detection — Advisor cost recommendations for underutilized VMs, estimated savings",
+      "preflight_probe": "resource_graph"
+    },
+    "load_balancers": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/loadbalancers'",
+      "signal_bus_name": "resource_graph:load_balancers",
+      "description": "Load Balancers with SKU, backend pools, and zone redundancy",
+      "preflight_probe": "resource_graph"
+    },
+    "vnet_gateways": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/virtualnetworkgateways'",
+      "signal_bus_name": "resource_graph:vnet_gateways",
+      "description": "ExpressRoute and VPN virtual network gateways",
+      "preflight_probe": "resource_graph"
+    },
+    "bastion_hosts": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/bastionhosts'",
+      "signal_bus_name": "resource_graph:bastion_hosts",
+      "description": "Azure Bastion hosts for secure VM access",
+      "preflight_probe": "resource_graph"
+    },
+    "front_doors": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.cdn/profiles' or type =~ 'microsoft.network/frontdoors'",
+      "signal_bus_name": "resource_graph:front_doors",
+      "description": "Azure Front Door and CDN profiles for global HTTP/S protection",
+      "preflight_probe": "resource_graph"
+    },
+    "app_gateways": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/applicationgateways'",
+      "signal_bus_name": "resource_graph:app_gateways",
+      "description": "Application Gateways with WAF and SKU info",
+      "preflight_probe": "resource_graph"
+    },
+    "dns_zones": {
+      "provider": "resource_graph",
+      "query": "Resources | where type =~ 'microsoft.network/dnszones' or type =~ 'microsoft.network/privatednszones'",
+      "signal_bus_name": "resource_graph:dns_zones",
+      "description": "Azure DNS zones (public and private)",
+      "preflight_probe": "resource_graph"
+    },
+    "vnet_peerings": {
+      "provider": "resource_graph",
+      "query": "VNet peering details extracted from virtual network properties",
+      "signal_bus_name": "resource_graph:vnet_peerings",
+      "description": "VNet peering state, traffic forwarding, and gateway transit settings",
+      "preflight_probe": "resource_graph"
+    },
+    "managed_identities": {
+      "provider": "resource_graph",
+      "query": "Resources with system-assigned or user-assigned managed identities",
+      "signal_bus_name": "resource_graph:managed_identities",
+      "description": "Count of resources using managed identities for authentication",
+      "preflight_probe": "resource_graph"
+    },
+    "tag_coverage": {
+      "provider": "resource_graph",
+      "query": "Tag coverage analysis across all resource types",
+      "signal_bus_name": "resource_graph:tag_coverage",
+      "description": "Tag coverage percentage — resources with vs without tags",
+      "preflight_probe": "resource_graph"
+    },
+    "gateway_subnets": {
+      "provider": "resource_graph",
+      "query": "GatewaySubnet prefix sizes from virtual network subnet properties",
+      "signal_bus_name": "resource_graph:gateway_subnets",
+      "description": "GatewaySubnet prefix sizes for gateway subnet compliance",
       "preflight_probe": "resource_graph"
     }
   }

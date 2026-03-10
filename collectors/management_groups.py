@@ -37,16 +37,76 @@ def _walk(node: MgNode, depth: int = 0) -> List[Tuple[MgNode, int]]:
 
 def collect_management_group_hierarchy(client: AzureClient, root_group_id: str) -> Dict[str, Any]:
     """
-    Queries tenant-scope MG hierarchy with recursive expansion.
-    Detects ALZ canonical MGs by ID pattern AND display name.
+    Queries tenant-scope MG hierarchy using the descendants API for reliable
+    full-depth traversal, then reconstructs the tree.
     """
-    data = client.get(
-        f"/providers/Microsoft.Management/managementGroups/{root_group_id}",
-        api_version=API_VERSION,
-        params={"$expand": "children,subscriptions", "recurse": "true"}
-    )
+    # ── Primary: descendants API (flat list of all MGs + subs) ────
+    # The $expand=children approach is unreliable for recursive depth,
+    # so we use descendants and rebuild the tree ourselves.
+    try:
+        desc_data = client.get(
+            f"/providers/Microsoft.Management/managementGroups/{root_group_id}/descendants",
+            api_version=API_VERSION,
+        )
+        descendants = desc_data.get("value", [])
+    except Exception:
+        descendants = []
 
-    tree = _build_tree(data)
+    # Separate MGs from subscriptions
+    mg_nodes: Dict[str, Dict[str, Any]] = {}
+    sub_placement: Dict[str, str] = {}  # sub_id → parent_mg_name
+
+    for d in descendants:
+        dtype = d.get("type", "")
+        name = d.get("name", "")
+        props = d.get("properties", {})
+        display_name = props.get("displayName", name)
+        parent_id = props.get("parent", {}).get("id", "") or ""
+        parent_name = parent_id.rsplit("/", 1)[-1] if parent_id else ""
+
+        if dtype.endswith("/managementGroups"):
+            mg_nodes[name] = {
+                "name": name,
+                "display_name": display_name,
+                "parent": parent_name,
+                "children": [],
+                "subscriptions": [],
+            }
+        elif dtype.endswith("/subscriptions"):
+            sub_placement[name] = parent_name
+
+    # Add root MG itself (not in descendants)
+    mg_nodes[root_group_id] = mg_nodes.get(root_group_id, {
+        "name": root_group_id,
+        "display_name": root_group_id,
+        "parent": "",
+        "children": [],
+        "subscriptions": [],
+    })
+
+    # Wire children and subscriptions
+    for mg_name, mg in mg_nodes.items():
+        parent = mg["parent"]
+        if parent and parent in mg_nodes and parent != mg_name:
+            mg_nodes[parent]["children"].append(mg_name)
+
+    for sub_id, parent_mg in sub_placement.items():
+        if parent_mg in mg_nodes:
+            mg_nodes[parent_mg]["subscriptions"].append(sub_id)
+
+    # Build MgNode tree from root
+    def _build_from_flat(mg_name: str) -> MgNode:
+        mg = mg_nodes.get(mg_name, {})
+        child_names = mg.get("children", [])
+        return MgNode(
+            id=f"/providers/Microsoft.Management/managementGroups/{mg_name}",
+            name=mg_name,
+            display_name=mg.get("display_name", mg_name),
+            children=[_build_from_flat(c) for c in child_names],
+            subscriptions=mg.get("subscriptions", []),
+        )
+
+    tree = _build_from_flat(root_group_id)
     flat = _walk(tree)
 
     max_depth = max(d for _, d in flat) if flat else 0
@@ -74,6 +134,10 @@ def collect_management_group_hierarchy(client: AzureClient, root_group_id: str) 
         for n, _ in flat
         if n.name.lower() != root_group_id.lower()  # exclude root MG itself
     )
+    has_sandbox = any(_matches(n, "sandbox") for n, _ in flat)
+
+    # Subscriptions directly under root
+    root_subs = tree.subscriptions
 
     # Build compact hierarchy for AI topology reasoning
     def _to_compact(node: MgNode) -> Dict[str, Any]:
@@ -102,9 +166,11 @@ def collect_management_group_hierarchy(client: AzureClient, root_group_id: str) 
         "has_connectivity_mg": has_connectivity,
         "has_identity_mg": has_identity,
         "has_management_mg": has_management,
-        "subscription_placement": sub_to_mg,   # sub_id → mg_name
-        "tree": data,                      # raw for evidence
-        "compact_hierarchy": _to_compact(tree),  # for AI payload
+        "has_sandbox_mg": has_sandbox,
+        "root_subscriptions": root_subs,
+        "subscription_placement": sub_to_mg,
+        "tree": {"name": root_group_id, "properties": {"displayName": tree.display_name}},
+        "compact_hierarchy": _to_compact(tree),
     }
 
 def discover_management_group_scope(client: AzureClient):

@@ -201,7 +201,8 @@ def _build_report_context(output: dict) -> dict:
     foundation_gate = {
         "ready": ready,
         "readiness_score": esr.get("readiness_score"),
-        "max_subscriptions": esr.get("max_supported_subscriptions_current_state"),
+        "subscription_count": exec_ctx.get("subscription_count_visible") or exec_ctx.get("subscription_count_total"),
+        "max_subscriptions_estimate": esr.get("max_supported_subscriptions_current_state"),
         "blockers": gate_blockers,
         "minimum_items": min_items,
         "improvement_opportunities": improvement_opportunities,
