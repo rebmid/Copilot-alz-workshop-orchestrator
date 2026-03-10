@@ -16,7 +16,7 @@ if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8
 
 from azure.identity import AzureCliCredential
 
-from alz.loader import load_alz_checklist
+from alz.loader import load_alz_checklist, detect_checklist_drift, report_stale_checklist_ids
 from collectors.azure_client import set_shared_credential
 from collectors.resource_graph import get_subscriptions
 from engine.context import discover_execution_context
@@ -472,6 +472,24 @@ def main():
 
     # ── Checklist (full ALZ list — Manual items backfill scoring) ──
     checklist = load_alz_checklist(force_refresh=True)
+
+    # ── Checklist drift detection ─────────────────────────────────
+    drift = detect_checklist_drift()
+    if not drift["aligned"]:
+        print("\n┌─ ALZ Checklist Drift Detected ────────────────────────────┐")
+        if drift["added"]:
+            print(f"│  ⚠ New upstream design area(s): {drift['added']}")
+        if drift["removed"]:
+            print(f"│  ⚠ Missing upstream design area(s): {drift['removed']}")
+        print("│  Update ALZ_DESIGN_AREAS and taxonomy mappings.          │")
+        print("└──────────────────────────────────────────────────────────┘")
+    stale = report_stale_checklist_ids()
+    if stale:
+        print(f"\n  ⚠ {len(stale)} stale checklist reference(s) in control pack:")
+        for s in stale[:5]:
+            print(f"    • {s['control_id']}: {s['field']}={s['value']}")
+        if len(stale) > 5:
+            print(f"    … and {len(stale) - 5} more")
 
     # ── Data-driven evaluators already registered at module level ──
     from evaluators.registry import EVALUATORS as _ev_reg
