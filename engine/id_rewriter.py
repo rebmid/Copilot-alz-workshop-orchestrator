@@ -131,10 +131,15 @@ def _resolve_control_id(raw_id: str, canonical_keys: set[str]) -> tuple[str, str
     if _FULLID_TO_KEY and raw_id in _FULLID_TO_KEY:
         return _FULLID_TO_KEY[raw_id], "prefix"
 
-    # 1c. Checklist GUID → checklist_id (e.g. ca0fe401 → A03.04)
+    # 1c. Checklist GUID → pack key (via GUID→checklist_id→pack key)
+    #     We resolve to a pack key, NOT a checklist_id like A03.04,
+    #     because controls[] must stay in pack-key space.
     checklist_map = _load_checklist_guid_map()
-    if raw_id in checklist_map:
-        return checklist_map[raw_id], "prefix"
+    cid = checklist_map.get(raw_id)
+    if cid and _FULLID_TO_KEY:
+        pack_key = _FULLID_TO_KEY.get(cid)
+        if pack_key:
+            return pack_key, "prefix"
 
     # 2. Prefix match — the canonical keys are 8-char truncated.
     #    Take the first 8 characters of the raw ID and check for a

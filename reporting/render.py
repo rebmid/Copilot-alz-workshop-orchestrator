@@ -90,17 +90,22 @@ def _build_report_context(output: dict) -> dict:
     exec_ctx = output.get("execution_context", {})
     results = output.get("results", [])
     results_by_id = {r["control_id"]: r for r in results if "control_id" in r}
-    # Build 8-char prefix index for AI-generated short IDs
-    _prefix_index: dict[str, str] = {}
+    # Build 8-char prefix index for AI-generated short IDs.
+    # If multiple control IDs share the same prefix, mark as ambiguous (None).
+    _prefix_index: dict[str, str | None] = {}
     for rid in results_by_id:
-        _prefix_index.setdefault(rid[:8], rid)
+        prefix = rid[:8]
+        if prefix not in _prefix_index:
+            _prefix_index[prefix] = rid
+        elif _prefix_index[prefix] != rid:
+            _prefix_index[prefix] = None  # ambiguous
 
     def _resolve_ctrl(short_id: str) -> str | None:
         """Resolve an 8-char or short control ID to its full result key."""
         if short_id in results_by_id:
             return short_id
         full = _prefix_index.get(short_id[:8])
-        return full
+        return full  # None if ambiguous or missing
 
     auto_cov = scoring.get("automation_coverage", {})
 

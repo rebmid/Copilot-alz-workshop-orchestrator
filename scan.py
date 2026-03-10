@@ -69,13 +69,12 @@ import evaluators.billing              # noqa: F401
 
 # ── Data-driven checklist evaluators ──────────────────────────────
 # Auto-register evaluators for ALL automatable items from the official
-# Azure Review Checklist repo. This covers items that the hand-written
-# evaluators above don't already handle.
+# Azure Review Checklist repo.  Registration is deferred to main() so
+# that --demo / --why / --workshop modes don't trigger a network call
+# on a cold cache.
 from evaluators.checklist_driven import register_checklist_evaluators
-from alz.loader import load_alz_checklist as _load_checklist
 
-_cl = _load_checklist(force_refresh=False)
-_auto_count = register_checklist_evaluators(_cl.get("items", []))
+_auto_count = 0  # set in main() after CLI flags are parsed
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "out")
 
@@ -491,7 +490,10 @@ def main():
         if len(stale) > 5:
             print(f"    … and {len(stale) - 5} more")
 
-    # ── Data-driven evaluators already registered at module level ──
+    # ── Data-driven evaluators (deferred from module level) ────────
+    global _auto_count
+    _cl = load_alz_checklist(force_refresh=False)
+    _auto_count = register_checklist_evaluators(_cl.get("items", []))
     from evaluators.registry import EVALUATORS as _ev_reg
     print(f"  {len(_ev_reg)} evaluators registered ({_auto_count} data-driven from ALZ checklist)")
 
