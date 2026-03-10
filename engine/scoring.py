@@ -25,6 +25,7 @@ from schemas.taxonomy import (
     DOMAIN_WEIGHTS,
     ALL_CONTROL_STATUSES,
     MATURITY_STATUSES,
+    MATURITY_DENOMINATOR_STATUSES,
     AUTO_STATUSES,
     NON_MATURITY_STATUSES,
     SIGNAL_ERROR_STATUSES,
@@ -118,25 +119,23 @@ def section_scores(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         for r in items:
             counts[r.get("status", "EvaluationError")] += 1
 
-        # Maturity: only MATURITY_STATUSES (Pass, Fail, Partial)
-        # Everything else is explicitly excluded — no implicit omission
+        # Maturity numerator: only MATURITY_STATUSES (Pass, Fail, Partial)
         maturity_items = [r for r in items
                           if r.get("status") in MATURITY_STATUSES]
         auto_total = len(maturity_items)
         auto_pass = sum(1 for r in maturity_items if r.get("status") == "Pass")
         auto_fail = sum(1 for r in maturity_items if r.get("status") in ("Fail", "Partial"))
 
-        # Confidence-weighted maturity
+        # Maturity denominator: includes Manual/NotVerified so unverified
+        # controls lower the percentage, but excludes NA and error statuses.
+        denom_items = [r for r in items
+                       if r.get("status") in MATURITY_DENOMINATOR_STATUSES]
+        denom_total = len(denom_items)
+
+        # Maturity = Pass / (Pass+Fail+Partial+Manual+NotVerified)
         maturity = None
-        if auto_total > 0:
-            total_weight = 0.0
-            pass_weight = 0.0
-            for r in maturity_items:
-                conf = _effective_confidence(r)
-                total_weight += conf
-                if r.get("status") == "Pass":
-                    pass_weight += conf
-            maturity = round((pass_weight / total_weight) * 100.0, 1) if total_weight else 0.0
+        if denom_total > 0:
+            maturity = round((auto_pass / denom_total) * 100.0, 1)
 
         # Coverage-based summary (from coverage evaluators)
         coverage_items = [r for r in items if r.get("coverage_ratio") is not None]
@@ -168,6 +167,7 @@ def section_scores(results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             "automated_pass": auto_pass,
             "automated_fail": auto_fail,
             "total_controls": total_ctrl,
+            "maturity_denominator": denom_total,
             "maturity_percent": maturity,
             "avg_coverage_percent": avg_coverage,
             "automation_percent": automation_pct,
@@ -193,15 +193,15 @@ def _effective_confidence(r: Dict[str, Any]) -> float:
 def overall_maturity(sections: List[Dict[str, Any]]) -> float:
     """Tenant-wide overall maturity across all design areas.
 
-    Weighted by automated control count per section.  This is a single
-    tenant-scoped metric — never computed per-subscription.
+    Uses maturity_denominator (Pass+Fail+Partial+Manual+NotVerified) so
+    unverified controls lower the overall percentage.  Excludes NA and
+    error statuses.  This is a single tenant-scoped metric.
     """
-    # Weighted by automated_controls
-    total_auto = sum(s["automated_controls"] for s in sections)
-    if total_auto == 0:
+    total_denom = sum(s.get("maturity_denominator", s["automated_controls"]) for s in sections)
+    if total_denom == 0:
         return 0.0
     total_pass = sum(s["automated_pass"] for s in sections)
-    return round((total_pass / total_auto) * 100.0, 1)
+    return round((total_pass / total_denom) * 100.0, 1)
 
 def top_failing_sections(sections: List[Dict[str, Any]], top_n: int = 5) -> List[Dict[str, Any]]:
     # Rank by automated_fail then maturity

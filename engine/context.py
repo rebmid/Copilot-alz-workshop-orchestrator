@@ -155,11 +155,14 @@ def discover_execution_context(credential: AzureCliCredential) -> dict:
             )
             if mg_resp.ok:
                 descendants = mg_resp.json().get("value", [])
-                total_subs = sum(
-                    1 for d in descendants
+                mg_sub_ids = sorted({
+                    d["name"] for d in descendants
                     if (d.get("type") or "").endswith("/subscriptions")
-                )
-                total_subs = max(total_subs, len(subs))
+                })
+                total_subs = max(len(mg_sub_ids), len(subs))
+                # Expand visible subs to include all MG-discovered subs
+                if len(mg_sub_ids) > len(subs):
+                    subs = mg_sub_ids
     except Exception:
         pass
 

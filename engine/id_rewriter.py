@@ -70,15 +70,45 @@ _CONTROLS_JSON_PATH = (
 )
 
 _CANONICAL_KEYS: set[str] | None = None
+_FULLID_TO_KEY: dict[str, str] | None = None
+_CHECKLIST_GUID_TO_ID: dict[str, str] | None = None
+
+
+def _load_checklist_guid_map() -> dict[str, str]:
+    """Load GUID → checklist_id map from the ALZ checklist (cached)."""
+    global _CHECKLIST_GUID_TO_ID
+    if _CHECKLIST_GUID_TO_ID is None:
+        try:
+            from alz.loader import load_alz_checklist
+            cl = load_alz_checklist(force_refresh=False)
+            _CHECKLIST_GUID_TO_ID = {}
+            for item in cl.get("items", []):
+                guid = item.get("guid", "")
+                cid = item.get("id", "")
+                if guid and cid:
+                    _CHECKLIST_GUID_TO_ID[guid] = cid
+                    _CHECKLIST_GUID_TO_ID[guid[:8]] = cid
+        except Exception:
+            _CHECKLIST_GUID_TO_ID = {}
+    return _CHECKLIST_GUID_TO_ID
 
 
 def _load_canonical_keys() -> set[str]:
     """Load the set of canonical control keys from controls.json (cached)."""
-    global _CANONICAL_KEYS
+    global _CANONICAL_KEYS, _FULLID_TO_KEY
     if _CANONICAL_KEYS is None:
         with open(_CONTROLS_JSON_PATH, encoding="utf-8") as f:
             pack = json.load(f)
-        _CANONICAL_KEYS = set(pack.get("controls", {}).keys())
+        controls = pack.get("controls", {})
+        _CANONICAL_KEYS = set(controls.keys())
+        # Build reverse lookup: full_id UUID → short key, and
+        # first-8-chars-of-full_id → short key
+        _FULLID_TO_KEY = {}
+        for key, ctrl in controls.items():
+            fid = ctrl.get("full_id", "")
+            if fid:
+                _FULLID_TO_KEY[fid] = key
+                _FULLID_TO_KEY[fid[:8]] = key
     return _CANONICAL_KEYS
 
 
@@ -96,6 +126,20 @@ def _resolve_control_id(raw_id: str, canonical_keys: set[str]) -> tuple[str, str
     # 1. Exact match
     if raw_id in canonical_keys:
         return raw_id, "exact"
+
+    # 1b. Full-ID or UUID-prefix match via pack reverse lookup
+    if _FULLID_TO_KEY and raw_id in _FULLID_TO_KEY:
+        return _FULLID_TO_KEY[raw_id], "prefix"
+
+    # 1c. Checklist GUID → pack key (via GUID→checklist_id→pack key)
+    #     We resolve to a pack key, NOT a checklist_id like A03.04,
+    #     because controls[] must stay in pack-key space.
+    checklist_map = _load_checklist_guid_map()
+    cid = checklist_map.get(raw_id)
+    if cid and _FULLID_TO_KEY:
+        pack_key = _FULLID_TO_KEY.get(cid)
+        if pack_key:
+            return pack_key, "prefix"
 
     # 2. Prefix match — the canonical keys are 8-char truncated.
     #    Take the first 8 characters of the raw ID and check for a

@@ -36,9 +36,12 @@ Return ONLY valid JSON matching this schema:
 
 Rules:
 - You MUST only use control_id values from the CRITICAL CONTROLS input. Do NOT invent or fabricate any IDs.
+- You MUST only describe issues that correspond to FAILING controls in the input. Do NOT fabricate issues for controls that are passing or not present.
+- If a control is PASSING (status=Pass), do NOT report it as a critical issue — the deterministic engine has already verified it.
 - Each issue MUST have at least 2 course_of_action steps.
 - business_risk MUST reference the subscriptions_affected and scope_pattern from the input.
 - course_of_action steps MUST be specific to Azure services (not generic advice).
 - Do NOT change or reinterpret the control status — you are narrating risk, not re-scoring.
 - Return between 3 and 5 issues (fewer if fewer critical controls exist).
 - Order issues by severity (Critical first), then by subscriptions_affected descending.
+- NEVER claim a capability is absent if the corresponding control in the input shows Pass or is not listed as failing.

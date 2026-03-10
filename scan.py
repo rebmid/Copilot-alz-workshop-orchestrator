@@ -7,13 +7,16 @@ import sys
 import time
 from datetime import datetime, timezone
 
+from dotenv import load_dotenv
+load_dotenv()  # load .env (AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_KEY, etc.)
+
 # Ensure stdout handles Unicode on Windows terminals that default to cp1252
 if sys.stdout.encoding and sys.stdout.encoding.lower().replace("-", "") != "utf8":
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[attr-defined]
 
 from azure.identity import AzureCliCredential
 
-from alz.loader import load_alz_checklist
+from alz.loader import load_alz_checklist, detect_checklist_drift, report_stale_checklist_ids
 from collectors.azure_client import set_shared_credential
 from collectors.resource_graph import get_subscriptions
 from engine.context import discover_execution_context
@@ -58,6 +61,20 @@ import evaluators.identity         # noqa: F401
 import evaluators.network_coverage # noqa: F401
 import evaluators.management       # noqa: F401
 import evaluators.cost             # noqa: F401
+import evaluators.network_topology     # noqa: F401
+import evaluators.identity_access      # noqa: F401
+import evaluators.resource_organization  # noqa: F401
+import evaluators.platform_automation  # noqa: F401
+import evaluators.billing              # noqa: F401
+
+# ── Data-driven checklist evaluators ──────────────────────────────
+# Auto-register evaluators for ALL automatable items from the official
+# Azure Review Checklist repo.  Registration is deferred to main() so
+# that --demo / --why / --workshop modes don't trigger a network call
+# on a cold cache.
+from evaluators.checklist_driven import register_checklist_evaluators
+
+_auto_count = 0  # set in main() after CLI flags are parsed
 
 OUT_DIR = os.path.join(os.path.dirname(__file__), "out")
 
@@ -389,8 +406,37 @@ def main():
         subscription_ids = execution_context.get("subscription_ids_visible", [])
         print(f"\n  Tenant-wide mode: {len(subscription_ids)} subscription(s)")
     else:
-        subscription_ids = get_subscriptions()
-        print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
+        # Default mode: prefer MG descendants for full coverage, fall back to ARM
+        mg_access = execution_context.get("management_group_access", False)
+        if mg_access and tenant_id:
+            import requests as _req
+            _token = credential.get_token("https://management.azure.com/.default").token
+            try:
+                _mg_resp = _req.get(
+                    f"https://management.azure.com/providers/Microsoft.Management"
+                    f"/managementGroups/{tenant_id}/descendants"
+                    f"?api-version=2021-04-01",
+                    headers={"Authorization": f"Bearer {_token}"},
+                    timeout=20,
+                )
+                _mg_resp.raise_for_status()
+                _mg_subs = sorted({
+                    d["name"]
+                    for d in _mg_resp.json().get("value", [])
+                    if (d.get("type") or "").endswith("/subscriptions")
+                })
+                if _mg_subs:
+                    subscription_ids = _mg_subs
+                    print(f"\n  MG-discovery mode: {len(subscription_ids)} subscription(s) across tenant")
+                else:
+                    subscription_ids = get_subscriptions()
+                    print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
+            except Exception:
+                subscription_ids = get_subscriptions()
+                print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
+        else:
+            subscription_ids = get_subscriptions()
+            print(f"\n  Resource-Graph mode: {len(subscription_ids)} subscription(s)")
 
     if not subscription_ids:
         print("  ⚠ No subscriptions found — assessment will be limited.")
@@ -425,6 +471,32 @@ def main():
 
     # ── Checklist (full ALZ list — Manual items backfill scoring) ──
     checklist = load_alz_checklist(force_refresh=True)
+
+    # ── Checklist drift detection ─────────────────────────────────
+    drift = detect_checklist_drift()
+    if not drift["aligned"]:
+        print("\n┌─ ALZ Checklist Drift Detected ────────────────────────────┐")
+        if drift["added"]:
+            print(f"│  ⚠ New upstream design area(s): {drift['added']}")
+        if drift["removed"]:
+            print(f"│  ⚠ Missing upstream design area(s): {drift['removed']}")
+        print("│  Update ALZ_DESIGN_AREAS and taxonomy mappings.          │")
+        print("└──────────────────────────────────────────────────────────┘")
+    stale = report_stale_checklist_ids()
+    if stale:
+        print(f"\n  ⚠ {len(stale)} stale checklist reference(s) in control pack:")
+        for s in stale[:5]:
+            print(f"    • {s['control_id']}: {s['field']}={s['value']}")
+        if len(stale) > 5:
+            print(f"    … and {len(stale) - 5} more")
+
+    # ── Data-driven evaluators (deferred from module level) ────────
+    global _auto_count
+    _cl = load_alz_checklist(force_refresh=False)
+    _auto_count = register_checklist_evaluators(_cl.get("items", []))
+    from evaluators.registry import EVALUATORS as _ev_reg
+    print(f"  {len(_ev_reg)} evaluators registered ({_auto_count} data-driven from ALZ checklist)")
+
     # ── Fail-fast: binding validation ─────────────────────────
     pack = load_pack("alz", "v1.0")
     binding_violations = validate_signal_bindings(pack)

@@ -169,6 +169,16 @@ class ReasoningEngine:
             print("        Normalizing control IDs to canonical keys …")
             _control_id_violations = normalize_control_ids(items)
 
+            # Deduplicate controls across items: each control belongs to
+            # the first item that references it.  This prevents the
+            # dependency engine from warning about shared controls.
+            _seen_controls: set[str] = set()
+            for _item in items:
+                original = _item.get("controls", [])
+                unique = [c for c in original if c not in _seen_controls]
+                _seen_controls.update(unique)
+                _item["controls"] = unique
+
         # ── 1c. Resolve synthetic checklist_ids to canonical format ──
         # The AI may emit checklist_id values like "rbac-hygiene-001" or
         # UUIDs instead of canonical A01.01 format.  Resolve them
@@ -408,6 +418,28 @@ class ReasoningEngine:
             # Guard: strip any AI-hallucinated control IDs
             valid_cids = {c["control_id"] for c in critical_candidates}
             critical_issues = [ci for ci in critical_issues if ci.get("control_id") in valid_cids]
+            # Guard: inject actual control status/section to prevent narrative drift
+            candidate_by_id = {c["control_id"]: c for c in critical_candidates}
+            for ci in critical_issues:
+                source = candidate_by_id.get(ci.get("control_id"), {})
+                ci["_deterministic_status"] = source.get("status", "Unknown")
+                ci["_deterministic_section"] = source.get("section", ci.get("section", ""))
+                ci["_deterministic_notes"] = source.get("notes", "")[:200]
+
+            # Ground critical issues with Microsoft Learn documentation via MCP
+            try:
+                from ai.mcp_retriever import search_docs
+                for ci in critical_issues:
+                    area = ci.get("alz_design_area", ci.get("section", ""))
+                    title = ci.get("title", "")
+                    query = f"Azure Landing Zone {area} {title}"
+                    refs = search_docs(query, top=2)
+                    if refs:
+                        ci["learn_references"] = refs
+                        ci["learn_url"] = refs[0].get("url", "")
+            except Exception as e:
+                print(f"        ⚠ MCP grounding for critical issues skipped: {e}")
+
             print(f"        → {len(critical_issues)} critical issue(s)")
         else:
             print(f"  [10/{total_passes}] Critical Issues skipped (no qualifying controls).")

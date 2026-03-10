@@ -58,6 +58,18 @@ from signals.providers.cost_management import (
 )
 from signals.providers.network_watcher import fetch_network_watcher_posture
 from signals.providers.update_manager import fetch_update_manager_posture
+from signals.providers.network_topology import (
+    fetch_load_balancers,
+    fetch_expressroute_gateways,
+    fetch_bastion_hosts,
+    fetch_front_doors,
+    fetch_application_gateways,
+    fetch_dns_zones,
+    fetch_vnet_peerings,
+    fetch_managed_identities,
+    fetch_tag_coverage,
+    fetch_gateway_subnets,
+)
 
 
 # Type: (scope) -> SignalResult
@@ -226,9 +238,11 @@ def _merge_signal_results(results: list[SignalResult]) -> SignalResult:
 # ── Defender-specific merge (worst-case plan tiers) ──────────────
 
 def _merge_defender_pricings(results: list[SignalResult]) -> SignalResult:
-    """Merge Defender pricing results with worst-case tier logic.
+    """Merge Defender pricing results with coverage-based logic.
 
-    A plan is only "Standard" if it's Standard in ALL subscriptions.
+    Reports what percentage of subscriptions have each plan enabled.
+    A plan is "Standard" if >50% of subscriptions have it enabled.
+    Individual subscription counts are preserved in evidence.
     """
     ok_results = [r for r in results if r.status == SignalStatus.OK]
     if not ok_results:
@@ -244,21 +258,25 @@ def _merge_defender_pricings(results: list[SignalResult]) -> SignalResult:
             if name:
                 plan_tiers.setdefault(name, []).append(tier)
 
-    # Worst-case: if ANY subscription has "Free", entire plan is "Free"
+    # Coverage-based: plan is "Standard" if majority (>50%) of subs have it
     merged_items = []
     plans_total = 0
     plans_enabled = 0
     for plan_name, tiers in plan_tiers.items():
-        worst_tier = "Standard" if all(t == "Standard" for t in tiers) else "Free"
+        subs_standard = sum(1 for t in tiers if t == "Standard")
+        subs_total = len(tiers)
+        coverage_pct = round(subs_standard / max(subs_total, 1) * 100, 1)
+        effective_tier = "Standard" if subs_standard > subs_total / 2 else "Free"
         plans_total += 1
-        if worst_tier == "Standard":
+        if effective_tier == "Standard":
             plans_enabled += 1
         merged_items.append({
             "name": plan_name,
-            "tier": worst_tier,
-            "pricingTier": worst_tier,
-            "subscriptions_standard": sum(1 for t in tiers if t == "Standard"),
-            "subscriptions_total": len(tiers),
+            "tier": effective_tier,
+            "pricingTier": effective_tier,
+            "subscriptions_standard": subs_standard,
+            "subscriptions_total": subs_total,
+            "coverage_pct": coverage_pct,
         })
 
     return SignalResult(
@@ -324,25 +342,38 @@ def _merge_defender_scores(results: list[SignalResult]) -> SignalResult:
 # ── Workspace topology merge (special booleans) ──────────────────
 
 def _merge_workspace_topology(results: list[SignalResult]) -> SignalResult:
-    """Merge workspace topology with worst-case booleans (AND for is_centralized)."""
+    """Merge workspace topology with coverage-based logic.
+
+    Reports what percentage of subscriptions meet each criterion,
+    rather than requiring ALL subscriptions to pass.
+    """
     base = _merge_signal_results(results)
     if base.status != SignalStatus.OK or not base.raw:
         return base
 
     ok_raws = [r.raw for r in results if r.status == SignalStatus.OK and r.raw is not None]
+    total_subs = len(ok_raws)
 
-    # is_centralized: TRUE only if ALL subs have ≤2 workspaces
-    base.raw["is_centralized"] = all(
-        d.get("is_centralized", False) for d in ok_raws
-    )
-    # sentinel_enabled: TRUE only if ALL subs have Sentinel
-    base.raw["sentinel_enabled"] = all(
-        d.get("sentinel_enabled", False) for d in ok_raws
-    )
-    # max_retention: minimum across subs (worst-case)
-    retentions = [d.get("max_retention_days", 0) for d in ok_raws if d.get("max_retention_days")]
+    if total_subs == 0:
+        return base
+
+    # is_centralized: TRUE if majority (>50%) of subs have ≤2 workspaces
+    centralized_count = sum(1 for d in ok_raws if d.get("is_centralized", False))
+    base.raw["is_centralized"] = centralized_count > total_subs / 2
+    base.raw["centralized_subs"] = centralized_count
+    base.raw["centralized_total"] = total_subs
+
+    # sentinel_enabled: TRUE if majority (>50%) of subs have Sentinel
+    sentinel_count = sum(1 for d in ok_raws if d.get("sentinel_enabled", False))
+    base.raw["sentinel_enabled"] = sentinel_count > total_subs / 2
+    base.raw["sentinel_subs"] = sentinel_count
+    base.raw["sentinel_total"] = total_subs
+
+    # max_retention: median across subs (representative, not worst-case)
+    retentions = sorted(d.get("max_retention_days", 0) for d in ok_raws if d.get("max_retention_days"))
     if retentions:
-        base.raw["max_retention_days"] = min(retentions)
+        mid = len(retentions) // 2
+        base.raw["max_retention_days"] = retentions[mid]
 
     return base
 
@@ -560,6 +591,18 @@ SIGNAL_PROVIDERS: dict[str, ProviderFn] = {
 
     # Update Manager (multi-sub aggregation)
     "manage:update_manager":              _multi_sub_provider(fetch_update_manager_posture),
+
+    # ── Network Topology signals (RG — cross-sub) ────────────────
+    "resource_graph:load_balancers":       _rg_provider(fetch_load_balancers),
+    "resource_graph:vnet_gateways":        _rg_provider(fetch_expressroute_gateways),
+    "resource_graph:bastion_hosts":        _rg_provider(fetch_bastion_hosts),
+    "resource_graph:front_doors":          _rg_provider(fetch_front_doors),
+    "resource_graph:app_gateways":         _rg_provider(fetch_application_gateways),
+    "resource_graph:dns_zones":            _rg_provider(fetch_dns_zones),
+    "resource_graph:vnet_peerings":        _rg_provider(fetch_vnet_peerings),
+    "resource_graph:managed_identities":   _rg_provider(fetch_managed_identities),
+    "resource_graph:tag_coverage":         _rg_provider(fetch_tag_coverage),
+    "resource_graph:gateway_subnets":      _rg_provider(fetch_gateway_subnets),
 }
 
 

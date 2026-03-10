@@ -2,7 +2,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 import os, re
 
 from schemas.taxonomy import bucket_domain as _bucket_domain
-from schemas.taxonomy import SECTION_TO_DESIGN_AREA, OFFICIAL_ALZ_DESIGN_AREAS, CHECKLIST_LETTER_TO_DESIGN_AREA, DESIGN_AREA_TO_CHECKLIST_LETTER
+from schemas.taxonomy import SECTION_TO_DESIGN_AREA, OFFICIAL_ALZ_DESIGN_AREAS, CHECKLIST_LETTER_TO_DESIGN_AREA, DESIGN_AREA_TO_CHECKLIST_LETTER, MATURITY_DENOMINATOR_STATUSES
 from engine.scoring import section_scores as _compute_section_scores
 
 
@@ -90,6 +90,23 @@ def _build_report_context(output: dict) -> dict:
     exec_ctx = output.get("execution_context", {})
     results = output.get("results", [])
     results_by_id = {r["control_id"]: r for r in results if "control_id" in r}
+    # Build 8-char prefix index for AI-generated short IDs.
+    # If multiple control IDs share the same prefix, mark as ambiguous (None).
+    _prefix_index: dict[str, str | None] = {}
+    for rid in results_by_id:
+        prefix = rid[:8]
+        if prefix not in _prefix_index:
+            _prefix_index[prefix] = rid
+        elif _prefix_index[prefix] != rid:
+            _prefix_index[prefix] = None  # ambiguous
+
+    def _resolve_ctrl(short_id: str) -> str | None:
+        """Resolve an 8-char or short control ID to its full result key."""
+        if short_id in results_by_id:
+            return short_id
+        full = _prefix_index.get(short_id[:8])
+        return full  # None if ambiguous or missing
+
     auto_cov = scoring.get("automation_coverage", {})
 
     # Shared lookups
@@ -179,8 +196,9 @@ def _build_report_context(output: dict) -> dict:
             total_risks_reduced += impact_data.get("risks_reduced", 0)
 
         # Derive aggregate confidence from all controls
+        resolved_all_controls = [_resolve_ctrl(c) or c for c in all_controls]
         conf_values = [_confidence_numeric(results_by_id[c])
-                       for c in all_controls if c in results_by_id]
+                       for c in resolved_all_controls if c in results_by_id]
         avg_conf = sum(conf_values) / len(conf_values) if conf_values else None
 
         gate_blockers.append({
@@ -201,7 +219,8 @@ def _build_report_context(output: dict) -> dict:
     foundation_gate = {
         "ready": ready,
         "readiness_score": esr.get("readiness_score"),
-        "max_subscriptions": esr.get("max_supported_subscriptions_current_state"),
+        "subscription_count": exec_ctx.get("subscription_count_visible") or exec_ctx.get("subscription_count_total"),
+        "max_subscriptions_estimate": esr.get("max_supported_subscriptions_current_state"),
         "blockers": gate_blockers,
         "minimum_items": min_items,
         "improvement_opportunities": improvement_opportunities,
@@ -217,10 +236,12 @@ def _build_report_context(output: dict) -> dict:
     risk_cards = []
     for risk in raw_risks:
         affected = risk.get("affected_controls", [])
+        # Resolve short IDs to full result keys
+        resolved_affected = [_resolve_ctrl(c) or c for c in affected]
         # Derive design area from majority section of affected controls
         section_counts: dict[str, int] = {}
         ctrl_confs: list[float] = []
-        for cid in affected:
+        for cid in resolved_affected:
             ctrl = results_by_id.get(cid, {})
             sec = ctrl.get("section")
             if sec:
@@ -231,7 +252,7 @@ def _build_report_context(output: dict) -> dict:
 
         # Derive signal type badge (majority of affected controls)
         sig_counts = {"Confirmed": 0, "Derived": 0, "Assumed": 0}
-        for cid in affected:
+        for cid in resolved_affected:
             ctrl = results_by_id.get(cid, {})
             sig_counts[_signal_type(ctrl)] += 1
         signal_badge = max(sig_counts, key=sig_counts.get) if any(sig_counts.values()) else "Assumed"
@@ -239,7 +260,8 @@ def _build_report_context(output: dict) -> dict:
         # Derive fix item by matching affected_controls ∩ item.controls
         fix_item = None
         for item in rem_items:
-            if set(affected) & set(item.get("controls", [])):
+            item_ctrls_resolved = {_resolve_ctrl(c) or c for c in item.get("controls", [])}
+            if set(resolved_affected) & item_ctrls_resolved:
                 fix_item = {
                     "id": item.get("checklist_id", item.get("initiative_id")),
                     "title": item.get("title"),
@@ -250,7 +272,7 @@ def _build_report_context(output: dict) -> dict:
         # Score drivers (structured, from metadata)
         status_breakdown = {"Fail": 0, "Partial": 0, "Pass": 0, "Manual": 0}
         severity_set = set()
-        for cid in affected:
+        for cid in resolved_affected:
             ctrl = results_by_id.get(cid, {})
             st = ctrl.get("status", "Manual")
             status_breakdown[st] = status_breakdown.get(st, 0) + 1
@@ -328,6 +350,8 @@ def _build_report_context(output: dict) -> dict:
             cid = entry.get("checklist_id", entry.get("initiative_id", ""))
             item = item_by_id.get(cid, {})
             controls = item.get("controls", [])
+            # Resolve short control IDs to full result keys
+            resolved_controls = [_resolve_ctrl(c) or c for c in controls]
 
             # Use risk impact model for enrichment (deterministic)
             impact = risk_impact_by_id.get(cid, {})
@@ -339,7 +363,7 @@ def _build_report_context(output: dict) -> dict:
             if not impact and raw_risks:
                 risks_reduced = sum(
                     1 for risk in raw_risks
-                    if set(risk.get("affected_controls", [])) & set(controls)
+                    if set(risk.get("affected_controls", [])) & set(resolved_controls)
                 )
 
             # Dependencies from dependency engine (preferred) or entry
@@ -353,7 +377,7 @@ def _build_report_context(output: dict) -> dict:
                 "checklist_id": cid,
                 "title": item.get("title", cid) if item else cid,
                 "caf_discipline": entry.get("caf_discipline", item.get("caf_discipline", "")),
-                "controls_count": len(controls),
+                "controls_count": len(resolved_controls),
                 "controls_resolved": controls_resolved,
                 "risks_reduced": risks_reduced,
                 "dependencies": dep_titles if dep_titles else deps,
@@ -422,8 +446,9 @@ def _build_report_context(output: dict) -> dict:
 
         _section_data[sec_name] = {
             "maturity_percent": ss.get("maturity_percent"),
-            "counts": ss.get("counts", {}),
+            "automated_pass": ss.get("automated_pass", 0),
             "automated_controls": ss.get("automated_controls", 0),
+            "counts": ss.get("counts", {}),
             "total_controls": ss.get("total_controls", 0),
             "automation_percent": ss.get("automation_percent", 0),
             "critical_fail_count": ss.get("critical_fail_count", 0),
@@ -439,9 +464,9 @@ def _build_report_context(output: dict) -> dict:
         if alz_area not in _alz_merged:
             _alz_merged[alz_area] = {
                 "section": alz_area,
-                "maturity_percents": [],
                 "total_controls_sum": 0,
                 "automated_controls_sum": 0,
+                "automated_pass_sum": 0,
                 "critical_fail_count": 0,
                 "critical_partial_count": 0,
                 "counts": {},
@@ -449,12 +474,9 @@ def _build_report_context(output: dict) -> dict:
                 "controls": [],
             }
         m = _alz_merged[alz_area]
-        if data["maturity_percent"] is not None:
-            m["maturity_percents"].append(
-                (data["maturity_percent"], data["total_controls"])
-            )
         m["total_controls_sum"] += data["total_controls"]
         m["automated_controls_sum"] += data["automated_controls"]
+        m["automated_pass_sum"] += data["automated_pass"]
         m["critical_fail_count"] += data["critical_fail_count"]
         m["critical_partial_count"] += data["critical_partial_count"]
         for k, v in data["counts"].items():
@@ -467,9 +489,9 @@ def _build_report_context(output: dict) -> dict:
         if official not in _alz_merged:
             _alz_merged[official] = {
                 "section": official,
-                "maturity_percents": [],
                 "total_controls_sum": 0,
                 "automated_controls_sum": 0,
+                "automated_pass_sum": 0,
                 "critical_fail_count": 0,
                 "critical_partial_count": 0,
                 "counts": {},
@@ -480,20 +502,14 @@ def _build_report_context(output: dict) -> dict:
     # Flatten into final design_areas list
     design_areas = []
     for alz_area, m in _alz_merged.items():
-        # Weighted-average maturity (by control count)
-        if m["maturity_percents"]:
-            total_w = sum(w for _, w in m["maturity_percents"])
-            if total_w > 0:
-                mat_pct = round(
-                    sum(p * w for p, w in m["maturity_percents"]) / total_w
-                )
-            else:
-                mat_pct = round(
-                    sum(p for p, _ in m["maturity_percents"])
-                    / len(m["maturity_percents"])
-                )
-        else:
-            mat_pct = None
+        # Maturity: automated_pass / applicable controls (excl. NA + errors)
+        # Includes Manual/NotVerified in denominator so unverified
+        # controls lower the percentage.
+        denom = sum(1 for c in m["controls"]
+                    if c.get("status", "Manual") in MATURITY_DENOMINATOR_STATUSES)
+        ac = m["automated_controls_sum"]
+        ap = m["automated_pass_sum"]
+        mat_pct = round((ap / denom) * 100, 1) if denom > 0 else None
 
         avg_conf = (
             sum(m["conf_values"]) / len(m["conf_values"])
@@ -502,7 +518,83 @@ def _build_report_context(output: dict) -> dict:
         )
 
         tc = m["total_controls_sum"]
-        ac = m["automated_controls_sum"]
+        auto_pct = round(ac / tc * 100) if tc else 0
+
+        # Verification status based on signal coverage
+        if auto_pct >= 50:
+            verification_status = "Verified"
+        elif auto_pct > 0:
+            verification_status = "Derived from telemetry"
+        else:
+            verification_status = "Workshop validation recommended"
+
+        # Verification notes — summarize which signals informed conclusions
+        _sig_set: set[str] = set()
+        for ctrl in m["controls"]:
+            _why = ctrl.get("why", "")
+            if "Signal:" in _why:
+                # Extract signal name from "Signal: resource_graph:foo · ..."
+                _sig_part = _why.split("Signal:")[-1].split("·")[0].strip()
+                if _sig_part:
+                    _sig_set.add(_sig_part)
+        verification_signals = sorted(_sig_set)[:6]
+        # Friendly signal names for display
+        _SIGNAL_FRIENDLY: dict[str, str] = {
+            "resource_graph:azure_firewall": "Azure Firewall posture",
+            "resource_graph:vnets": "Virtual network topology",
+            "resource_graph:public_ips": "Public IP inventory",
+            "resource_graph:nsgs": "NSG coverage",
+            "resource_graph:nsg_coverage": "NSG coverage",
+            "resource_graph:private_endpoints": "Private endpoint coverage",
+            "resource_graph:vnet_gateways": "VPN/ExpressRoute gateways",
+            "resource_graph:vnet_peerings": "VNet peering topology",
+            "resource_graph:route_tables": "Route table analysis",
+            "resource_graph:dns_zones": "DNS zone inventory",
+            "resource_graph:bastion_hosts": "Bastion host coverage",
+            "resource_graph:app_gateways": "Application Gateway posture",
+            "resource_graph:front_doors": "Front Door posture",
+            "resource_graph:load_balancers": "Load balancer inventory",
+            "resource_graph:gateway_subnets": "Gateway subnet analysis",
+            "resource_graph:managed_identities": "Managed identity usage",
+            "resource_graph:tag_coverage": "Tag coverage analysis",
+            "resource_graph:storage_posture": "Storage account posture",
+            "resource_graph:keyvault_posture": "Key Vault posture",
+            "resource_graph:sql_posture": "SQL database posture",
+            "resource_graph:app_service_posture": "App Service posture",
+            "resource_graph:acr_posture": "Container Registry posture",
+            "resource_graph:aks_posture": "AKS cluster posture",
+            "resource_graph:backup_coverage": "Backup coverage",
+            "resource_graph:resource_locks": "Resource lock coverage",
+            "identity:rbac_hygiene": "RBAC hygiene analysis",
+            "identity:entra_log_availability": "Entra ID log availability",
+            "identity:pim_usage": "PIM usage analysis",
+            "identity:pim_maturity": "PIM maturity assessment",
+            "identity:breakglass_validation": "Break-glass account validation",
+            "identity:sp_owner_risk": "Service principal owner risk",
+            "identity:admin_ca_coverage": "Admin conditional access coverage",
+            "arm:mg_hierarchy": "Management group hierarchy",
+            "policy:assignments": "Policy assignment coverage",
+            "policy:compliance_summary": "Policy compliance summary",
+            "defender:pricings": "Defender plan coverage",
+            "defender:secure_score": "Defender secure score",
+            "monitor:workspace_topology": "SOC workspace topology",
+            "monitor:diag_coverage_sample": "Diagnostic settings coverage",
+            "monitor:activity_log_analysis": "Activity log analysis",
+            "monitor:alert_action_mapping": "Alert action mapping",
+            "monitor:action_group_coverage": "Action group coverage",
+            "monitor:availability_signals": "Availability signal coverage",
+            "monitor:change_tracking": "Change tracking analysis",
+            "cost:management_posture": "Cost management posture",
+            "cost:forecast_accuracy": "Cost forecast accuracy",
+            "cost:idle_resources": "Idle resource detection",
+            "network:watcher_posture": "Network Watcher posture",
+            "manage:update_manager": "Update Manager coverage",
+        }
+        verification_notes_friendly = [
+            _SIGNAL_FRIENDLY.get(s, s.split(":")[-1].replace("_", " ").title())
+            for s in verification_signals
+        ]
+
         design_areas.append({
             "section": alz_area,
             "legend_letter": DESIGN_AREA_TO_CHECKLIST_LETTER.get(alz_area, ""),
@@ -510,17 +602,18 @@ def _build_report_context(output: dict) -> dict:
             "counts": m["counts"],
             "automated_controls": ac,
             "total_controls": tc,
-            "automation_percent": round(ac / tc * 100) if tc else 0,
+            "automation_percent": auto_pct,
             "critical_fail_count": m["critical_fail_count"],
             "critical_partial_count": m["critical_partial_count"],
             "confidence": _confidence_badge(avg_conf),
             "controls": m["controls"],
+            "verification_status": verification_status,
+            "verification_notes": verification_notes_friendly,
         })
 
-    # Sort by risk: critical fails desc, maturity asc
+    # Sort by maturity: highest to lowest, then alphabetically
     design_areas.sort(key=lambda s: (
-        -(s.get("critical_fail_count", 0) + s.get("critical_partial_count", 0)),
-        s["maturity_percent"] if s["maturity_percent"] is not None else 9999,
+        -(s["maturity_percent"] if s["maturity_percent"] is not None else -1),
         s["section"],
     ))
 
@@ -614,8 +707,12 @@ def _build_report_context(output: dict) -> dict:
 
 def generate_report(output: dict, template_name: str = "report_template.html", out_path: str = None):
     # ── Relationship integrity gate (Rule F) ──────────────────
-    # Abort rendering if structural violations exist.
-    from engine.relationship_integrity import validate_relationship_integrity
+    # Pre-repair: resolve GUID-based IDs from AI output to checklist format
+    from engine.relationship_integrity import validate_relationship_integrity, repair_ai_output_ids
+    repairs = repair_ai_output_ids(output)
+    if repairs:
+        print(f"  Auto-repaired {repairs} GUID-based checklist_id(s) in AI output")
+
     ri_ok, ri_violations = validate_relationship_integrity(output)
     if not ri_ok:
         msg = (f"Rendering aborted: {len(ri_violations)} relationship integrity "

@@ -56,6 +56,12 @@ ALZDesignArea = Literal[
     "data_protection",
     "resilience",
     "cost",
+    # Official ALZ design area slugs (align to CAF 8 design areas)
+    "network_topology",
+    "identity_access",
+    "resource_org",
+    "platform_automation",
+    "billing",
 ]
 
 ALL_DESIGN_AREAS: tuple[str, ...] = get_args(ALZDesignArea)
@@ -135,6 +141,14 @@ MANUAL_STATUSES: frozenset[str] = frozenset({"Manual"})
 
 # Not applicable
 NA_STATUSES: frozenset[str] = frozenset({"NotApplicable"})
+
+# Statuses included in the maturity denominator.
+# Pass/Fail/Partial contribute to scoring; Manual/NotVerified are
+# unverified coverage that must lower the percentage.
+# Excludes NotApplicable (irrelevant) and error statuses (infra failures).
+MATURITY_DENOMINATOR_STATUSES: frozenset[str] = frozenset({
+    "Pass", "Fail", "Partial", "Manual", "NotVerified",
+})
 
 # Compile-time assertion: every status is categorized
 assert MATURITY_STATUSES | NON_MATURITY_STATUSES == frozenset(ALL_CONTROL_STATUSES), \
@@ -290,14 +304,21 @@ REQUIRED_CONTROL_FIELDS: tuple[str, ...] = (
 # ══════════════════════════════════════════════════════════════════
 
 DESIGN_AREA_SECTION: dict[str, str] = {
-    "network":         "Networking",
-    "governance":      "Governance",
-    "security":        "Security",
-    "data_protection": "Data Protection",
-    "resilience":      "Resilience",
-    "identity":        "Identity",
-    "management":      "Management",
-    "cost":            "Cost",
+    # Original custom design area slugs
+    "network":              "Networking",
+    "governance":           "Governance",
+    "security":             "Security",
+    "data_protection":      "Data Protection",
+    "resilience":           "Resilience",
+    "identity":             "Identity",
+    "management":           "Management",
+    "cost":                 "Cost",
+    # Official ALZ design area slugs → official CAF section names
+    "network_topology":     "Network Topology and Connectivity",
+    "identity_access":      "Identity and Access Management",
+    "resource_org":         "Resource Organization",
+    "platform_automation":  "Platform Automation and DevOps",
+    "billing":              "Azure Billing and Microsoft Entra ID Tenants",
 }
 
 # ── ALZ Core vs Operational Overlay ───────────────────────────────
@@ -309,6 +330,12 @@ ALZ_CORE_SECTIONS: frozenset[str] = frozenset({
     "Governance",
     "Security",
     "Management",
+    # Official ALZ design areas
+    "Network Topology and Connectivity",
+    "Identity and Access Management",
+    "Resource Organization",
+    "Platform Automation and DevOps",
+    "Azure Billing and Microsoft Entra ID Tenants",
 })
 
 OPERATIONAL_OVERLAY_SECTIONS: frozenset[str] = frozenset({
@@ -327,6 +354,7 @@ assert ALZ_CORE_SECTIONS | OPERATIONAL_OVERLAY_SECTIONS == frozenset(DESIGN_AREA
 # ══════════════════════════════════════════════════════════════════
 
 DOMAIN_WEIGHTS: dict[str, float] = {
+    # Original custom section weights
     "Security":        1.5,
     "Networking":      1.4,
     "Governance":      1.3,
@@ -335,6 +363,12 @@ DOMAIN_WEIGHTS: dict[str, float] = {
     "Data Protection": 1.3,
     "Resilience":      1.2,
     "Cost":            1.0,
+    # Official ALZ design area section weights
+    "Network Topology and Connectivity":          1.4,
+    "Identity and Access Management":              1.4,
+    "Resource Organization":                       1.3,
+    "Platform Automation and DevOps":               1.2,
+    "Azure Billing and Microsoft Entra ID Tenants": 1.0,
 }
 
 
@@ -351,6 +385,12 @@ SECTION_TO_DESIGN_AREA: dict[str, str] = {
     "Data Protection": "Security",           # protection controls → Security
     "Resilience":      "Management",         # protect & recover → Management
     "Cost":            "Governance",          # cost policy enforcement → Governance
+    # Official ALZ section names map to themselves
+    "Network Topology and Connectivity":          "Network Topology and Connectivity",
+    "Identity and Access Management":              "Identity and Access Management",
+    "Resource Organization":                       "Resource Organization",
+    "Platform Automation and DevOps":               "Platform Automation and DevOps",
+    "Azure Billing and Microsoft Entra ID Tenants": "Azure Billing and Microsoft Entra ID Tenants",
 }
 
 
@@ -442,8 +482,10 @@ DESIGN_AREA_TO_CHECKLIST_LETTER: dict[str, str] = {
 }
 
 # compile-time check: legend covers all official design areas
-assert set(CHECKLIST_LETTER_TO_DESIGN_AREA.values()) == set(OFFICIAL_ALZ_DESIGN_AREAS), \
-    f"Legend/design-area mismatch: {set(OFFICIAL_ALZ_DESIGN_AREAS) - set(CHECKLIST_LETTER_TO_DESIGN_AREA.values())}"
+_legend_areas = set(CHECKLIST_LETTER_TO_DESIGN_AREA.values())
+_official_areas: set[str] = set(OFFICIAL_ALZ_DESIGN_AREAS)
+assert _legend_areas == _official_areas, \
+    f"Legend/design-area mismatch: {_official_areas - _legend_areas}"
 
 # ── KG discipline → internal design-area slug ─────────────────────
 # Maps the Knowledge Graph 'affects[].discipline' short labels to

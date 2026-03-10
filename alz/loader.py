@@ -18,7 +18,13 @@ ALZ_CHECKLIST_URL = (
     "main/checklists/alz_checklist.en.json"
 )
 
-# 8 official ALZ design areas — canonical list used everywhere
+import logging
+
+_log = logging.getLogger(__name__)
+
+# 8 official ALZ design areas — canonical fallback list.
+# At runtime, ``get_live_design_areas()`` derives these from the
+# live checklist so the system detects upstream additions/renames.
 ALZ_DESIGN_AREAS: list[str] = [
     "Azure Billing and Microsoft Entra ID Tenants",
     "Identity and Access Management",
@@ -206,6 +212,121 @@ def get_design_area_learn_urls() -> dict[str, str]:
         "Governance":
             "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/governance",
     }
+
+# ══════════════════════════════════════════════════════════════════
+# Checklist drift detection
+# ══════════════════════════════════════════════════════════════════
+
+
+def get_live_design_areas() -> list[str]:
+    """Derive design area names directly from the live checklist.
+
+    Falls back to the hardcoded ``ALZ_DESIGN_AREAS`` list if the
+    checklist is unavailable.
+    """
+    try:
+        items = get_checklist_items()
+    except Exception:
+        return list(ALZ_DESIGN_AREAS)
+    live = sorted({item.get("category", "") for item in items if item.get("category")})
+    return live if live else list(ALZ_DESIGN_AREAS)
+
+
+def detect_checklist_drift() -> dict[str, Any]:
+    """Compare hardcoded ``ALZ_DESIGN_AREAS`` against the live checklist.
+
+    Returns a dict with:
+        ``aligned``  — True if no structural drift detected
+        ``added``    — design areas in the live checklist but not hardcoded
+        ``removed``  — design areas hardcoded but absent from the live checklist
+        ``live``     — the full list derived from the live checklist
+    """
+    live = get_live_design_areas()
+    hardcoded = set(ALZ_DESIGN_AREAS)
+    live_set = set(live)
+
+    added = sorted(live_set - hardcoded)
+    removed = sorted(hardcoded - live_set)
+
+    result: dict[str, Any] = {
+        "aligned": not added and not removed,
+        "added": added,
+        "removed": removed,
+        "live": live,
+    }
+
+    if added:
+        _log.warning(
+            "ALZ checklist drift: new design area(s) appeared upstream: %s. "
+            "Consider updating ALZ_DESIGN_AREAS and related taxonomy mappings.",
+            added,
+        )
+    if removed:
+        _log.warning(
+            "ALZ checklist drift: design area(s) no longer present upstream: %s. "
+            "Controls referencing these areas may become orphaned.",
+            removed,
+        )
+
+    return result
+
+
+def report_stale_checklist_ids(
+    controls_json: dict[str, dict] | None = None,
+) -> list[dict[str, str]]:
+    """Identify control-pack ``checklist_ids`` that no longer resolve.
+
+    Loads the live checklist and checks every ``checklist_ids`` and
+    ``checklist_guids`` value in the control pack against it.
+
+    Returns
+    -------
+    list[dict]
+        Each entry: ``{"control_id", "field", "value", "detail"}``.
+        Empty list means all IDs still resolve.
+    """
+    if controls_json is None:
+        pack_path = (
+            Path(__file__).resolve().parent.parent
+            / "control_packs" / "alz" / "v1.0" / "controls.json"
+        )
+        with open(pack_path, encoding="utf-8") as f:
+            controls_json = json.load(f).get("controls", {})
+
+    items = get_checklist_items()
+    ids_in_checklist = {it.get("id", "") for it in items}
+    guids_in_checklist = {it.get("guid", "") for it in items}
+
+    stale: list[dict[str, str]] = []
+    for cid, ctrl in controls_json.items():
+        for ref_id in ctrl.get("checklist_ids", []):
+            if ref_id and ref_id not in ids_in_checklist:
+                stale.append({
+                    "control_id": cid,
+                    "field": "checklist_ids",
+                    "value": ref_id,
+                    "detail": f"Control '{ctrl.get('name', cid)}' references "
+                              f"checklist ID '{ref_id}' which no longer exists upstream.",
+                })
+        for ref_guid in ctrl.get("checklist_guids", []):
+            if ref_guid and ref_guid not in guids_in_checklist:
+                stale.append({
+                    "control_id": cid,
+                    "field": "checklist_guids",
+                    "value": ref_guid,
+                    "detail": f"Control '{ctrl.get('name', cid)}' references "
+                              f"checklist GUID '{ref_guid}' which no longer exists upstream.",
+                })
+
+    if stale:
+        _log.warning(
+            "%d stale checklist reference(s) found in control pack. "
+            "Run `report_stale_checklist_ids()` for details.",
+            len(stale),
+        )
+
+    return stale
+
 
 def ground_new_control(
     checklist_id: str,

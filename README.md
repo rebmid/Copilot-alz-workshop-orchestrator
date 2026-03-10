@@ -432,6 +432,16 @@ The **Copilot SDK session** (`--workshop-copilot`) adds an interactive orchestra
 - ALZ control pack scoring → Pass / Fail / Partial / Manual
 - Weighted maturity + risk model
 
+Controls fall into three verification categories:
+
+| Category | Description |
+|----------|-------------|
+| **Automated** | Verified automatically using Azure telemetry signals (Resource Graph, Policy, Defender, etc.) |
+| **Manual — Azure Review** | Requires manual inspection of Azure resources by a CSA or platform engineer. Telemetry may indicate that relevant resources exist, but configuration details must be reviewed to confirm alignment with landing zone design guidance. |
+| **Manual — Workshop Validation** | Represents organizational processes, architecture decisions, or operational practices that cannot be verified through Azure telemetry. |
+
+> **Maturity percentage as a starting point:** Manual and unverified controls are included in the maturity denominator, so areas with low automation coverage show proportionally lower maturity. Only controls with status `Pass` contribute to the numerator. Controls that are `NotApplicable` or in an error state (`SignalError`, `EvaluationError`) are excluded entirely. This means the maturity percentage represents verified pass rate across all applicable controls — not just the automated subset. The score serves as a **baseline** — it will change once manual controls are reviewed with the customer during the workshop and their outcomes are incorporated into the final assessment.
+
 ### AI Reasoning Engine
 
 | Pass | Name | Output |
@@ -532,7 +542,7 @@ az login
 ```bash
 python scan.py                       # scans the default subscription
 python scan.py --demo                # demo mode — no Azure connection
-python scan.py --mg-scope <mg-id>    # scope to a management group (recommended for CSA)
+python scan.py --mg-scope <mg-id>    # scope to Tenant Root Management group (recommended for CSA)
 ```
 
 See the **[CLI Reference](#cli-reference)** for all available modes and flags.
