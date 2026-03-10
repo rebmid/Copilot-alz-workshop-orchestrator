@@ -32,6 +32,7 @@ from engine.id_rewriter import is_synthetic_id
 _CHECKLIST_ID_RE = re.compile(r"^[A-Z]\d{2}\.\d{2}$")
 # UUID pattern for GUID-based IDs the AI may generate
 _UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-", re.IGNORECASE)
+_SHORT_GUID_RE = re.compile(r"^[0-9a-f]{8}$", re.IGNORECASE)
 
 
 def _build_guid_to_checklist_id() -> dict[str, str]:
@@ -51,38 +52,97 @@ def _build_guid_to_checklist_id() -> dict[str, str]:
 def repair_ai_output_ids(output: dict[str, Any]) -> int:
     """Pre-repair AI output by resolving GUID-based checklist_ids to proper format.
 
+    Repairs ALL locations where GUIDs appear: remediation_items, roadmap phases,
+    dependency graph, blocker refs, and any dict key that is a GUID.
+
     Modifies the output dict in-place. Returns count of repairs made.
     """
     guid_map = _build_guid_to_checklist_id()
-    if not guid_map:
+    # Also build 8-char prefix map for short GUIDs from the checklist
+    from engine.id_rewriter import _load_checklist_guid_map
+    short_guid_map = _load_checklist_guid_map()
+
+    if not guid_map and not short_guid_map:
         return 0
+
+    def _resolve(val: str) -> str | None:
+        """Try to resolve a GUID (full or short) to a canonical checklist ID."""
+        if _UUID_RE.match(val):
+            return guid_map.get(val) or guid_map.get(val[:36])
+        if _SHORT_GUID_RE.match(val):
+            return short_guid_map.get(val)
+        return None
 
     ai = output.get("ai", output)
     repairs = 0
 
-    # Repair remediation items
+    # 1. Repair remediation items checklist_id
     rem_items = ai.get("remediation_items", ai.get("initiatives", []))
     for item in rem_items:
         cid = item.get("checklist_id", "")
-        if _UUID_RE.match(cid) and cid in guid_map:
-            item["checklist_id"] = guid_map[cid]
-            repairs += 1
-        elif _UUID_RE.match(cid) and cid[:36] in guid_map:
-            item["checklist_id"] = guid_map[cid[:36]]
+        resolved = _resolve(cid)
+        if resolved:
+            item["checklist_id"] = resolved
             repairs += 1
 
-    # Repair blocker resolving_checklist_ids
+    # 2. Repair roadmap phase entries
+    roadmap = ai.get("transformation_roadmap", {}).get("roadmap_30_60_90", {})
+    for phase_key in ("30_days", "60_days", "90_days"):
+        for entry in roadmap.get(phase_key, []):
+            for id_key in ("checklist_id", "initiative_id"):
+                val = entry.get(id_key, "")
+                resolved = _resolve(val)
+                if resolved:
+                    entry[id_key] = resolved
+                    repairs += 1
+
+    # 3. Repair dependency graph keys and values
+    dep_graph = ai.get("dependency_graph_model", {})
+    for dict_key in ("phase_assignment", "item_deps", "initiative_deps"):
+        old_dict = dep_graph.get(dict_key, {})
+        if not old_dict:
+            continue
+        new_dict = {}
+        for k, v in old_dict.items():
+            resolved_k = _resolve(k) or k
+            if resolved_k != k:
+                repairs += 1
+            # Values may be lists of IDs (item_deps) or strings (phase_assignment)
+            if isinstance(v, list):
+                new_v = []
+                for item in v:
+                    resolved_item = _resolve(item) if isinstance(item, str) else None
+                    new_v.append(resolved_item or item)
+                    if resolved_item:
+                        repairs += 1
+                new_dict[resolved_k] = new_v
+            else:
+                new_dict[resolved_k] = v
+        dep_graph[dict_key] = new_dict
+
+    # Also repair item_order / initiative_order lists
+    for list_key in ("item_order", "initiative_order"):
+        old_list = dep_graph.get(list_key, [])
+        if old_list:
+            new_list = []
+            for item in old_list:
+                resolved = _resolve(item) if isinstance(item, str) else None
+                new_list.append(resolved or item)
+                if resolved:
+                    repairs += 1
+            dep_graph[list_key] = new_list
+
+    # 4. Repair blocker resolving_checklist_ids
     esr = ai.get("enterprise_scale_readiness") or {}
     for blocker in esr.get("blockers", []):
         refs = blocker.get("resolving_checklist_ids", [])
         if refs:
             new_refs = []
             for ref in refs:
-                if _UUID_RE.match(ref) and ref in guid_map:
-                    new_refs.append(guid_map[ref])
+                resolved = _resolve(ref)
+                new_refs.append(resolved or ref)
+                if resolved:
                     repairs += 1
-                else:
-                    new_refs.append(ref)
             blocker["resolving_checklist_ids"] = new_refs
 
     return repairs

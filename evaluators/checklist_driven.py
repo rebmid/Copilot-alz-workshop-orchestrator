@@ -265,7 +265,7 @@ class ChecklistSignalEvaluator:
         if raw.get("management_group_count", 0) > 1:
             return ControlResult(
                 status="Partial", severity="Medium", confidence="Low",
-                reason=f"Signal: {sig_name} · {raw['management_group_count']} management groups. Verify specific configuration.",
+                reason=f"Signal: {sig_name} · {raw['management_group_count']} management groups detected. Workshop verification required for specific configuration.",
                 signals_used=self.required_signals,
             )
 
@@ -274,7 +274,7 @@ class ChecklistSignalEvaluator:
             count = raw.get("total_assignments", raw.get("assignment_count", 0))
             return ControlResult(
                 status="Partial", severity="Medium", confidence="Low",
-                reason=f"Signal: {sig_name} · {count} policy assignment(s). Verify specific policy.",
+                reason=f"Signal: {sig_name} · {count} policy assignment(s) detected. Workshop verification required for specific policy alignment.",
                 signals_used=self.required_signals,
             )
 
@@ -284,7 +284,7 @@ class ChecklistSignalEvaluator:
         if item_count > 0:
             return ControlResult(
                 status="Partial", severity="Medium", confidence="Low",
-                reason=f"Signal: {sig_name} · {item_count} resource(s) detected. Verify specific configuration.",
+                reason=f"Signal: {sig_name} · {item_count} resource(s) detected. Workshop verification required — signal confirms presence but cannot validate specific configuration.",
                 signals_used=self.required_signals,
             )
 
