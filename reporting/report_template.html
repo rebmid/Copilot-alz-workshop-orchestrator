@@ -323,9 +323,9 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
   </div>
   {% else %}
   <div class="gate-fail">
-    <div class="gate-icon">&#x1F6AB;</div>
-    <div class="gate-headline">Not Yet Ready for Enterprise Scale</div>
-    <p style="color:var(--muted)">Critical blockers must be resolved before the platform can support enterprise-scale workloads.</p>
+    <div class="gate-icon">&#x26A0;&#xFE0F;</div>
+    <div class="gate-headline">Enterprise Readiness Not Yet Confirmed</div>
+    <p style="color:var(--muted)">Signal-based assessment has identified gaps that need resolution. Most controls still require workshop validation before a final readiness determination can be made.</p>
   </div>
   {% endif %}
 
@@ -334,11 +334,13 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <div class="kpi-value" style="color:{% if foundation_gate.overall_maturity and foundation_gate.overall_maturity >= 70 %}var(--success){% elif foundation_gate.overall_maturity and foundation_gate.overall_maturity >= 40 %}var(--warn){% else %}var(--danger){% endif %}">
         {{ foundation_gate.overall_maturity|default('--') }}{% if foundation_gate.overall_maturity %}%{% endif %}
       </div>
-      <div class="kpi-label">Overall Maturity</div>
+      <div class="kpi-label">Verified Maturity</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Signal-confirmed controls only</div>
     </div>
     <div class="kpi">
       <div class="kpi-value" style="color:var(--accent)">{{ foundation_gate.readiness_score|default('--') }}{% if foundation_gate.readiness_score is not none %}/100{% endif %}</div>
       <div class="kpi-label">Readiness Score</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:.2rem">Pre-workshop baseline</div>
     </div>
     <div class="kpi">
       <div class="kpi-value">{{ foundation_gate.subscription_count|default('--') }}</div>
@@ -349,6 +351,13 @@ td.why-cell { max-width: 400px; font-size: .78rem; color: var(--muted); }
       <div class="kpi-label">Signal-Backed Controls</div>
     </div>
   </div>
+
+  <p style="font-size:.82rem;color:var(--muted);margin-top:.75rem;line-height:1.5">
+    <strong>These scores reflect only what automated telemetry can confirm today.</strong>
+    {{ foundation_gate.total_controls - foundation_gate.automated_controls }} of {{ foundation_gate.total_controls }}
+    controls require manual validation during the workshop. The maturity percentage will increase as those controls
+    are reviewed and their outcomes are incorporated.
+  </p>
 
   {% if foundation_gate.blockers %}
   <h3 style="margin-top:1.5rem">&#x1F6A7; Blockers ({{ foundation_gate.blockers|length }})</h3>
