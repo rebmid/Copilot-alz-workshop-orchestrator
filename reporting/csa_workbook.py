@@ -117,6 +117,22 @@ def _map_status(raw: str) -> str:
     return mapped
 
 
+def _verification_tag(status: str, signal_used: str, checklist_service: str) -> str:
+    """Return the verification hint tag for a control's Comment field.
+
+    [AUTO]     — evaluated automatically through telemetry signals.
+    [AZURE]    — inspectable by a CSA with read-only portal access.
+    [WORKSHOP] — governance / operating-model / organisational process.
+    """
+    if status in ("Pass", "Fail", "Partial"):
+        return "[AUTO]"
+    if signal_used:
+        return "[AZURE]"
+    if checklist_service and checklist_service.strip() not in ("", "N/A"):
+        return "[AZURE]"
+    return "[WORKSHOP]"
+
+
 # ══════════════════════════════════════════════════════════════════
 # Data clearing
 # ══════════════════════════════════════════════════════════════════
@@ -203,7 +219,16 @@ def _write_control_detail_rows(
                 s = ev.get("summary", ev.get("resource_id", ""))
                 if s:
                     parts.append(str(s)[:120])
-        ws.cell(row=row, column=9, value="\n".join(parts))
+        comment_body = "\n".join(parts)
+
+        # Prepend verification hint tag
+        tag = _verification_tag(
+            ctrl.get("status", "Manual"),
+            ctrl.get("signal_used", ""),
+            cl.get("service", ""),
+        )
+        comment = f"{tag} {comment_body}" if comment_body else tag
+        ws.cell(row=row, column=9, value=comment)
 
         ws.cell(row=row, column=10, value="")                       # AMMP
         ws.cell(row=row, column=11, value=cl.get("link", ""))       # Learn link
@@ -315,10 +340,10 @@ def _populate_executive_summary(ws, run: dict) -> None:
 
     ready = esr.get("ready_for_enterprise_scale", False)
     score = esr.get("readiness_score", "")
-    ws.cell(row=9, column=2, value="Yes" if ready else f"No  (score: {score})")
+    ws.cell(row=9, column=2, value="Confirmed" if ready else f"Not yet confirmed  (score: {score})")
 
     # Scope model: maturity is tenant-wide, never per-subscription
-    ws.cell(row=10, column=1, value="Tenant Maturity")
+    ws.cell(row=10, column=1, value="Verified Maturity (signal-confirmed)")
     maturity = scoring.get('overall_maturity_percent')
     ws.cell(row=10, column=2,
             value=f"{maturity}%" if maturity is not None else "Unavailable")
