@@ -197,8 +197,9 @@ def main():
             run_source = _glr(OUT_DIR, run.get("execution_context", {}).get("tenant_id"))
         if not run_source:
             # Fall back to assessment.json
-            if os.path.exists("assessment.json"):
-                run_source = "assessment.json"
+            _assess_path = os.path.join(OUT_DIR, "assessment.json")
+            if os.path.exists(_assess_path):
+                run_source = _assess_path
         ta_path = os.path.join(OUT_DIR, "target_architecture.json")
         _why_run_id = datetime.now(timezone.utc).strftime("run-%Y%m%d-%H%M")
         csa_path = os.path.join(OUT_DIR, f"{_why_run_id}_CSA_Workbook.xlsm")
@@ -226,7 +227,7 @@ def main():
         ws_path = os.path.join(OUT_DIR, "workshop-run.json")
         with open(ws_path, "w", encoding="utf-8") as f:
             json.dump(updated, f, indent=2, default=str)
-        with open("assessment.json", "w", encoding="utf-8") as f:
+        with open(os.path.join(OUT_DIR, "assessment.json"), "w", encoding="utf-8") as f:
             json.dump(updated, f, indent=2, default=str)
         print(f"\n  Workshop run saved: {ws_path}")
 
@@ -768,7 +769,7 @@ def main():
 
     with open(run_json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
-    with open("assessment.json", "w", encoding="utf-8") as f:
+    with open(os.path.join(OUT_DIR, "assessment.json"), "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
     save_run(OUT_DIR, tenant_id, output, tenant_name=tenant_name)
 
@@ -837,7 +838,7 @@ def main():
     output["telemetry"]["grounding_status"] = get_grounding_status()
     with open(run_json_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
-    with open("assessment.json", "w", encoding="utf-8") as f:
+    with open(os.path.join(OUT_DIR, "assessment.json"), "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
 
     print("\n┌─ Runtime Telemetry ──────────────────┐")

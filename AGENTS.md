@@ -42,7 +42,7 @@ are invoked by a CLI. The Copilot agent may only invoke the following tools:
 - **File confinement**: All generated artefacts are written to `out/` — writes outside that directory are rejected at the code level.
 - **Format allow-list**: Only `html` and `excel` output formats are accepted.
 - **No scoring override**: Maturity scores are computed deterministically and cannot be altered by the agent.
-- **No Inferring missing telemetry: The agent cannot create or modify values, every response must be grounded in loaded assessment data.
+- **No inferring missing telemetry**: The agent cannot create or modify values; every response must be grounded in loaded assessment data.
 ## Session Cache
 
 After `run_scan` or `load_results`, the session remembers the active run ID.
@@ -63,5 +63,5 @@ python scan.py --workshop-copilot --demo   # demo mode (no Azure connection)
 | `src/workshop_copilot.py` | SDK session bootstrap, tool registration, caching |
 | `src/workshop_tools.py` | Handler functions, path guardrails, run cache |
 | `scan.py` | Main CLI — `--workshop-copilot` flag enters workshop mode |
-| `demo/demo_run.json` | 243-control demo fixture for offline testing |
+| `demo/demo_run.json` | 284-control demo fixture for offline testing |
 | `tests/test_workshop.py` | Minimal test suite (4 tests) |

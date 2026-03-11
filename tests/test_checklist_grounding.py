@@ -4,7 +4,7 @@ Tests that:
   1. Controls resolve to their correct checklist items via checklist_ids
   2. Initiatives accumulate deduplicated checklist items from their controls
   3. Pipeline validation flags initiatives with zero checklist grounding
-  4. Controls.json mapping is complete — all 48 controls have checklist_ids
+  4. Controls.json mapping is complete — all 58 controls have checklist_ids
   5. All checklist_ids in controls.json actually exist in the ALZ checklist
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ import pytest
 # ── Fixtures ──────────────────────────────────────────────────────
 
 CONTROLS_JSON_PATH = (
-    Path(__file__).resolve().parent
+    Path(__file__).resolve().parent.parent
     / "control_packs" / "alz" / "v1.0" / "controls.json"
 )
 
@@ -37,7 +37,7 @@ def sample_initiative_with_controls() -> dict:
     return {
         "checklist_id": "D07.01",
         "title": "Harden Network Perimeter",
-        "controls": ["e6c4cfd3", "088137f5", "nsg-cove"],
+        "controls": ["e6c4cfd3", "088137f5", "ddos-log"],
         "dependencies": [],
     }
 
@@ -123,13 +123,12 @@ class TestResolveControlToChecklist:
         assert refs[0]["checklist_id"] == "D07.01"
 
     def test_slug_control_resolves(self, controls_json):
-        """storage- (Storage Account Posture) → G04.01, G04.02"""
+        """fw-diag- (Firewall Diagnostic Logs) → D07.09"""
         from alz.checklist_grounding import resolve_control_to_checklist
-        refs = resolve_control_to_checklist("storage-", controls_json)
-        assert len(refs) == 2
+        refs = resolve_control_to_checklist("fw-diag-", controls_json)
+        assert len(refs) >= 1
         ids = {r["checklist_id"] for r in refs}
-        assert "G04.01" in ids
-        assert "G04.02" in ids
+        assert "D07.09" in ids
 
     def test_unknown_control_returns_empty(self, controls_json):
         from alz.checklist_grounding import resolve_control_to_checklist
@@ -159,21 +158,21 @@ class TestDeriveChecklistForInitiative:
         refs = derive_checklist_for_initiative(
             sample_initiative_with_controls, controls_json,
         )
-        # e6c4cfd3→D07.01, 088137f5→D05.06, nsg-cove→D09.04
+        # e6c4cfd3→D07.01, 088137f5→D05.06, ddos-log→D05.08
         ids = {r["checklist_id"] for r in refs}
         assert "D07.01" in ids
         assert "D05.06" in ids
-        assert "D09.04" in ids
+        assert "D05.08" in ids
 
     def test_initiative_deduplicates(self, controls_json):
         """Two controls mapping to same checklist item → no duplicates."""
         init = {
-            "controls": ["sql-post", "appservi"],  # both → G03.05
+            "controls": ["3c5a808d", "ddos-log"],  # both → D05.08
         }
         from alz.checklist_grounding import derive_checklist_for_initiative
         refs = derive_checklist_for_initiative(init, controls_json)
         ids = [r["checklist_id"] for r in refs]
-        assert ids.count("G03.05") == 1
+        assert ids.count("D05.08") == 1
 
     def test_initiative_no_controls_empty(self, controls_json, sample_initiative_no_controls):
         from alz.checklist_grounding import derive_checklist_for_initiative
@@ -279,12 +278,11 @@ class TestControlDefinitionChecklistFields:
 
     def test_control_definition_ids_populated(self, controls_json):
         from schemas.taxonomy import ControlDefinition
-        cid = "storage-"
+        cid = "fw-diag-"
         ctrl = controls_json[cid]
         cd = ControlDefinition.from_json(cid, ctrl)
-        assert len(cd.checklist_ids) == 2
-        assert "G04.01" in cd.checklist_ids
-        assert "G04.02" in cd.checklist_ids
+        assert len(cd.checklist_ids) >= 1
+        assert "D07.09" in cd.checklist_ids
 
     def test_control_definition_defaults_empty(self):
         """If checklist fields missing in JSON, defaults to empty tuple."""

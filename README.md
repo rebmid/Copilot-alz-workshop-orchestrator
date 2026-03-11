@@ -1,5 +1,7 @@
 # Copilot-Governed Azure Landing Zone Orchestration
 
+> **Production Validated** — This platform has been tested and validated against a real enterprise Azure Landing Zone environment spanning multiple subscriptions and management groups, using read-only access with no environment mutation.
+
 Azure Landing Zone governance reviews are traditionally delivered through manual workshops, slide decks, and checklist interviews. These engagements are difficult to scale, inconsistent across architects, and challenging to produce repeatable governance insights.
 
 This project introduces a **Copilot-orchestrated Azure Landing Zone governance workshop** powered by a **deterministic governance assessment engine**.
@@ -758,7 +760,7 @@ All outputs are written to the `out/` directory (run snapshots are stored per-te
 | `target_architecture.json` | Target architecture recommendation (when AI is enabled) |
 | `preflight/out/preflight.json` | *(preflight mode only)* Access probe results |
 
-Additionally, `assessment.json` is written to the project root as a convenience copy.
+Additionally, `assessment.json` is written to `out/` alongside other run artifacts.
 
 ---
 

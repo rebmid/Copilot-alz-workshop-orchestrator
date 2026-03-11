@@ -46,7 +46,7 @@ jobs:
             if ! python scan.py --demo --no-ai; then
               echo "Demo command unavailable in this runner; using deterministic demo fixture as current artifact."
               mkdir -p out
-              cp demo/demo_run.json assessment.json
+              cp demo/demo_run.json out/assessment.json
               cp demo/demo_run.json out/run-demo.json
             fi
           fi
@@ -55,7 +55,7 @@ jobs:
         run: |
           python scripts/delta_summary.py \
             --previous demo/demo_run.json \
-            --current assessment.json \
+            --current out/assessment.json \
             --output out/delta-summary.md
 
       - name: Upload assessment artifacts
@@ -64,5 +64,4 @@ jobs:
           name: continuous-posture-${{ github.run_number }}
           if-no-files-found: error
           path: |
-            assessment.json
             out/**

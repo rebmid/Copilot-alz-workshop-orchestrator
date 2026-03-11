@@ -722,7 +722,9 @@ def generate_report(output: dict, template_name: str = "report_template.html", o
             print(f"    \u2022 {v}")
         # Write a minimal error HTML instead of crashing
         if out_path is None:
-            out_path = os.path.join(os.getcwd(), "report.html")
+            _out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "out")
+            os.makedirs(_out_dir, exist_ok=True)
+            out_path = os.path.join(_out_dir, "report.html")
         _write_integrity_error_html(out_path, ri_violations)
         return ri_violations
 
@@ -740,7 +742,9 @@ def generate_report(output: dict, template_name: str = "report_template.html", o
     html = template.render(**context)
 
     if out_path is None:
-        out_path = os.path.join(os.getcwd(), "report.html")
+        _out_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "out")
+        os.makedirs(_out_dir, exist_ok=True)
+        out_path = os.path.join(_out_dir, "report.html")
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(html)
 

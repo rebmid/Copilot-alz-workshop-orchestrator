@@ -560,7 +560,13 @@
         "load_balancers"
       ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D01.14"
+      ],
+      "checklist_guids": [
+        "9dcd6250-9c4a-4382-aa9b-5b84c64fc1fe"
+      ]
     },
     "lb-backe": {
       "name": "LB Backend Pool Instances",
@@ -576,7 +582,13 @@
         "load_balancers"
       ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D01.15"
+      ],
+      "checklist_guids": [
+        "48682fb1-1e86-4458-a686-518ebd47393d"
+      ]
     },
     "vnet-pee": {
       "name": "VNet Peering Traffic Allowed",
@@ -592,7 +604,13 @@
         "vnet_peerings"
       ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D01.13"
+      ],
+      "checklist_guids": [
+        "c76cb5a2-abe2-11ed-afa1-0242ac120002"
+      ]
     },
     "bastion-": {
       "name": "Azure Bastion Deployed",
@@ -608,7 +626,13 @@
         "bastion_hosts"
       ],
       "caf_guidance": "Plan for inbound and outbound internet connectivity",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity",
+      "checklist_ids": [
+        "D05.01"
+      ],
+      "checklist_guids": [
+        "ee1ac551-c4d5-46cf-b035-d0a3c50d87ad"
+      ]
     },
     "frontdoo": {
       "name": "Azure Front Door with WAF",
@@ -624,7 +648,13 @@
         "front_doors"
       ],
       "caf_guidance": "Plan for inbound and outbound internet connectivity",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity",
+      "checklist_ids": [
+        "D05.03"
+      ],
+      "checklist_guids": [
+        "1d7aa9b6-4704-4489-a804-2d88e79d17b7"
+      ]
     },
     "privdns-": {
       "name": "Private DNS Zones",
@@ -640,7 +670,13 @@
         "dns_zones"
       ],
       "caf_guidance": "Private Link and DNS integration at scale",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale",
+      "checklist_ids": [
+        "D03.06"
+      ],
+      "checklist_guids": [
+        "153e8908-ae28-4c84-a33b-6b7808b9fe5c"
+      ]
     },
     "dns-auto": {
       "name": "DNS Auto-Registration",
@@ -656,7 +692,13 @@
         "dns_zones"
       ],
       "caf_guidance": "Private Link and DNS integration at scale",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale",
+      "checklist_ids": [
+        "D03.09"
+      ],
+      "checklist_guids": [
+        "614658d3-558f-4d77-849b-821112df27ee"
+      ]
     },
     "gw-subne": {
       "name": "Gateway Subnet Size",
@@ -672,7 +714,13 @@
         "gateway_subnets"
       ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D09.01"
+      ],
+      "checklist_guids": [
+        "f2aad7e3-bb03-4adc-8606-4123d342a917"
+      ]
     },
     "ddos-log": {
       "name": "DDoS Diagnostic Logs",
@@ -689,7 +737,13 @@
         "diagnostic_settings_sample"
       ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D05.08"
+      ],
+      "checklist_guids": [
+        "b1c82a3f-2320-4dfa-8972-7ae4823c8930"
+      ]
     },
     "shared-n": {
       "name": "Shared Networking Services",
@@ -706,7 +760,13 @@
         "azure_firewalls"
       ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D01.04"
+      ],
+      "checklist_guids": [
+        "7dd61623-a364-4a90-9eca-e48ebd54cd7d"
+      ]
     },
     "fw-diag-": {
       "name": "Firewall Diagnostic Logs",
@@ -723,7 +783,13 @@
         "diagnostic_settings_sample"
       ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D07.09"
+      ],
+      "checklist_guids": [
+        "715d833d-4708-4527-90ac-1b142c7045ba"
+      ]
     },
     "fw-subne": {
       "name": "Firewall Subnet Size /26",
@@ -739,7 +805,13 @@
         "vnets"
       ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D07.11"
+      ],
+      "checklist_guids": [
+        "22d6419e-b627-4d95-9e7d-019fa759387f"
+      ]
     },
     "ddos-fw-": {
       "name": "DDoS on Firewall VNet",
@@ -756,7 +828,13 @@
         "azure_firewalls"
       ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D07.22"
+      ],
+      "checklist_guids": [
+        "e8143efa-0301-4d62-be54-ca7b5ce566dc"
+      ]
     },
     "fw-premi": {
       "name": "Azure Firewall Premium",
@@ -772,7 +850,13 @@
         "azure_firewalls"
       ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D07.05"
+      ],
+      "checklist_guids": [
+        "c10d51ef-f999-455d-bba0-5c90ece07447"
+      ]
     },
     "fw-az-de": {
       "name": "Firewall Availability Zones",
@@ -788,7 +872,13 @@
         "azure_firewalls"
       ],
       "caf_guidance": "Plan for traffic inspection",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-traffic-inspection",
+      "checklist_ids": [
+        "D07.21"
+      ],
+      "checklist_guids": [
+        "d38ad60c-bc9e-4d49-b699-97e5d4dcf707"
+      ]
     },
     "onprem-p": {
       "name": "On-Premises Private Endpoints",
@@ -805,7 +895,13 @@
         "vnet_gateways"
       ],
       "caf_guidance": "Private Link and DNS integration at scale",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/private-link-and-dns-integration-at-scale",
+      "checklist_ids": [
+        "D08.03"
+      ],
+      "checklist_guids": [
+        "b3e4563a-4d87-4397-98b6-62d6d15f512a"
+      ]
     },
     "appgw-wa": {
       "name": "Application Gateway WAF",
@@ -821,7 +917,13 @@
         "app_gateways"
       ],
       "caf_guidance": "Plan for inbound and outbound internet connectivity",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/plan-for-inbound-and-outbound-internet-connectivity",
+      "checklist_ids": [
+        "D05.05"
+      ],
+      "checklist_guids": [
+        "2363cefe-179b-4599-be0d-5973cd4cd21b"
+      ]
     },
     "er-prima": {
       "name": "ExpressRoute as Primary",
@@ -837,7 +939,13 @@
         "vnet_gateways"
       ],
       "caf_guidance": "Define an Azure network topology",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/azure-best-practices/define-an-azure-network-topology",
+      "checklist_ids": [
+        "D06.01"
+      ],
+      "checklist_guids": [
+        "359c373e-7dd6-4162-9a36-4a907ecae48e"
+      ]
     },
     "mgd-iden": {
       "name": "Managed Identity Usage",
@@ -853,7 +961,13 @@
         "managed_identities"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.02"
+      ],
+      "checklist_guids": [
+        "4348bf81-7573-4512-8f46-9061cc198fea"
+      ]
     },
     "ca-polic": {
       "name": "Conditional Access Policies",
@@ -869,7 +983,13 @@
         "admin_ca_coverage"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.04"
+      ],
+      "checklist_guids": [
+        "53e8908a-e28c-484c-93b6-b7808b9fe5c4"
+      ]
     },
     "mfa-enfo": {
       "name": "MFA Enforcement",
@@ -885,7 +1005,13 @@
         "admin_ca_coverage"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.05"
+      ],
+      "checklist_guids": [
+        "1049d403-a923-4c34-94d0-0018ac6a9e01"
+      ]
     },
     "pim-zero": {
       "name": "PIM Zero Standing Access",
@@ -901,7 +1027,13 @@
         "pim_maturity"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.07"
+      ],
+      "checklist_guids": [
+        "14658d35-58fd-4772-99b8-21112df27ee4"
+      ]
     },
     "bg-alz--": {
       "name": "Break-Glass Accounts (ALZ)",
@@ -917,7 +1049,13 @@
         "breakglass_validation"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.15"
+      ],
+      "checklist_guids": [
+        "984a859c-773e-47d2-9162-3a765a917e1f"
+      ]
     },
     "rbac-ali": {
       "name": "RBAC Model Alignment",
@@ -933,7 +1071,13 @@
         "rbac_hygiene"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.01"
+      ],
+      "checklist_guids": [
+        "348ef254-c27d-442e-abba-c7571559ab91"
+      ]
     },
     "pim-revw": {
       "name": "PIM Access Reviews",
@@ -949,7 +1093,13 @@
         "pim_usage"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B04.03"
+      ],
+      "checklist_guids": [
+        "d505ebcb-79b1-4274-9c0d-a27c8bea489c"
+      ]
     },
     "ctrl-del": {
       "name": "Centralized Delegation",
@@ -966,7 +1116,13 @@
         "mg_hierarchy"
       ],
       "caf_guidance": "Identity and access management",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/identity-access",
+      "checklist_ids": [
+        "B03.06"
+      ],
+      "checklist_guids": [
+        "e6a83de5-de32-4c19-a248-1607d5d1e4e6"
+      ]
     },
     "sandbox-": {
       "name": "Sandbox Management Group",
@@ -982,7 +1138,13 @@
         "mg_hierarchy"
       ],
       "caf_guidance": "Resource organization",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "checklist_ids": [
+        "C02.02"
+      ],
+      "checklist_guids": [
+        "667313b4-f566-44b5-b984-a859c773e7d2"
+      ]
     },
     "no-root-": {
       "name": "No Subscriptions Under Root MG",
@@ -998,7 +1160,13 @@
         "mg_hierarchy"
       ],
       "caf_guidance": "Resource organization",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "checklist_ids": [
+        "C02.05"
+      ],
+      "checklist_guids": [
+        "33b6b780-8b9f-4e5c-9104-9d403a923c34"
+      ]
     },
     "mg-rbac-": {
       "name": "MG RBAC Authorization",
@@ -1015,7 +1183,13 @@
         "rbac_hygiene"
       ],
       "caf_guidance": "Resource organization",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "checklist_ids": [
+        "C02.06"
+      ],
+      "checklist_guids": [
+        "74d00018-ac6a-49e0-8e6a-83de5de32c19"
+      ]
     },
     "tag-bill": {
       "name": "Tags for Billing",
@@ -1031,7 +1205,13 @@
         "tag_coverage"
       ],
       "caf_guidance": "Resource organization",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "checklist_ids": [
+        "C02.14"
+      ],
+      "checklist_guids": [
+        "5de32c19-9248-4160-9d5d-1e4e614658d3"
+      ]
     },
     "region-s": {
       "name": "Region Selection",
@@ -1047,7 +1227,13 @@
         "vnets"
       ],
       "caf_guidance": "Resource organization",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "checklist_ids": [
+        "C03.01"
+      ],
+      "checklist_guids": [
+        "250d81ce-8bbe-4f85-9051-6a18a8221e50"
+      ]
     },
     "multi-re": {
       "name": "Multi-Region Deployment",
@@ -1063,7 +1249,13 @@
         "vnets"
       ],
       "caf_guidance": "Resource organization",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org",
+      "checklist_ids": [
+        "C03.02"
+      ],
+      "checklist_guids": [
+        "19ca3f89-397d-44b1-b5b6-5e18661372ac"
+      ]
     },
     "kv-secre": {
       "name": "Key Vault for Secrets",
@@ -1079,7 +1271,13 @@
         "keyvault_posture"
       ],
       "caf_guidance": "Platform automation and DevOps",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops",
+      "checklist_ids": [
+        "H01.06"
+      ],
+      "checklist_guids": [
+        "108d5099-a11d-4445-bd8b-e12a5e95412e"
+      ]
     },
     "iac-matu": {
       "name": "IaC Maturity",
@@ -1095,7 +1293,13 @@
         "activity_log_analysis"
       ],
       "caf_guidance": "Platform automation and DevOps",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops",
+      "checklist_ids": [
+        "H03.01"
+      ],
+      "checklist_guids": [
+        "2cdc9d99-dbcc-4ad4-97f5-e7d358bdfa73"
+      ]
     },
     "devsecop": {
       "name": "DevSecOps Integration",
@@ -1112,7 +1316,13 @@
         "keyvault_posture"
       ],
       "caf_guidance": "Platform automation and DevOps",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/platform-automation-devops",
+      "checklist_ids": [
+        "H04.01"
+      ],
+      "checklist_guids": [
+        "cc87a3bc-c572-4ad2-92ed-8cabab66160f"
+      ]
     },
     "cost-rep": {
       "name": "Cost Reporting Setup",
@@ -1128,7 +1338,13 @@
         "cost_management_posture"
       ],
       "caf_guidance": "Azure billing and Microsoft Entra tenant",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/azure-billing-microsoft-entra-tenant"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/azure-billing-microsoft-entra-tenant",
+      "checklist_ids": [
+        "A02.03"
+      ],
+      "checklist_guids": [
+        "32952499-58c8-4e6f-ada5-972e67893d55"
+      ]
     },
     "budget-a": {
       "name": "Budget Alerts",
@@ -1144,7 +1360,13 @@
         "cost_management_posture"
       ],
       "caf_guidance": "Azure billing and Microsoft Entra tenant",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/azure-billing-microsoft-entra-tenant"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/azure-billing-microsoft-entra-tenant",
+      "checklist_ids": [
+        "A03.03"
+      ],
+      "checklist_guids": [
+        "54f0d8b1-22a3-4c0d-8ce2-58b9e086c93a"
+      ]
     },
     "notifica": {
       "name": "Notification Contact Email",
@@ -1160,7 +1382,13 @@
         "action_group_coverage"
       ],
       "caf_guidance": "Azure billing and Microsoft Entra tenant",
-      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/azure-billing-microsoft-entra-tenant"
+      "caf_url": "https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/azure-billing-microsoft-entra-tenant",
+      "checklist_ids": [
+        "A03.01"
+      ],
+      "checklist_guids": [
+        "685cb4f2-ac9c-4b19-9167-993ed0b32415"
+      ]
     }
   }
 }

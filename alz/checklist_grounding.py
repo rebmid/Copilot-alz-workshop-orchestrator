@@ -125,6 +125,21 @@ def resolve_control_to_checklist(
                     "category": it.get("category", ""),
                 })
 
+    # If still no match, try the control's full_id (GUID) for a direct
+    # lookup — covers controls that have full_id but lack checklist_ids /
+    # checklist_guids fields.
+    if not refs:
+        full_id = ctrl.get("full_id", "")
+        if full_id and full_id in by_guid:
+            it = by_guid[full_id]
+            refs.append({
+                "checklist_id": it["id"],
+                "guid": it["guid"],
+                "text": it.get("text", "")[:200],
+                "severity": it.get("severity", ""),
+                "category": it.get("category", ""),
+            })
+
     # If still no match, try 8-char prefix against checklist GUIDs
     # (AI often uses truncated GUIDs as control IDs)
     if not refs and len(control_id) >= 8:

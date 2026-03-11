@@ -13,7 +13,8 @@ import evaluators.platform_automation  # noqa: F401
 import evaluators.billing              # noqa: F401
 
 # Load scope from current assessment context
-d = json.load(open("assessment.json", encoding="utf-8"))
+import os
+d = json.load(open(os.path.join("out", "assessment.json"), encoding="utf-8"))
 ctx = d.get("execution_context", {})
 subs = ctx.get("subscription_ids_visible", [])
 tenant = ctx.get("tenant_id", "")

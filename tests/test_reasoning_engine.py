@@ -10,13 +10,17 @@ Run via pytest:  pytest test_reasoning_engine.py -v
 import json
 import glob
 import os
+from pathlib import Path
 import pytest
 
 from ai.build_advisor_payload import build_advisor_payload
 
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
 def _have_run_files():
-    return len(glob.glob("out/run-*.json")) > 0
+    return len(glob.glob(str(_REPO_ROOT / "out" / "run-*.json"))) > 0
 
 
 def _have_aoai_credentials():
@@ -33,7 +37,7 @@ def test_reasoning_engine_pipeline():
     from ai.engine.reasoning_engine import ReasoningEngine
     from ai.prompts import PromptPack
 
-    run_files = sorted(glob.glob("out/run-*.json"), reverse=True)
+    run_files = sorted(glob.glob(str(_REPO_ROOT / "out" / "run-*.json")), reverse=True)
     latest = run_files[0]
     with open(latest, encoding="utf-8") as f:
         run = json.load(f)
@@ -66,7 +70,7 @@ def test_reasoning_engine_pipeline():
 @pytest.mark.skipif(not _have_run_files(), reason="No out/run-*.json files available")
 def test_build_advisor_payload():
     """Verify build_advisor_payload produces a valid payload from a run file."""
-    run_files = sorted(glob.glob("out/run-*.json"), reverse=True)
+    run_files = sorted(glob.glob(str(_REPO_ROOT / "out" / "run-*.json")), reverse=True)
     latest = run_files[0]
     with open(latest, encoding="utf-8") as f:
         run = json.load(f)
@@ -90,7 +94,7 @@ def main():
     from ai.engine.reasoning_engine import ReasoningEngine
     from ai.prompts import PromptPack
 
-    run_files = sorted(glob.glob("out/run-*.json"), reverse=True)
+    run_files = sorted(glob.glob(str(_REPO_ROOT / "out" / "run-*.json")), reverse=True)
     if not run_files:
         raise SystemExit("No run files found in out/")
     latest = run_files[0]
@@ -176,7 +180,7 @@ def main():
     progress = ai_output.get("progress_analysis", {})
     print(f"\n\U0001f4c8 Progress: {progress.get('velocity', '?')} \u2014 {progress.get('maturity_trend', '')[:80]}")
 
-    out_path = "out/reasoning_engine_output.json"
+    out_path = str(_REPO_ROOT / "out" / "reasoning_engine_output.json")
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(ai_output, f, indent=2)
     print(f"\n\u2713 Full output saved to {out_path}")

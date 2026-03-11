@@ -83,13 +83,13 @@ No upward imports. No exceptions.
 
 **Location**: `control_packs/<family>/<version>/`
 
-**Current frozen pack**: `alz/v1.0` — 48 controls, 8 design areas.
+**Current frozen pack**: `alz/v1.0` — 58 controls, 8 design areas.
 
 **Version lock mechanism** (`control_packs/loader.py`):
 1. SHA-256 checksum of `controls.json` is computed at load time.
 2. Checked against `_FROZEN_CHECKSUMS` registry.
 3. Mismatch raises `ControlPackVersionError` — assessment refuses to start.
-4. Current checksum: `03eb5c86e10c5203`.
+4. Current checksum: `7fe4d340adb278f6`.
 
 **To update a frozen pack**:
 1. Create a new version directory: `control_packs/alz/v1.1/`
